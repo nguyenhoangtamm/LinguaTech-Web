@@ -1,0 +1,149 @@
+.btnResetFilter {
+    border: 1px solid #d1d5db;
+    color: #374151;
+    background: #fff;
+    height: 28px;
+    padding-left: 16px;
+    padding-right: 16px;
+    font-size: 13px;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+.btnResetFilter:hover {
+    background: #f3f4f6;
+}
+
+.btnSearchFilter {
+    background-color: rgb(var(--primary-default)) !important;
+    color: #fff;
+    height: 28px;
+    padding-left: 16px;
+    padding-right: 16px;
+    font-size: 13px;
+    border-radius: 6px;
+    border: none;
+    transition: background 0.2s;
+}
+.btnSearchFilter:hover {
+    background-color: #1e40af !important;
+    color: #fff;
+}
+.btnSearchFilter:focus{
+    background-color: rgb(var(--primary-default)) !important;
+
+}
+.btnCreate {
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background-color: rgb(var(--primary-default)) !important;
+    color: #fff !important;
+    padding-left: 12px;
+    padding-right: 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+}
+.btnCreate:hover,
+.btnCreate:active {
+    background-color: rgb(var(--primary-lighter));
+    color: #fff;
+    outline: none;
+    transition: background 0.2s;
+}
+/* .formFooterButtons {
+    min-width: 60px;
+} */
+.inputField {
+    width: 100%;
+    height: 30.5px;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 12px;
+    transition: border-color 0.2s;
+    box-shadow: none;
+    outline: none;
+    color: rgb(var(--gray-500)) !important;
+}
+.inputField:active,
+.inputField:hover,
+.inputField:focus {
+    outline: none;
+    box-shadow: none;
+}
+.inputField:active {
+    border-color: #2563eb;
+}
+.selectPicker {
+    width: 100%;
+}
+.selectPicker:active,
+.selectPicker:hover,
+.selectPicker:focus {
+    border-color: rgb(var(--primary-lighter)) !important;
+    outline: none;
+    box-shadow: none;
+}
+.selectPicker span {
+    font-size: 12px;
+    color: rgb(var(--gray-500)) !important;
+}
+.selectPicker :global(.rs-picker-value-count) {
+    font-size: 11px !important;
+    color: white !important;
+}
+.selectPickerMenu {
+    font-size: 12px !important;
+    color: rgb(var(--gray-500)) !important;
+}
+.selectPickerMenu span {
+    font-size: 12px !important;
+    outline: none;
+    box-shadow: none;
+}
+.datePicker:active,
+.datePicker:hover,
+.datePicker:focus {
+    border-color: rgb(var(--primary-lighter)) !important;
+    outline: none;
+    box-shadow: none;
+}
+.datePicker input {
+    font-size: 12px;
+    color: rgb(var(--gray-500)) !important;
+}
+/*:global(.rs-modal-content) {*/
+/*    width: 100%;*/
+/*    margin: 0 auto;*/
+/*    padding: 0 !important;*/
+/*    background-color: #fff;*/
+/*    border-radius: 8px;*/
+/*    box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;*/
+/*}*/
+
+/*:global(.rs-modal-header) {*/
+/*    border-bottom: 1px solid #e5e7eb;*/
+/*    padding: 12px 24px 12px 24px;*/
+/*    margin-bottom: 0;*/
+/*}*/
+
+/*:global(.rs-modal-body) {*/
+/*    padding: 12px 24px 12px 24px;*/
+/*    margin-top: 0;*/
+/*}*/
+
+/*:global(.rs-modal-footer) {*/
+/*    border-top: 1px solid #e5e7eb;*/
+/*    padding-top: 12px;*/
+/*    margin-top: 0;*/
+/*    padding-bottom: 12px;*/
+/*    padding-left: 24px;*/
+/*    padding-right: 24px;*/
+/*}*/
+/*:global(.rs-modal-footer) > * {*/
+/*    min-width: 60px;*/
+/*}*/

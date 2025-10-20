@@ -1,0 +1,76 @@
+.responsiveTable {
+    width: 100%;
+}
+
+@media only screen and (max-width: 760px),
+(min-device-width: 768px) and (max-device-width: 1024px) {
+
+    .responsiveTable table,
+    .responsiveTable thead,
+    .responsiveTable tbody,
+    .responsiveTable th,
+    .responsiveTable td,
+    .responsiveTable tr {
+        display: block;
+    }
+
+    .responsiveTable td {
+        display: flex;
+        align-items: center;
+        padding: 12px;
+    }
+
+    .responsiveTable thead {
+        display: none;
+    }
+
+    .responsiveTable thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+
+    .responsiveTable tr {
+        border-radius: 4px;
+        margin: 10px;
+        background: #f8f9fa;
+    }
+
+    .responsiveTable td {
+        border: none;
+        border-bottom: 1px solid #eee;
+        position: relative;
+        padding-left: 40%;
+    }
+
+    .responsiveTable td:before {
+        position: absolute;
+        top: 12px;
+        left: 6px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+    }
+
+    .responsiveTable td:nth-of-type(1):before {
+        content: "STT";
+        text-align: left;
+    }
+
+    .responsiveTable td:nth-of-type(2):before {
+        content: "Code";
+    }
+
+    .responsiveTable td:nth-of-type(3):before {
+        content: "Tên";
+    }
+
+    .responsiveTable td:nth-of-type(4):before {
+        content: "Đơn vị";
+        text-align: left;
+    }
+    .responsiveTable td:nth-of-type(5):before {
+        content: "Vai trò";
+        text-align: left;
+    }
+}
