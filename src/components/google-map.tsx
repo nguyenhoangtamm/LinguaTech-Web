@@ -14,7 +14,7 @@ type GoogleMapComponentProps = {
   handleClickMarker: (position: MapLocation) => void;
 };
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyDMPBInLIMw1I_Y8_psHpVf-FVeD66ONlo";
+const GOOGLE_MAPS_API_KEY = "";
 
 const containerStyle: React.CSSProperties = {
   height: "100vh",
