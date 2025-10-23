@@ -37,4 +37,11 @@ export const routes = {
         login: "/auth/login",
         accounts: "/accounts",
     },
+    user: {
+        dashboard: "/dashboard",
+        courses: "/courses",
+        coursesByCategory: "/courses/category",
+        coursesByTag: "/courses/tag",
+        courseDetail: "/courses/detail",
+    },
 };
