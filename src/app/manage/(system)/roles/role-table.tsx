@@ -7,22 +7,22 @@ import {
 import { getDisplayedRowCount, handleErrorApi } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { useSearchParams } from "next/navigation";
-import { Filter, PencilIcon } from "lucide-react";
+import { PencilIcon } from "lucide-react";
 import {
   RoleType,
   FilterRoleType,
 } from "@/schemaValidations/role.schema";
 import { useRoleListQuery, useDeleteRoleMutation } from "@/queries/useRole";
 import { Label } from "@/components/ui/label";
-import { IconButton, Input, Button } from "rsuite";
+import { IconButton, Input, Button, Badge } from "rsuite";
 import DeletePopover from "@/app/shared/delete-popover";
-import { Badge } from "@/components/ui/badge";
 import { PageHeaderProps } from "@/types/page-header-props.type";
 import { usePageHeader } from "@/hooks/use-page-header";
 import RoleForm from "./role-form";
 import { Transition } from "@headlessui/react";
 import Table, { TableColumn } from "@/app/shared/common/components/table";
 import BaseLayout from "@/layouts/BaseLayout";
+import FunnelIcon from '@rsuite/icons/Funnel';
 
 const PAGE_SIZE = 10;
 
@@ -41,11 +41,13 @@ export default function RoleTable({ title, breadcrumb }: PageHeaderProps) {
     keywords: filter.keywords,
   });
 
-  const { data, totalCount }: { data: RoleType[]; totalCount: number } =
-    roleListQuery.data ?? {
+  const listResult: { data: RoleType[]; totalCount: number } =
+    roleListQuery.data?.data ?? {
       data: [],
       totalCount: 0,
     };
+  const data: RoleType[] = listResult.data;
+  const totalCount: number = listResult.totalCount;
 
   const [activeSearch, setActiveSearch] = useState(false);
 
@@ -142,11 +144,10 @@ export default function RoleTable({ title, breadcrumb }: PageHeaderProps) {
       align: "center",
       render: (rowData: RoleType) => (
         <Badge
-          variant={rowData.priority ? "default" : "destructive"}
-          className="capitalize"
-        >
-          {rowData.priority ? "Ưu tiên" : "Không ưu tiên"}
-        </Badge>
+          color={rowData.priority ? "green" : "orange"}
+          content={rowData.priority ? "Ưu tiên" : "Không ưu tiên"}
+        />
+
       ),
     },
     {
@@ -205,7 +206,7 @@ export default function RoleTable({ title, breadcrumb }: PageHeaderProps) {
           className="bg-gray-100 border border-gray-200 rounded-md flex items-center justify-center hover:bg-gray-200 p-1 w-7 h-7"
           size="sm"
           appearance="subtle"
-          icon={<Filter fill="#223e5e" />}
+          icon={<FunnelIcon />}
           onClick={() => setFilterCollapsed(!filterCollapsed)}
         />
         <RoleForm onSubmitSuccess={roleListQuery.refetch} />

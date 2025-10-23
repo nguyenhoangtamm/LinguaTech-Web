@@ -70,7 +70,7 @@ export default function HorizontalMenu({ className }: { className?: string }) {
                                         <button
                                             onClick={() => handleDropdownToggle(item.name)}
                                             className={cn(
-                                                "flex items-center space-x-2 px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 border",
+                                                "flex items-center space-x-2 px-4 py-1 rounded-lg text-sm font-semibold transition-all duration-200 border",
                                                 isDropdownOpen
                                                     ? "bg-white text-primary border-white shadow-md"
                                                     : "text-white hover:bg-white hover:text-primary hover:border-white border-transparent"
@@ -93,7 +93,7 @@ export default function HorizontalMenu({ className }: { className?: string }) {
                                         {/* Dropdown Menu */}
                                         {openDropdown === item.name && (
                                             <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-gray-200 rounded-xl shadow-xl z-[9999] overflow-hidden header-dropdown">
-                                                <div className="py-2">
+                                                <div className="py-1">
                                                     {item?.children?.map((dropdownItem: any, childIndex: number) => {
                                                         const isChildActive = pathname === (dropdownItem?.url as string);
 

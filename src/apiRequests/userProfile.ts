@@ -11,7 +11,7 @@ const buildUrlWithParams = (baseUrl: string, params: Record<string, any>) => {
 };
 
 const userProfileApiRequest = {
-    me: () => http.get<ProfileResType>('Auth/me'),
+    me: () => http.get<ProfileResType>('Users/me'),
     getProfilesByUserName: () => http.get<UserProfilesResType>('userprofiles/get-user-profiles'),
     getPagination: (filters: { pageNumber: number; pageSize: number }) =>
         http.get<ProfileListResType>(

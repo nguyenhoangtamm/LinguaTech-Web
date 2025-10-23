@@ -38,14 +38,22 @@ export const RoleSchema = z.object({
 
 export type RoleType = z.TypeOf<typeof RoleSchema>;
 
-export const RoleListRes = z.object({
+export const RoleListResData = z.object({
   data: z.array(RoleSchema),
   totalCount: z.number(),
-  message: z.string(),
 });
 
-export type RoleListResType = z.TypeOf<typeof RoleListRes>;
+export type RoleListResDataType = z.TypeOf<typeof RoleListResData>;
 
+export const RoleListRes = z
+  .object({
+    data: RoleListResData,
+    message: z.string(),
+    successed: z.boolean(),
+    code: z.number(),
+  })
+  .strict();
+export type RoleListResType = z.TypeOf<typeof RoleListRes>;
 export const RoleRes = z
   .object({
     data: RoleSchema,

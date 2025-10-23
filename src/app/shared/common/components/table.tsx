@@ -258,7 +258,7 @@ const Table: React.FC<TableProps> = ({
                         boundaryLinks
                         maxButtons={3}
                         size="xs"
-                        layout={['-', 'pager', 'skip']}
+                        layout={['-', 'pager']}
                         total={totalCount}
                         limitOptions={[10, 30, 50]}
                         limit={pageSize}

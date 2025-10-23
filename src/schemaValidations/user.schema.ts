@@ -6,8 +6,13 @@ export const UserSchema = z.object({
     required_error: "Mã người dùng là bắt buộc",
     invalid_type_error: "Mã người dùng phải là số",
   }),
-
-  fullName: z
+  username: z
+    .string({
+      required_error: "Tên đăng nhập là bắt buộc",
+      invalid_type_error: "Tên đăng nhập phải là chuỗi",
+    })
+    .min(1, "Tên đăng nhập không được để trống"),
+  fullname: z
     .string({
       required_error: "Vui lòng nhập họ và tên",
       invalid_type_error: "Họ và tên phải là chuỗi",
@@ -94,8 +99,10 @@ const profileSchema = z.object({
 });
 export const profileResSchema = z
   .object({
-    data: profileSchema,
+    data: UserSchema,
     message: z.string(),
+    successed: z.boolean(),
+    code: z.number(),
   })
   .strict();
 export type ProfileResType = z.TypeOf<typeof profileResSchema>;

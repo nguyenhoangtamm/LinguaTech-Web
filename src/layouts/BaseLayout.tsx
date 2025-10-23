@@ -6,7 +6,7 @@ type Props = {
 
 export default function BaseLayout({ children }: Props) {
     return (
-        <div className="w-full flex flex-col" style={{ height: 'calc(100vh - 60px)' }}>
+        <div className="w-full flex flex-col" style={{ height: 'calc(100vh - 210px)' }}>
             {children}
         </div>
     );
