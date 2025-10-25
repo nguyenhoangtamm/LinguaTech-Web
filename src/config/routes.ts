@@ -34,7 +34,8 @@ export const routes = {
         },
     },
     auth: {
-        login: "/auth/login",
+        login: "/login",
+        register: "/register",
         accounts: "/accounts",
     },
     user: {

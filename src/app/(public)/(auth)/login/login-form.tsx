@@ -93,11 +93,11 @@ export default function LoginForm() {
         <div className="w-full max-w-md">
           <div className="flex flex-col items-center">
             <Link href={'/'} className=" inline-block max-w-[240px] lg:mb-9">
-              <Image src='/ltlogo.png' width={280} height={280} alt="LinguaTech" className="dark:invert" />
+              <Image src='/ltlogo.png' width={200} height={200} alt="LinguaTech" className="dark:invert" />
             </Link>
           </div>
           <h2 className="text-2xl font-semibold text-blue-900 mb-5 text-center">
-            LinguaTech - Quản lý dự án ngôn ngữ
+            LinguaTech - Học trực tuyến
           </h2>
           <Form {...form}>
             <form
@@ -187,6 +187,19 @@ export default function LoginForm() {
               </Button>
             </form>
           </Form>
+
+          {/* Footer - Link to Register */}
+          <div className="text-center mt-6">
+            <p className="text-gray-600">
+              Chưa có tài khoản?{" "}
+              <Link
+                href={routes.auth.register}
+                className="font-medium text-[#072442] hover:text-[#0a2d55] transition-colors duration-200"
+              >
+                Đăng ký ngay
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>

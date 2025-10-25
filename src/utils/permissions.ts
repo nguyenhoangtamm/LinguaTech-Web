@@ -71,7 +71,22 @@ export const USER_PATHS = ["/dashboard", "/courses", "/profile"] as const;
  * Kiểm tra xem một đường dẫn có khớp với pattern không
  */
 function matchPath(path: string, pattern: string): boolean {
-    // Chuyển đổi pattern thành regex
+    // Nếu pattern kết thúc bằng /**, thì cũng cho phép match exact path
+    // VD: /courses/** sẽ match cả /courses và /courses/something
+    if (pattern.endsWith("/**")) {
+        const basePath = pattern.slice(0, -3); // Remove /**
+        // Kiểm tra exact match với base path
+        if (path === basePath) {
+            return true;
+        }
+        // Kiểm tra match với sub paths
+        if (path.startsWith(basePath + "/")) {
+            return true;
+        }
+        return false;
+    }
+
+    // Chuyển đổi pattern thành regex cho các trường hợp khác
     const regexPattern = pattern
         .replace(/\*\*/g, ".*") // ** khớp với mọi thứ
         .replace(/\*/g, "[^/]*") // * khớp với segment đơn
@@ -79,6 +94,20 @@ function matchPath(path: string, pattern: string): boolean {
 
     const regex = new RegExp(`^${regexPattern}$`);
     return regex.test(path);
+}
+
+/**
+ * Lấy trang chủ mặc định dựa trên role
+ */
+export function getDefaultHomePage(userRole: RoleType): string {
+    switch (userRole) {
+        case Role.Admin:
+            return "/manage/roles";
+        case Role.User:
+            return "/dashboard";
+        default:
+            return "/dashboard";
+    }
 }
 
 /**
@@ -92,6 +121,12 @@ export function hasPermission(userRole: RoleType, path: string): boolean {
 
     const rolePermission = ROLE_PERMISSIONS[userRole];
     if (!rolePermission) return false;
+
+    // Luôn cho phép truy cập trang home mặc định của role đó
+    const homePage = getDefaultHomePage(userRole);
+    if (path === homePage) {
+        return true;
+    }
 
     // Kiểm tra đường dẫn bị hạn chế
     const isRestricted = rolePermission.restrictedPaths.some((restrictedPath) =>
@@ -119,20 +154,6 @@ export function isAdmin(userRole: RoleType): boolean {
  */
 export function isUser(userRole: RoleType): boolean {
     return userRole === Role.User;
-}
-
-/**
- * Lấy trang chủ mặc định dựa trên role
- */
-export function getDefaultHomePage(userRole: RoleType): string {
-    switch (userRole) {
-        case Role.Admin:
-            return "/manage/roles";
-        case Role.User:
-            return "/dashboard";
-        default:
-            return "/dashboard";
-    }
 }
 
 /**

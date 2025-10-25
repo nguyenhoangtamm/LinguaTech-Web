@@ -1,5 +1,10 @@
 import http from "@/lib/http";
-import { LoginBodyType, LoginResType } from "@/schemaValidations/auth.schema";
+import {
+    LoginBodyType,
+    LoginResType,
+    RegisterBodyType,
+    RegisterResType,
+} from "@/schemaValidations/auth.schema";
 import { MessageResType } from "@/schemaValidations/common.schema";
 
 const authApiRequest = {
@@ -9,6 +14,12 @@ const authApiRequest = {
         }),
     login: (body: LoginBodyType) =>
         http.post<LoginResType>("/api/auth/login", body, { baseUrl: "" }),
+    register: (body: RegisterBodyType) =>
+        http.post<RegisterResType>("/api/auth/register", body, { baseUrl: "" }),
+    SRegister: (body: RegisterBodyType) =>
+        http.post<RegisterResType>("/auth/register", body, {
+            baseUrl: "http://localhost:5013/api/v1",
+        }),
     logoutFromNextServerToServer: ({
         accessToken,
         refreshToken,

@@ -63,6 +63,13 @@ export function middleware(request: NextRequest) {
     if (!hasPermission(userRole, pathname)) {
         // Không có quyền, redirect về trang chủ phù hợp với role
         const homePage = getDefaultHomePage(userRole);
+
+        // Tránh vòng lặp redirect nếu trang home cũng không có quyền
+        if (pathname === homePage) {
+            // Nếu đang ở trang home mà vẫn không có quyền, redirect về dashboard mặc định
+            return NextResponse.redirect(new URL("/dashboard", request.url));
+        }
+
         return NextResponse.redirect(new URL(homePage, request.url));
     }
 
