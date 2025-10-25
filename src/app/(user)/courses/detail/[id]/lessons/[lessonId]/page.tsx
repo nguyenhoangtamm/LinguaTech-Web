@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { routes } from "@/config/routes";
+import { mockAssignments } from "@/data/assignments";
 
 // Mock lesson data
 const mockLessons = [
@@ -50,81 +51,179 @@ const mockCurrentLesson = {
     duration: 45,
     completed: false,
     moduleId: "mod1",
-    content: `
-# Giới thiệu về Advanced Patterns trong React
-
-## Tổng quan
-Advanced Patterns trong React là những kỹ thuật và mẫu thiết kế giúp chúng ta viết code React hiệu quả hơn, dễ maintain và có thể tái sử dụng.
-
-## Các Pattern chính
-
-### 1. Higher-Order Components (HOC)
-Higher-Order Component là một function nhận vào một component và trả về một component mới với các tính năng bổ sung.
-
-\`\`\`jsx
-function withLoading(WrappedComponent) {
-  return function WithLoadingComponent(props) {
-    if (props.isLoading) {
-      return <div>Loading...</div>;
-    }
-    return <WrappedComponent {...props} />;
-  };
-}
-\`\`\`
-
-### 2. Render Props
-Render Props là một kỹ thuật chia sẻ code giữa các React components bằng cách sử dụng một prop có giá trị là function.
-
-\`\`\`jsx
-function Mouse({ render }) {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  
-  // Logic xử lý mouse movement
-  
-  return render(position);
-}
-\`\`\`
-
-### 3. Compound Components
-Compound Components cho phép tạo ra các components có thể kết hợp với nhau một cách linh hoạt.
-
-## Bài tập thực hành
-1. Tạo một HOC để thêm authentication cho components
-2. Xây dựng một component sử dụng render props pattern
-3. Thiết kế một compound component cho dropdown menu
-    `,
     materials: [
         { id: "m1", fileName: "slides-intro.pdf", fileUrl: "/files/slides-intro.pdf", fileType: "pdf", size: 1200 },
         { id: "m2", fileName: "code-samples.zip", fileUrl: "/files/code-samples.zip", fileType: "zip", size: 20480 }
     ],
-    exercises: [
+    sections: [
         {
-            id: "ex1",
-            title: "Xây dựng HOC đầu tiên",
-            description: "Tạo một Higher-Order Component để thêm loading state cho các component",
-            difficulty: "medium"
+            id: "s1",
+            title: "Tổng quan",
+            order: 1,
+            content: `
+# Tổng quan
+
+Advanced Patterns trong React là những kỹ thuật và mẫu thiết kế giúp chúng ta viết code React hiệu quả hơn, dễ maintain và có thể tái sử dụng.
+
+Các pattern này là những cách tinh tế để tổ chức và chia sẻ logic component. Chúng rất hữu ích khi bạn cần:
+- Tái sử dụng logic giữa các components
+- Tránh prop drilling (prop drilling là khi bạn phải truyền prop qua nhiều component để đạt được component con)
+- Làm code dễ đọc và dễ maintain hơn
+            `
+        },
+        {
+            id: "s2",
+            title: "Higher-Order Components (HOC)",
+            order: 2,
+            content: `
+# Higher-Order Components (HOC)
+
+## Định nghĩa
+Higher-Order Component là một function nhận vào một component và trả về một component mới với các tính năng bổ sung.
+
+\`\`\`jsx
+const EnhancedComponent = higherOrderComponent(OriginalComponent);
+\`\`\`
+
+## Ví dụ cơ bản - withLoading HOC
+
+\`\`\`jsx
+function withLoading(WrappedComponent) {
+  return function WithLoadingComponent({ isLoading, ...props }) {
+    if (isLoading) {
+      return <div className="flex items-center justify-center p-4">
+        <div className="animate-spin">Loading...</div>
+      </div>;
+    }
+    return <WrappedComponent {...props} />;
+  };
+}
+
+// Sử dụng
+function UserList({ users }) {
+  return <ul>{users.map(u => <li key={u.id}>{u.name}</li>)}</ul>;
+}
+
+const UserListWithLoading = withLoading(UserList);
+
+// Trong component
+<UserListWithLoading isLoading={true} />
+\`\`\`
+
+## Lợi ích
+- **Tái sử dụng logic**: Một HOC có thể được sử dụng với nhiều components
+- **Abstraction**: Logic phức tạp được ẩn đi
+- **Props manipulation**: HOC có thể thêm, xoá, hoặc thay đổi props
+            `
+        },
+        {
+            id: "s3",
+            title: "Render Props Pattern",
+            order: 3,
+            content: `
+# Render Props Pattern
+
+## Định nghĩa
+Render Props là một kỹ thuật chia sẻ code giữa các React components bằng cách sử dụng một prop có giá trị là function.
+
+\`\`\`jsx
+<Mouse render={mouse => (
+  <h1>The mouse is at {mouse.x}, {mouse.y}</h1>
+)}/>
+\`\`\`
+
+## Ví dụ cơ bản - Mouse Tracker
+
+\`\`\`jsx
+class Mouse extends React.Component {
+  state = { x: 0, y: 0 };
+
+  handleMouseMove = (event) => {
+    this.setState({
+      x: event.clientX,
+      y: event.clientY
+    });
+  }
+
+  render() {
+    return (
+      <div style={{ height: '100vh' }} onMouseMove={this.handleMouseMove}>
+        {this.props.render(this.state)}
+      </div>
+    );
+  }
+}
+
+// Sử dụng
+<Mouse render={({ x, y }) => (
+  <h1>The mouse position is ({x}, {y})</h1>
+)}/>
+\`\`\`
+
+## Lợi ích
+- **Linh hoạt**: Component chứa logic có thể render bất cứ gì
+- **Tránh nesting**: Tránh "wrapper hell" so với HOC
+- **Dễ hiểu**: Rõ ràng logic nào được chia sẻ
+            `
+        },
+        {
+            id: "s4",
+            title: "Compound Components",
+            order: 4,
+            content: `
+# Compound Components Pattern
+
+## Định nghĩa
+Compound Components cho phép tạo ra các components có liên quan kết hợp với nhau để tạo một API linh hoạt.
+
+## Ví dụ - Select Component
+
+\`\`\`jsx
+// Định nghĩa
+const SelectContext = React.createContext();
+
+function Select({ value, onChange, children }) {
+  return (
+    <SelectContext.Provider value={{ value, onChange }}>
+      <div className="select-container">
+        {children}
+      </div>
+    </SelectContext.Provider>
+  );
+}
+
+function SelectOption({ value, children }) {
+  const { value: selectedValue, onChange } = useContext(SelectContext);
+  
+  return (
+    <div
+      className={selectedValue === value ? "selected" : ""}
+      onClick={() => onChange(value)}
+    >
+      {children}
+    </div>
+  );
+}
+
+// Sử dụng
+<Select value={country} onChange={setCountry}>
+  <SelectOption value="us">United States</SelectOption>
+  <SelectOption value="uk">United Kingdom</SelectOption>
+  <SelectOption value="ca">Canada</SelectOption>
+</Select>
+\`\`\`
+
+## Lợi ích
+- **Linh hoạt**: Child components có thể được sắp xếp theo bất kỳ cách nào
+- **Dễ sử dụng**: API rõ ràng và trực quan
+- **Composable**: Dễ dàng thêm tính năng mới
+            `
         }
-    ],
-    notes: []
+    ]
 };
 
-const mockUserNotes = [
-    {
-        id: "note1",
-        timestamp: 120,
-        content: "HOC là một pattern rất hữu ích để tái sử dụng logic",
-        createdAt: new Date()
-    },
-    {
-        id: "note2",
-        timestamp: 300,
-        content: "Cần nhớ về việc forward refs khi sử dụng HOC",
-        createdAt: new Date()
-    }
-];
-
 // Separate components for each section that can load independently
-const ContentSection = ({ lesson, isLoading }: { lesson: any, isLoading: boolean }) => {
+const ContentSection = ({ section, isLoading }: { section: any, isLoading: boolean }) => {
     const [fontSize, setFontSize] = useState(16);
     const [isBookmarked, setIsBookmarked] = useState(false);
 
@@ -144,11 +243,10 @@ const ContentSection = ({ lesson, isLoading }: { lesson: any, isLoading: boolean
 
     return (
         <div className="space-y-6">
-            {/* Content Header */}
+            {/* Section Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold mb-2">{lesson.title}</h1>
-                    <p className="text-gray-600">{lesson.description}</p>
+                    <h1 className="text-2xl font-bold mb-2">{section.title}</h1>
                 </div>
                 <div className="flex items-center gap-2">
                     <Button
@@ -179,71 +277,61 @@ const ContentSection = ({ lesson, isLoading }: { lesson: any, isLoading: boolean
                 </div>
             </div>
 
-            {/* Reading Progress */}
-            <div className="bg-blue-50 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-blue-700">Tiến độ đọc</span>
-                    <span className="text-sm text-blue-600">Thời gian đọc ước tính: {lesson.duration} phút</span>
-                </div>
-                <Progress value={30} className="h-2" />
-            </div>
-
             {/* Main Content */}
             <Card>
-                <CardContent className="p-8">
+                <CardContent className="p-8 overflow-y-auto">
                     <div
-                        className="prose prose-lg max-w-none"
+                        className="prose prose-sm sm:prose-base max-w-none"
                         style={{ fontSize: `${fontSize}px` }}
-                        dangerouslySetInnerHTML={{
-                            __html: lesson.content
-                                .replace(/^# /gm, '<h1 class="text-3xl font-bold mb-4 text-gray-900">')
-                                .replace(/^## /gm, '<h2 class="text-2xl font-semibold mb-3 text-gray-800 mt-8">')
-                                .replace(/^### /gm, '<h3 class="text-xl font-medium mb-2 text-gray-700 mt-6">')
-                                .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')
-                                .replace(/`([^`]+)`/g, '<code class="bg-gray-100 px-2 py-1 rounded text-sm font-mono">$1</code>')
-                                .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto my-4"><code>$2</code></pre>')
-                                .replace(/\n\n/g, '</p><p class="mb-4">')
-                                .replace(/^\d+\./gm, '</p><li class="mb-2">')
-                                .replace(/^- /gm, '</p><li class="mb-1 ml-4">')
-                        }}
-                    />
+                    >
+                        {section.content.split('\n').map((line: string, idx: number) => {
+                            // Heading 1
+                            if (line.startsWith('# ')) {
+                                return <h1 key={idx} className="text-3xl font-bold mb-4 mt-6 text-gray-900">{line.replace(/^# /, '')}</h1>;
+                            }
+                            // Heading 2
+                            if (line.startsWith('## ')) {
+                                return <h2 key={idx} className="text-2xl font-semibold mb-3 mt-8 text-gray-800">{line.replace(/^## /, '')}</h2>;
+                            }
+                            // Heading 3
+                            if (line.startsWith('### ')) {
+                                return <h3 key={idx} className="text-xl font-medium mb-2 mt-6 text-gray-700">{line.replace(/^### /, '')}</h3>;
+                            }
+                            // Code block - handle triple backticks
+                            if (line.startsWith('```')) {
+                                const codeBlockMatch = section.content.substring(section.content.indexOf(line));
+                                const match = codeBlockMatch.match(/```(\w+)?\n([\s\S]*?)\n```/);
+                                if (match) {
+                                    return (
+                                        <pre key={idx} className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto my-4">
+                                            <code>{match[2]}</code>
+                                        </pre>
+                                    );
+                                }
+                            }
+                            // List items
+                            if (line.startsWith('- ')) {
+                                return <li key={idx} className="ml-6 mb-2 text-gray-700">{line.replace(/^- /, '')}</li>;
+                            }
+                            if (line.match(/^\d+\./)) {
+                                return <li key={idx} style={{ listStyleType: 'decimal' }} className="ml-6 mb-2 text-gray-700">{line.replace(/^\d+\.\s*/, '')}</li>;
+                            }
+                            // Empty line
+                            if (line.trim() === '') {
+                                return <div key={idx} className="mb-2"></div>;
+                            }
+                            // Regular paragraph
+                            return <p key={idx} className="text-gray-700 mb-4 leading-relaxed">{line}</p>;
+                        })}
+                    </div>
                 </CardContent>
             </Card>
-
-            {/* Interactive Elements */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-lg">💡 Điểm quan trọng</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-sm text-gray-700">
-                            Higher-Order Components là một pattern mạnh mẽ để tái sử dụng logic component.
-                            Hãy nhớ luôn forward refs khi cần thiết.
-                        </p>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-lg">🎯 Bài tập</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-sm text-gray-700 mb-3">
-                            Hãy thử tạo một HOC để thêm loading state cho bất kỳ component nào.
-                        </p>
-                        <Button size="sm" variant="outline">
-                            Xem đáp án
-                        </Button>
-                    </CardContent>
-                </Card>
-            </div>
         </div>
     );
-}; const NotesSection = ({ notes, isLoading }: { notes: any[], isLoading: boolean }) => {
-    const [newNote, setNewNote] = useState("");
-    const [currentTimestamp, setCurrentTimestamp] = useState(120);
+};
 
+// Assignment section component
+const AssignmentsSection = ({ assignments, lessonId, courseId, isLoading }: { assignments: any[], lessonId: string, courseId: string, isLoading: boolean }) => {
     if (isLoading) {
         return (
             <div className="p-4">
@@ -255,50 +343,98 @@ const ContentSection = ({ lesson, isLoading }: { lesson: any, isLoading: boolean
         );
     }
 
+    const lessonAssignments = assignments.filter(a => a.lessonId === lessonId && !a.isDeleted);
+
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center">
-                <h3 className="font-medium">Ghi chú của tôi</h3>
-                <Button size="sm">
-                    <PenTool className="w-4 h-4 mr-2" />
-                    Thêm ghi chú
-                </Button>
+                <h3 className="font-medium">Bài tập</h3>
+                <Badge variant="secondary">{lessonAssignments.length} bài</Badge>
             </div>
 
-            {/* Add Note Form */}
-            <div className="border rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-3 text-sm text-gray-600">
-                    <Clock className="w-4 h-4" />
-                    <span>Thời điểm: {Math.floor(currentTimestamp / 60)}:{(currentTimestamp % 60).toString().padStart(2, '0')}</span>
+            {lessonAssignments.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                    <HelpCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p>Chưa có bài tập nào</p>
                 </div>
-                <textarea
-                    value={newNote}
-                    onChange={(e) => setNewNote(e.target.value)}
-                    placeholder="Nhập ghi chú tại thời điểm này..."
-                    className="w-full p-3 border rounded-lg resize-none"
-                    rows={3}
-                />
-                <div className="flex justify-end gap-2 mt-2">
-                    <Button variant="outline" size="sm">Hủy</Button>
-                    <Button size="sm">Lưu ghi chú</Button>
-                </div>
-            </div>
+            ) : (
+                <div className="space-y-3">
+                    {lessonAssignments.map(assignment => {
+                        const totalQuestions = assignment.questions?.length || 0;
+                        const essayQuestions = assignment.questions?.filter((q: any) => q.questionTypeId === "essay").length || 0;
+                        const multipleChoiceQuestions = assignment.questions?.filter((q: any) => q.questionTypeId === "multiple_choice").length || 0;
+                        const isCompleted = assignment.completionDate !== null;
+                        const isOverdue = new Date() > new Date(assignment.dueDate) && !isCompleted;
 
-            {/* Existing Notes */}
-            <div className="space-y-3">
-                {notes.map(note => (
-                    <div key={note.id} className="border rounded-lg p-4">
-                        <div className="flex justify-between items-start mb-2">
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                                <StickyNote className="w-4 h-4" />
-                                <span>{Math.floor(note.timestamp / 60)}:{(note.timestamp % 60).toString().padStart(2, '0')}</span>
+                        return (
+                            <div key={assignment.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                                <div className="flex justify-between items-start mb-3">
+                                    <div className="flex-1">
+                                        <h4 className="font-medium text-sm mb-1">{assignment.title}</h4>
+                                        <p className="text-xs text-gray-600 mb-2">{assignment.description}</p>
+
+                                        {/* Assignment Stats */}
+                                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                                            <span className="flex items-center gap-1">
+                                                <HelpCircle className="w-3 h-3" />
+                                                {totalQuestions} câu hỏi
+                                            </span>
+                                            {essayQuestions > 0 && (
+                                                <span className="flex items-center gap-1">
+                                                    <FileText className="w-3 h-3" />
+                                                    {essayQuestions} tự luận
+                                                </span>
+                                            )}
+                                            {multipleChoiceQuestions > 0 && (
+                                                <span className="flex items-center gap-1">
+                                                    <CheckCircle className="w-3 h-3" />
+                                                    {multipleChoiceQuestions} trắc nghiệm
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Status Badge */}
+                                    <div className="ml-2">
+                                        {isCompleted ? (
+                                            <Badge variant="default" className="bg-green-100 text-green-700">
+                                                Hoàn thành
+                                            </Badge>
+                                        ) : isOverdue ? (
+                                            <Badge variant="destructive">
+                                                Quá hạn
+                                            </Badge>
+                                        ) : (
+                                            <Badge variant="outline">
+                                                Chưa làm
+                                            </Badge>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Due Date */}
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                                        <Clock className="w-3 h-3" />
+                                        <span>Hạn nộp: {new Date(assignment.dueDate).toLocaleDateString('vi-VN')}</span>
+                                    </div>
+
+                                    {/* Action Button */}
+                                    <Button
+                                        size="sm"
+                                        variant={isCompleted ? "outline" : "default"}
+                                        asChild
+                                    >
+                                        <Link href={`/courses/detail/${courseId}/lessons/${lessonId}/assignments/${assignment.id}`}>
+                                            {isCompleted ? "Xem lại" : "Làm bài"}
+                                        </Link>
+                                    </Button>
+                                </div>
                             </div>
-                            <Button variant="ghost" size="sm">Xóa</Button>
-                        </div>
-                        <p className="text-gray-700">{note.content}</p>
-                    </div>
-                ))}
-            </div>
+                        );
+                    })}
+                </div>
+            )}
         </div>
     );
 };
@@ -391,11 +527,12 @@ export default function LessonDetailPage() {
 
     const [lesson, setLesson] = useState<any>(null);
     const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [rightPanelOpen, setRightPanelOpen] = useState(true);
+    const [selectedSectionId, setSelectedSectionId] = useState<string>("s1");
     const [loadingStates, setLoadingStates] = useState({
         content: true,
-        notes: true,
         materials: true,
-        summary: true
+        assignments: true
     });
 
     useEffect(() => {
@@ -412,12 +549,8 @@ export default function LessonDetailPage() {
         }, 1500);
 
         setTimeout(() => {
-            setLoadingStates(prev => ({ ...prev, notes: false }));
+            setLoadingStates(prev => ({ ...prev, assignments: false }));
         }, 2000);
-
-        setTimeout(() => {
-            setLoadingStates(prev => ({ ...prev, summary: false }));
-        }, 2500);
     }, [courseId, lessonId]);
 
     if (!lesson) {
@@ -435,11 +568,11 @@ export default function LessonDetailPage() {
 
     return (
         <div className="flex h-screen bg-gray-50">
-            {/* Sidebar - Lesson List */}
+            {/* Sidebar - Lesson Sections */}
             <div className={`${sidebarOpen ? 'w-80' : 'w-0'} transition-all duration-300 overflow-hidden bg-white border-r`}>
                 <div className="p-4 border-b">
                     <div className="flex items-center justify-between">
-                        <h3 className="font-semibold">Danh sách bài học</h3>
+                        <h3 className="font-semibold">Nội dung bài học</h3>
                         <Button
                             variant="ghost"
                             size="sm"
@@ -450,24 +583,16 @@ export default function LessonDetailPage() {
                     </div>
                 </div>
                 <div className="p-4 space-y-2 max-h-96 overflow-y-auto">
-                    {mockLessons.map((l, index) => (
-                        <Link
-                            key={l.id}
-                            href={`/courses/detail/${courseId}/lessons/${l.id}`}
-                            className={`block p-3 rounded-lg border hover:bg-gray-50 ${l.id === lessonId ? 'bg-blue-50 border-blue-200' : ''
+                    {lesson?.sections?.map((section: any) => (
+                        <button
+                            key={section.id}
+                            onClick={() => setSelectedSectionId(section.id)}
+                            className={`w-full text-left p-3 rounded-lg border hover:bg-gray-50 transition-colors ${selectedSectionId === section.id ? 'bg-blue-50 border-blue-200' : ''
                                 }`}
                         >
-                            <div className="flex items-center gap-3">
-                                <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-xs font-medium">
-                                    {index + 1}
-                                </div>
-                                <div className="flex-1">
-                                    <p className="font-medium text-sm">{l.title}</p>
-                                    <p className="text-xs text-gray-600">{l.duration} phút</p>
-                                </div>
-                                {l.completed && <CheckCircle className="w-4 h-4 text-green-500" />}
-                            </div>
-                        </Link>
+                            <div className="font-medium text-sm">{section.title}</div>
+                            <div className="text-xs text-gray-500 mt-1">Phần {section.order}</div>
+                        </button>
                     ))}
                 </div>
             </div>
@@ -513,10 +638,18 @@ export default function LessonDetailPage() {
                 </div>
 
                 {/* Content Area */}
-                <div className="flex-1 grid grid-cols-3 gap-6 p-6 overflow-hidden">
+                <div className="flex-1 grid gap-6 p-6 overflow-hidden" style={{
+                    gridTemplateColumns: rightPanelOpen ? '1fr 1fr' : '1fr',
+                    transition: 'grid-template-columns 0.3s ease-in-out'
+                }}>
                     {/* Left Column - Content */}
-                    <div className="col-span-2 space-y-6">
-                        <ContentSection lesson={lesson} isLoading={loadingStates.content} />
+                    <div className="space-y-6 overflow-y-auto">
+                        {lesson?.sections && (
+                            <ContentSection
+                                section={lesson.sections.find((s: any) => s.id === selectedSectionId) || lesson.sections[0]}
+                                isLoading={loadingStates.content}
+                            />
+                        )}
 
                         {/* Navigation */}
                         <div className="flex justify-between">
@@ -549,40 +682,65 @@ export default function LessonDetailPage() {
                         </div>
                     </div>
 
-                    {/* Right Column - Tabs */}
-                    <div className="space-y-6">
-                        <Tabs defaultValue="notes" className="w-full">
-                            <TabsList className="grid w-full grid-cols-3">
-                                <TabsTrigger value="notes">Ghi chú</TabsTrigger>
-                                <TabsTrigger value="materials">Tài liệu</TabsTrigger>
-                                <TabsTrigger value="summary">Tóm tắt</TabsTrigger>
-                            </TabsList>
+                    {/* Right Column - Tabs with Toggle */}
+                    {rightPanelOpen && (
+                        <div className="space-y-6 overflow-y-auto border-l">
+                            <div className="flex items-center justify-between pl-6 pt-6">
+                                <h3 className="font-medium">Bảng điều khiển</h3>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setRightPanelOpen(false)}
+                                >
+                                    <ChevronDown className="w-4 h-4" />
+                                </Button>
+                            </div>
 
-                            <TabsContent value="notes" className="mt-4">
-                                <Card>
-                                    <CardContent className="p-4">
-                                        <NotesSection notes={mockUserNotes} isLoading={loadingStates.notes} />
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
+                            <div className="px-6">
+                                <Tabs defaultValue="assignments" className="w-full">
+                                    <TabsList className="grid w-full grid-cols-2">
+                                        <TabsTrigger value="assignments">Bài tập</TabsTrigger>
+                                        <TabsTrigger value="materials">Tài liệu</TabsTrigger>
+                                    </TabsList>
 
-                            <TabsContent value="materials" className="mt-4">
-                                <Card>
-                                    <CardContent className="p-4">
-                                        <MaterialsSection materials={lesson.materials} isLoading={loadingStates.materials} />
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
+                                    <TabsContent value="assignments" className="mt-4">
+                                        <Card>
+                                            <CardContent className="p-4">
+                                                <AssignmentsSection
+                                                    assignments={mockAssignments}
+                                                    lessonId={lessonId as string}
+                                                    courseId={courseId as string}
+                                                    isLoading={loadingStates.assignments}
+                                                />
+                                            </CardContent>
+                                        </Card>
+                                    </TabsContent>
 
-                            <TabsContent value="summary" className="mt-4">
-                                <Card>
-                                    <CardContent className="p-4">
-                                        <ReadingNotesSection lesson={lesson} isLoading={loadingStates.summary} />
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
-                        </Tabs>
-                    </div>
+                                    <TabsContent value="materials" className="mt-4">
+                                        <Card>
+                                            <CardContent className="p-4">
+                                                <MaterialsSection materials={lesson.materials} isLoading={loadingStates.materials} />
+                                            </CardContent>
+                                        </Card>
+                                    </TabsContent>
+                                </Tabs>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Right Panel Toggle Button when hidden */}
+                    {!rightPanelOpen && (
+                        <div className="fixed right-4 top-1/2 transform -translate-y-1/2 z-10">
+                            <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => setRightPanelOpen(true)}
+                                className="shadow-lg"
+                            >
+                                <ChevronUp className="w-4 h-4" />
+                            </Button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

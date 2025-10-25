@@ -47,5 +47,11 @@ export const routes = {
         courseLearn: (courseId: string) => `/courses/detail/${courseId}/learn`,
         lesson: (courseId: string, lessonId: string) =>
             `/courses/detail/${courseId}/lessons/${lessonId}`,
+        assignment: (
+            courseId: string,
+            lessonId: string,
+            assignmentId: string
+        ) =>
+            `/courses/detail/${courseId}/lessons/${lessonId}/assignments/${assignmentId}`,
     },
 };
