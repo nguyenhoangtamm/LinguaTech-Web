@@ -15,6 +15,12 @@ export const useLoginMutation = () => {
   });
 };
 
+export const useRefreshTokenMutation = () => {
+  return useMutation({
+    mutationFn: authApiRequest.refreshTokenFromNextServer,
+  });
+};
+
 export const useRegisterMutation = () => {
   return useMutation({
     mutationFn: authApiRequest.register,

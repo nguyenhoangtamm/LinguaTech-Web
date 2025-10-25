@@ -6,6 +6,7 @@ import { useUserProfileMeQuery } from "@/queries/useUserProfile";
 import { jwtDecode } from 'jwt-decode'
 import type { TokenPayload, RoleType } from '@/types/jwt.types'
 import { convertRoleIdToRole } from '@/utils/role-converter'
+import { useTokenRefresh } from '@/hooks/use-token-refresh'
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -50,26 +51,76 @@ function Provider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<TokenPayload | null>(null)
     const [hasProfileCode, setHasProfileCode] = useState<boolean>(true);
 
+    const { startTokenRefreshCycle, stopTokenRefreshCycle } = useTokenRefresh();
+
     useUserProfileMeQuery({
         enabled: isAuth
     })
 
     useLayoutEffect(() => {
         const accessToken = localStorage.getItem('accessToken')
+        const refreshToken = localStorage.getItem('refreshToken')
+
         if (accessToken) {
             try {
                 const decoded = jwtDecode<TokenPayload>(accessToken)
                 // Kiểm tra token đã hết hạn chưa
                 const currentTime = Math.floor(Date.now() / 1000)
-                if (decoded.exp > currentTime) {
+                const timeUntilExpiry = decoded.exp - currentTime
+
+                if (timeUntilExpiry > 0) {
                     setIsAuth(true)
                     setUser(decoded)
                     // Convert RoleId thành role string
                     const role = convertRoleIdToRole(decoded.RoleId)
                     setUserRole(role)
                     setUserId(decoded.userId)
+
+                    // Bắt đầu chu kỳ auto refresh token
+                    startTokenRefreshCycle(accessToken)
+                } else if (refreshToken) {
+                    // Token hết hạn nhưng có refresh token, thử refresh
+                    fetch('/api/auth/refresh-token', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ refreshToken })
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.data) {
+                                const { accessToken: newAccessToken, refreshToken: newRefreshToken } = data.data
+                                localStorage.setItem('accessToken', newAccessToken)
+                                localStorage.setItem('refreshToken', newRefreshToken)
+
+                                const newDecoded = jwtDecode<TokenPayload>(newAccessToken)
+                                setIsAuth(true)
+                                setUser(newDecoded)
+                                const role = convertRoleIdToRole(newDecoded.RoleId)
+                                setUserRole(role)
+                                setUserId(newDecoded.userId)
+                            } else {
+                                // Refresh failed, clear tokens
+                                localStorage.removeItem('accessToken')
+                                localStorage.removeItem('refreshToken')
+                                setIsAuth(false)
+                                setUser(null)
+                                setUserRole(null)
+                                setUserId(null)
+                            }
+                        })
+                        .catch(() => {
+                            // Refresh failed, clear tokens
+                            localStorage.removeItem('accessToken')
+                            localStorage.removeItem('refreshToken')
+                            setIsAuth(false)
+                            setUser(null)
+                            setUserRole(null)
+                            setUserId(null)
+                        })
                 } else {
-                    // Token hết hạn, xóa nó
+                    // Token hết hạn và không có refresh token, xóa nó
                     localStorage.removeItem('accessToken')
                     setIsAuth(false)
                     setUser(null)
@@ -79,13 +130,14 @@ function Provider({ children }: { children: React.ReactNode }) {
             } catch (error) {
                 // Token không hợp lệ
                 localStorage.removeItem('accessToken')
+                localStorage.removeItem('refreshToken')
                 setIsAuth(false)
                 setUser(null)
                 setUserRole(null)
                 setUserId(null)
             }
         }
-    }, [])
+    }, [startTokenRefreshCycle])
 
     return (
         <AppContext.Provider

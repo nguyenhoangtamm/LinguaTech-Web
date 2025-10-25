@@ -70,6 +70,7 @@ export function useAuth() {
      */
     const logout = () => {
         localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
         setUser(null);
         setUserRole(null);
         setError(null);

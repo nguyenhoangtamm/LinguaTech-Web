@@ -4,6 +4,8 @@ import {
     LoginResType,
     RegisterBodyType,
     RegisterResType,
+    RefreshTokenBodyType,
+    RefreshTokenResType,
 } from "@/schemaValidations/auth.schema";
 import { MessageResType } from "@/schemaValidations/common.schema";
 
@@ -47,6 +49,14 @@ const authApiRequest = {
         http.post<MessageResType>("/api/auth/logout", body, {
             baseUrl: "",
             signal,
+        }),
+    refreshToken: (body: RefreshTokenBodyType) =>
+        http.post<RefreshTokenResType>("/auth/refresh-token", body, {
+            baseUrl: "http://localhost:5013/api/v1",
+        }),
+    refreshTokenFromNextServer: (body: RefreshTokenBodyType) =>
+        http.post<RefreshTokenResType>("/api/auth/refresh-token", body, {
+            baseUrl: "",
         }),
 };
 
