@@ -44,5 +44,8 @@ export const routes = {
         coursesByCategory: "/courses/category",
         coursesByTag: "/courses/tag",
         courseDetail: "/courses/detail",
+        courseLearn: (courseId: string) => `/courses/detail/${courseId}/learn`,
+        lesson: (courseId: string, lessonId: string) =>
+            `/courses/detail/${courseId}/lessons/${lessonId}`,
     },
 };

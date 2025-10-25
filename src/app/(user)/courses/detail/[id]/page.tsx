@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import Image from "next/image";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -44,16 +45,46 @@ const mockCourse: Course = {
     isPublished: true
 };
 
-const mockLessons = [
-    { id: "1", title: "Giới thiệu về Advanced Patterns", duration: 45, completed: true },
-    { id: "2", title: "Custom Hooks và Logic Reuse", duration: 52, completed: true },
-    { id: "3", title: "Context API và Provider Pattern", duration: 38, completed: false },
-    { id: "4", title: "Performance Optimization với React.memo", duration: 41, completed: false },
-    { id: "5", title: "Code Splitting và Lazy Loading", duration: 35, completed: false },
-    { id: "6", title: "Error Boundaries và Error Handling", duration: 29, completed: false },
-    { id: "7", title: "Testing Advanced Components", duration: 47, completed: false },
-    { id: "8", title: "Production Deployment Best Practices", duration: 33, completed: false }
+// Mock data aligned with DB layout: Modules -> Lessons -> LessonMaterials -> Materials
+const mockMaterials = [
+    { id: "m1", fileName: "slides-intro.pdf", fileUrl: "/files/slides-intro.pdf", fileType: "pdf", size: 1200 },
+    { id: "m2", fileName: "code-samples.zip", fileUrl: "/files/code-samples.zip", fileType: "zip", size: 20480 },
+    { id: "m3", fileName: "reading-advanced.md", fileUrl: "/files/reading-advanced.md", fileType: "md", size: 48 }
 ];
+
+const mockModules = [
+    {
+        id: "mod1",
+        title: "Phần 1: Cơ sở và pattern",
+        order: 1,
+        lessons: [
+            { id: "l1", title: "Giới thiệu về Advanced Patterns", duration: 45, completed: true, materials: ["m1"] },
+            { id: "l2", title: "Custom Hooks và Logic Reuse", duration: 52, completed: true, materials: ["m2"] }
+        ]
+    },
+    {
+        id: "mod2",
+        title: "Phần 2: Performance và Production",
+        order: 2,
+        lessons: [
+            { id: "l3", title: "Performance Optimization với React.memo", duration: 41, completed: false, materials: ["m3"] },
+            { id: "l4", title: "Code Splitting và Lazy Loading", duration: 35, completed: false, materials: [] },
+            { id: "l5", title: "Testing Advanced Components", duration: 47, completed: false, materials: [] }
+        ]
+    }
+];
+
+// Flattened list of lessons (for legacy places that expect mockLessons)
+const mockLessons = mockModules.flatMap((m) =>
+    m.lessons.map((l) => ({ id: l.id, title: l.title, duration: l.duration, completed: l.completed }))
+);
+
+const mockCourseMaterials = [
+    { id: "cm1", courseId: "1", materialId: "m2" },
+    { id: "cm2", courseId: "1", materialId: "m1" }
+];
+
+const mockCourseType = { id: "ct1", name: "Professional" };
 
 const mockReviews = [
     {
@@ -138,12 +169,15 @@ export default function CourseDetailPage() {
                 <div className="lg:col-span-2">
                     <Card>
                         <CardContent className="p-0">
-                            {/* Course Video/Thumbnail */}
-                            <div className="aspect-video bg-gradient-to-br from-blue-500 to-purple-600 rounded-t-lg flex items-center justify-center">
-                                <div className="text-center text-white">
-                                    <Play className="w-16 h-16 mx-auto mb-4 opacity-80" />
-                                    <p className="text-lg font-medium">Preview khóa học</p>
-                                </div>
+                            {/* Course Thumbnail Image */}
+                            <div className="aspect-video bg-gray-200 rounded-t-lg overflow-hidden relative group">
+                                <Image
+                                    src={course.thumbnail || "/images/course-placeholder.jpg"}
+                                    alt={course.title}
+                                    fill
+                                    className="object-cover"
+                                    priority
+                                />
                             </div>
 
                             <div className="p-6">
@@ -153,6 +187,8 @@ export default function CourseDetailPage() {
                                         {course.level === "beginner" ? "Cơ bản" :
                                             course.level === "intermediate" ? "Trung cấp" : "Nâng cao"}
                                     </Badge>
+                                    {/* Course Type from DB */}
+                                    <Badge variant="default">{mockCourseType.name}</Badge>
                                 </div>
 
                                 <h1 className="text-2xl font-bold text-gray-900 mb-3">{course.title}</h1>
@@ -279,138 +315,105 @@ export default function CourseDetailPage() {
                 </div>
             </div>
 
-            {/* Course Content Tabs */}
-            <Card>
-                <CardContent className="p-6">
-                    <Tabs defaultValue="curriculum" className="w-full">
-                        <TabsList className="grid w-full grid-cols-4">
-                            <TabsTrigger value="curriculum">Nội dung</TabsTrigger>
-                            <TabsTrigger value="instructor">Giảng viên</TabsTrigger>
-                            <TabsTrigger value="reviews">Đánh giá</TabsTrigger>
-                            <TabsTrigger value="faq">FAQ</TabsTrigger>
-                        </TabsList>
-
-                        <TabsContent value="curriculum" className="mt-6">
-                            <h3 className="text-lg font-semibold mb-4">Nội dung khóa học</h3>
-                            <div className="space-y-2">
-                                {mockLessons.map((lesson, index) => (
-                                    <div
-                                        key={lesson.id}
-                                        className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium">
-                                                {index + 1}
-                                            </div>
-                                            <div>
-                                                <p className="font-medium">{lesson.title}</p>
-                                                <p className="text-sm text-gray-600">{lesson.duration} phút</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            {lesson.completed ? (
-                                                <CheckCircle className="w-5 h-5 text-green-500" />
-                                            ) : (
-                                                <Play className="w-5 h-5 text-gray-400" />
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
+            {/* Course Overview Summary */}
+            <div className="grid gap-6 lg:grid-cols-2">
+                {/* Basic Course Info */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Tổng quan khóa học</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-4">
+                            <div>
+                                <h4 className="font-medium mb-2">Mô tả</h4>
+                                <p className="text-gray-700 text-sm">{course.description}</p>
                             </div>
-                        </TabsContent>
 
-                        <TabsContent value="instructor" className="mt-6">
-                            <div className="flex gap-6">
-                                <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center text-xl font-bold">
-                                    {mockInstructor.avatar}
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <span className="text-gray-600">Cấp độ:</span>
+                                    <p className="font-medium">
+                                        {course.level === "beginner" ? "Cơ bản" :
+                                            course.level === "intermediate" ? "Trung cấp" : "Nâng cao"}
+                                    </p>
                                 </div>
-                                <div className="flex-1">
-                                    <h3 className="text-xl font-semibold">{mockInstructor.name}</h3>
-                                    <p className="text-gray-600 mb-2">{mockInstructor.title} tại {mockInstructor.company}</p>
-
-                                    <div className="flex gap-6 mb-4 text-sm text-gray-600">
-                                        <div>
-                                            <span className="font-medium text-gray-900">{mockInstructor.students}</span> học viên
-                                        </div>
-                                        <div>
-                                            <span className="font-medium text-gray-900">{mockInstructor.courses}</span> khóa học
-                                        </div>
-                                        <div className="flex items-center gap-1">
-                                            <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                                            <span className="font-medium text-gray-900">{mockInstructor.rating}</span>
-                                        </div>
-                                    </div>
-
-                                    <p className="text-gray-700">{mockInstructor.bio}</p>
+                                <div>
+                                    <span className="text-gray-600">Thời lượng:</span>
+                                    <p className="font-medium">{course.duration} giờ</p>
+                                </div>
+                                <div>
+                                    <span className="text-gray-600">Học viên:</span>
+                                    <p className="font-medium">{course.studentsCount} người</p>
+                                </div>
+                                <div>
+                                    <span className="text-gray-600">Đánh giá:</span>
+                                    <p className="font-medium flex items-center gap-1">
+                                        <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                                        {course.rating}
+                                    </p>
                                 </div>
                             </div>
-                        </TabsContent>
 
-                        <TabsContent value="reviews" className="mt-6">
-                            <div className="space-y-6">
-                                <div className="flex items-center gap-4">
-                                    <div className="text-center">
-                                        <div className="text-3xl font-bold">{course.rating}</div>
-                                        <div className="flex items-center gap-1">
-                                            {[...Array(5)].map((_, i) => (
-                                                <Star
-                                                    key={i}
-                                                    className={`w-4 h-4 ${i < Math.floor(course.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-                                                />
-                                            ))}
-                                        </div>
-                                        <p className="text-sm text-gray-600">{course.studentsCount} đánh giá</p>
-                                    </div>
+                            <div className="pt-4 border-t">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h4 className="font-medium">Nội dung khóa học</h4>
+                                    <span className="text-sm text-gray-600">{mockModules.length} phần</span>
                                 </div>
-
-                                <div className="space-y-4">
-                                    {mockReviews.map(review => (
-                                        <div key={review.id} className="border-b pb-4">
-                                            <div className="flex items-start gap-3">
-                                                <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-sm font-medium">
-                                                    {review.avatar}
-                                                </div>
-                                                <div className="flex-1">
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <span className="font-medium">{review.userName}</span>
-                                                        <div className="flex items-center">
-                                                            {[...Array(5)].map((_, i) => (
-                                                                <Star
-                                                                    key={i}
-                                                                    className={`w-3 h-3 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-                                                                />
-                                                            ))}
-                                                        </div>
-                                                        <span className="text-sm text-gray-500">{review.date}</span>
-                                                    </div>
-                                                    <p className="text-gray-700">{review.comment}</p>
-                                                </div>
-                                            </div>
+                                <div className="space-y-2">
+                                    {mockModules.map((mod, index) => (
+                                        <div key={mod.id} className="flex justify-between items-center text-sm">
+                                            <span className="text-gray-700">{mod.title}</span>
+                                            <span className="text-gray-500">{mod.lessons.length} bài</span>
                                         </div>
                                     ))}
                                 </div>
                             </div>
-                        </TabsContent>
+                        </div>
+                    </CardContent>
+                </Card>
 
-                        <TabsContent value="faq" className="mt-6">
-                            <div className="space-y-4">
-                                <div className="border-b pb-4">
-                                    <h4 className="font-medium mb-2">Tôi có thể truy cập khóa học bao lâu?</h4>
-                                    <p className="text-gray-700">Bạn có thể truy cập khóa học trọn đời sau khi đăng ký.</p>
-                                </div>
-                                <div className="border-b pb-4">
-                                    <h4 className="font-medium mb-2">Có chứng chỉ sau khi hoàn thành không?</h4>
-                                    <p className="text-gray-700">Có, bạn sẽ nhận được chứng chỉ hoàn thành sau khi hoàn thành tất cả bài học.</p>
-                                </div>
-                                <div className="border-b pb-4">
-                                    <h4 className="font-medium mb-2">Tôi có thể hoàn tiền không?</h4>
-                                    <p className="text-gray-700">Có, chúng tôi có chính sách hoàn tiền trong 30 ngày đầu tiên.</p>
+                {/* Instructor Info */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Giảng viên</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex gap-4">
+                            <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center text-lg font-bold">
+                                {mockInstructor.avatar}
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="font-semibold">{mockInstructor.name}</h3>
+                                <p className="text-gray-600 text-sm mb-2">{mockInstructor.title}</p>
+
+                                <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
+                                    <div>
+                                        <span className="font-medium text-gray-900">{mockInstructor.students}</span> học viên
+                                    </div>
+                                    <div>
+                                        <span className="font-medium text-gray-900">{mockInstructor.courses}</span> khóa học
+                                    </div>
                                 </div>
                             </div>
-                        </TabsContent>
-                    </Tabs>
-                </CardContent>
-            </Card>
+                        </div>
+                        <p className="text-gray-700 text-sm mt-4">{mockInstructor.bio}</p>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-4">
+                <Button size="lg" asChild>
+                    <Link href={`/courses/detail/${courseId}/learn`}>
+                        <BookOpen className="w-4 h-4 mr-2" />
+                        Xem chi tiết khóa học
+                    </Link>
+                </Button>
+                <Button variant="outline" size="lg">
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Xem đánh giá
+                </Button>
+            </div>
         </div>
     );
 }
