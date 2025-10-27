@@ -40,6 +40,7 @@ export const routes = {
     },
     user: {
         dashboard: "/dashboard",
+        profile: "/profile",
         courses: "/courses",
         coursesByCategory: "/courses/category",
         coursesByTag: "/courses/tag",

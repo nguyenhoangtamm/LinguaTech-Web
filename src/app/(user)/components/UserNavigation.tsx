@@ -12,6 +12,8 @@ import {
     Bell,
     Settings
 } from "lucide-react";
+import ProfileMenu from "@/layouts/profile-menu";
+import RoleDisplay from "@/layouts/role-dropdown";
 
 const navigationItems = [
     {
@@ -76,10 +78,8 @@ export default function UserNavigation() {
                         <button className="p-2 text-gray-600 hover:text-gray-900 rounded-md">
                             <Settings className="w-5 h-5" />
                         </button>
-                        <button className="flex items-center space-x-2 p-2 text-gray-600 hover:text-gray-900 rounded-md">
-                            <User className="w-5 h-5" />
-                            <span className="text-sm">Tài khoản</span>
-                        </button>
+                        <RoleDisplay />
+                        <ProfileMenu />
                     </div>
                 </div>
             </div>

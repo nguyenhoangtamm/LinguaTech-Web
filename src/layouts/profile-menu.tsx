@@ -6,9 +6,10 @@ import { useAppContext } from "@/components/app-provider";
 import { useLogoutMutation } from "@/queries/useAuth";
 import { handleErrorApi, removeTokensFromLocalStorage } from "@/lib/utils";
 import UserItem from "./hydrogen/user-item";
-import { Building } from "lucide-react";
+import { Building, User, Settings, LogOut } from "lucide-react";
 import { Button, Popover, Whisper, Avatar, IconButton } from "rsuite";
 import { useUserProfileMeQuery } from "@/queries/useUserProfile";
+import { routes } from "@/config/routes";
 
 function DropdownMenu() {
   const { setIsAuth } = useAppContext();
@@ -54,22 +55,46 @@ function DropdownMenu() {
           </div>
         )}
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '16px' }}>
           <div style={{ flex: 1 }}>
             <UserItem
               userName={userData?.username ?? ""}
               fullName={userData?.fullname ?? ""}
             />
           </div>
-          <Button
-            size="xs"
-            appearance="ghost"
-            color="blue"
-            onClick={() => logout()}
-            style={{ fontWeight: 500, fontSize: '12px' }}
-          >
-            Đăng xuất
-          </Button>
+        </div>
+
+        <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '8px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <Button
+              size="sm"
+              appearance="ghost"
+              style={{ justifyContent: 'flex-start', padding: '8px 12px', fontSize: '14px' }}
+              onClick={() => router.push(routes.user.profile)}
+            >
+              <User style={{ height: '16px', width: '16px', marginRight: '8px' }} />
+              Hồ sơ cá nhân
+            </Button>
+            <Button
+              size="sm"
+              appearance="ghost"
+              style={{ justifyContent: 'flex-start', padding: '8px 12px', fontSize: '14px' }}
+              onClick={() => router.push('/settings')}
+            >
+              <Settings style={{ height: '16px', width: '16px', marginRight: '8px' }} />
+              Cài đặt
+            </Button>
+            <Button
+              size="sm"
+              appearance="ghost"
+              color="red"
+              style={{ justifyContent: 'flex-start', padding: '8px 12px', fontSize: '14px' }}
+              onClick={() => logout()}
+            >
+              <LogOut style={{ height: '16px', width: '16px', marginRight: '8px' }} />
+              Đăng xuất
+            </Button>
+          </div>
         </div>
       </div>
     </div>
@@ -101,39 +126,39 @@ export default function ProfileMenu({
       placement="bottomEnd"
       trigger="click"
       speaker={
-      <Popover style={{ padding: 0, border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
-        {popoverContent}
-      </Popover>
+        <Popover style={{ padding: 0, border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+          {popoverContent}
+        </Popover>
       }
     >
       <IconButton
-      icon={
-        <Avatar
-        size="md"
-        circle
+        icon={
+          <Avatar
+            size="md"
+            circle
+            style={{
+              width: '36px',
+              height: '36px',
+              fontSize: '14px',
+              backgroundColor: '#3b82f6',
+              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            aria-label="user-initial"
+          >
+            {((data?.data?.username?.[0] ?? displayName?.[0] ?? 'U')).toUpperCase()}
+          </Avatar>
+        }
+        appearance="subtle"
         style={{
+          padding: 0,
+          marginRight: '8px',
           width: '36px',
           height: '36px',
-          fontSize: '14px',
-          backgroundColor: '#3b82f6',
-          color: '#fff',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
+          borderRadius: '50%'
         }}
-        aria-label="user-initial"
-        >
-        {((data?.data?.username?.[0] ?? displayName?.[0] ?? 'U')).toUpperCase()}
-        </Avatar>
-      }
-      appearance="subtle"
-      style={{
-        padding: 0,
-        marginRight: '8px',
-        width: '36px',
-        height: '36px',
-        borderRadius: '50%'
-      }}
       />
     </Whisper>
   );
