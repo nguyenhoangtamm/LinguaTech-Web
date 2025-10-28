@@ -522,7 +522,7 @@ const ReadingNotesSection = ({ lesson, isLoading }: { lesson: any, isLoading: bo
 
 export default function LessonDetailPage() {
     const params = useParams();
-    const courseId = params.id as string;
+    const courseId = params.courseId as string;
     const lessonId = params.lessonId as string;
 
     const [lesson, setLesson] = useState<any>(null);

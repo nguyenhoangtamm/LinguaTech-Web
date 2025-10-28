@@ -23,150 +23,53 @@ import {
     FileText,
     HelpCircle
 } from "lucide-react";
-import { Course } from "@/types/course";
 import Link from "next/link";
 import { routes } from "@/config/routes";
+import { useCourseDetailQuery } from "@/queries/useCourse";
+import { Course } from "@/types/course";
 
-// Mock data - same as overview page but with more detail
-const mockCourse: Course = {
-    id: "1",
-    title: "React Advanced Patterns và Performance Optimization",
-    description: "Khóa học chuyên sâu về React với các pattern nâng cao và kỹ thuật tối ưu hóa hiệu suất. Bạn sẽ học cách xây dựng ứng dụng React có hiệu suất cao, dễ maintain và scalable.",
-    instructor: "Nguyễn Văn A",
-    duration: 40,
-    level: "advanced",
-    price: 1500000,
-    rating: 4.8,
-    studentsCount: 234,
-    category: { id: "1", name: "Frontend", slug: "frontend" },
-    tags: ["React", "JavaScript", "TypeScript", "Performance"],
-    thumbnail: "/images/course1.jpg",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    isPublished: true
-};
 
-const mockMaterials = [
-    { id: "m1", fileName: "slides-intro.pdf", fileUrl: "/files/slides-intro.pdf", fileType: "pdf", size: 1200 },
-    { id: "m2", fileName: "code-samples.zip", fileUrl: "/files/code-samples.zip", fileType: "zip", size: 20480 },
-    { id: "m3", fileName: "reading-advanced.md", fileUrl: "/files/reading-advanced.md", fileType: "md", size: 48 },
-    { id: "m4", fileName: "final-project.zip", fileUrl: "/files/final-project.zip", fileType: "zip", size: 15360 }
-];
-
-const mockModules = [
-    {
-        id: "mod1",
-        title: "Phần 1: Cơ sở và pattern",
-        order: 1,
-        description: "Tìm hiểu về các pattern cơ bản và nâng cao trong React",
-        lessons: [
-            { id: "l1", title: "Giới thiệu về Advanced Patterns", duration: 45, completed: true, materials: ["m1"], contentType: "reading" },
-            { id: "l2", title: "Custom Hooks và Logic Reuse", duration: 52, completed: true, materials: ["m2"], contentType: "reading" },
-            { id: "l3", title: "Context API và Provider Pattern", duration: 38, completed: false, materials: [], contentType: "reading" }
-        ]
-    },
-    {
-        id: "mod2",
-        title: "Phần 2: Performance và Production",
-        order: 2,
-        description: "Tối ưu hóa hiệu suất và triển khai ứng dụng React",
-        lessons: [
-            { id: "l4", title: "Performance Optimization với React.memo", duration: 41, completed: false, materials: ["m3"], contentType: "reading" },
-            { id: "l5", title: "Code Splitting và Lazy Loading", duration: 35, completed: false, materials: [], contentType: "reading" },
-            { id: "l6", title: "Testing Advanced Components", duration: 47, completed: false, materials: [], contentType: "reading" },
-            { id: "l7", title: "Production Deployment Best Practices", duration: 33, completed: false, materials: ["m4"], contentType: "reading" }
-        ]
-    }
-];
-
-const mockCourseMaterials = [
-    { id: "cm1", courseId: "1", materialId: "m2", title: "Source Code Repository" },
-    { id: "cm2", courseId: "1", materialId: "m1", title: "Course Slides" },
-    { id: "cm3", courseId: "1", materialId: "m4", title: "Final Project Template" }
-];
-
-const mockCourseType = { id: "ct1", name: "Professional" };
-
-const mockReviews = [
-    {
-        id: "1",
-        userName: "Trần Văn B",
-        avatar: "TB",
-        rating: 5,
-        comment: "Khóa học rất hay, giảng viên giải thích rõ ràng và có nhiều ví dụ thực tế. Đáng tiền!",
-        date: "2 ngày trước",
-        helpful: 12
-    },
-    {
-        id: "2",
-        userName: "Lê Thị C",
-        avatar: "LC",
-        rating: 4,
-        comment: "Nội dung chất lượng, tuy nhiên một số phần hơi khó hiểu với người mới bắt đầu.",
-        date: "1 tuần trước",
-        helpful: 8
-    },
-    {
-        id: "3",
-        userName: "Phạm Minh D",
-        avatar: "PD",
-        rating: 5,
-        comment: "Excellent course! Đã áp dụng được nhiều kỹ thuật vào dự án thực tế.",
-        date: "2 tuần trước",
-        helpful: 15
-    }
-];
-
-const mockFAQs = [
-    {
-        id: "1",
-        question: "Tôi có thể truy cập khóa học bao lâu?",
-        answer: "Bạn có thể truy cập khóa học trọn đời sau khi đăng ký. Không có giới hạn thời gian."
-    },
-    {
-        id: "2",
-        question: "Có chứng chỉ sau khi hoàn thành không?",
-        answer: "Có, bạn sẽ nhận được chứng chỉ hoàn thành sau khi hoàn thành tất cả bài học và bài tập."
-    },
-    {
-        id: "3",
-        question: "Tôi có thể hoàn tiền không?",
-        answer: "Có, chúng tôi có chính sách hoàn tiền 100% trong 30 ngày đầu tiên nếu bạn không hài lòng."
-    },
-    {
-        id: "4",
-        question: "Khóa học có hỗ trợ tiếng Việt không?",
-        answer: "Có, tất cả nội dung khóa học đều được dịch và thuyết minh bằng tiếng Việt."
-    }
-];
 
 export default function CourseLearnPage() {
     const params = useParams();
-    const courseId = params.id as string;
+    const courseId = params.courseId as string;
 
-    const [course, setCourse] = useState<Course | null>(null);
     const [isEnrolled, setIsEnrolled] = useState(false);
     const [progress, setProgress] = useState(25);
 
+    // API queries
+    const { data: courseDetail, isLoading: courseLoading, error: courseError } = useCourseDetailQuery(courseId);
+
     useEffect(() => {
-        if (courseId) {
-            setCourse(mockCourse);
+        if (courseDetail?.data?.course) {
             setIsEnrolled(Math.random() > 0.3);
         }
-    }, [courseId]);
+    }, [courseDetail]);
 
-    if (!course) {
+    if (courseLoading) {
         return (
             <div className="text-center py-12">
-                <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">Đang tải khóa học...</h2>
+                <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
+                <p className="mt-4 text-gray-600">Đang tải khóa học...</p>
             </div>
         );
     }
 
-    const allLessons = mockModules.flatMap(m => m.lessons);
-    const completedLessons = allLessons.filter(lesson => lesson.completed).length;
-    const totalLessons = allLessons.length;
+    if (courseError || !courseDetail) {
+        return (
+            <div className="text-center py-12">
+                <p className="text-red-600">Không thể tải thông tin khóa học</p>
+            </div>
+        );
+    }
+
+    const { course, modules, materials, reviews, faqs, instructor } = courseDetail.data;
+
+    // Calculate progress from modules/lessons
+    const totalLessons = modules.reduce((acc: number, module: any) =>
+        acc + (module.lessons?.length || 0), 0);
+    const completedLessons = modules.reduce((acc: number, module: any) =>
+        acc + (module.lessons?.filter((lesson: any) => lesson.isCompleted).length || 0), 0);
 
     return (
         <div className="space-y-6">
@@ -317,7 +220,7 @@ export default function CourseLearnPage() {
                         <TabsContent value="curriculum" className="mt-6">
                             <h3 className="text-lg font-semibold mb-4">Mục lục khóa học</h3>
                             <div className="space-y-4">
-                                {mockModules.map((mod, mIndex) => (
+                                {modules.map((mod: any, mIndex: number) => (
                                     <div key={mod.id} className="border rounded-lg p-4">
                                         <div className="flex items-center justify-between mb-3">
                                             <div className="flex items-center gap-3">
@@ -330,12 +233,12 @@ export default function CourseLearnPage() {
                                                 </div>
                                             </div>
                                             <div className="text-sm text-gray-600">
-                                                {mod.lessons.length} bài • {mod.lessons.reduce((s, l) => s + l.duration, 0)} phút
+                                                {(mod.lessons?.length || 0)} bài • {(mod.lessons?.reduce((s: number, l: any) => s + l.duration, 0) || 0)} phút
                                             </div>
                                         </div>
 
                                         <div className="space-y-2">
-                                            {mod.lessons.map((lesson, lIndex) => (
+                                            {mod.lessons?.map((lesson: any, lIndex: number) => (
                                                 <div key={lesson.id} className="p-3 border rounded-lg hover:bg-gray-50">
                                                     <div className="flex items-center justify-between gap-4">
                                                         <div className="flex items-center gap-3">
@@ -351,8 +254,8 @@ export default function CourseLearnPage() {
                                                             <span className="text-sm text-gray-600">{lesson.duration} phút</span>
                                                             {isEnrolled ? (
                                                                 <Link href={`/courses/detail/${courseId}/lessons/${lesson.id}`}>
-                                                                    <Button size="sm" variant={lesson.completed ? "outline" : "default"}>
-                                                                        {lesson.completed ? "Xem lại" : "Học ngay"}
+                                                                    <Button size="sm" variant={lesson.isCompleted ? "outline" : "default"}>
+                                                                        {lesson.isCompleted ? "Xem lại" : "Học ngay"}
                                                                     </Button>
                                                                 </Link>
                                                             ) : (
@@ -360,7 +263,7 @@ export default function CourseLearnPage() {
                                                                     Đăng ký để học
                                                                 </Button>
                                                             )}
-                                                            {lesson.completed && (
+                                                            {lesson.isCompleted && (
                                                                 <CheckCircle className="w-5 h-5 text-green-500" />
                                                             )}
                                                         </div>
@@ -376,29 +279,25 @@ export default function CourseLearnPage() {
                         <TabsContent value="materials" className="mt-6">
                             <h3 className="text-lg font-semibold mb-4">Tài liệu khóa học</h3>
                             <div className="grid gap-4">
-                                {mockCourseMaterials.map(cm => {
-                                    const mat = mockMaterials.find(m => m.id === cm.materialId);
-                                    if (!mat) return null;
-                                    return (
-                                        <div key={cm.id} className="flex items-center justify-between p-4 border rounded-lg">
-                                            <div className="flex items-center gap-3">
-                                                <FileText className="w-8 h-8 text-blue-500" />
-                                                <div>
-                                                    <p className="font-medium">{cm.title}</p>
-                                                    <p className="text-sm text-gray-600">
-                                                        {mat.fileType.toUpperCase()} • {Math.round(mat.size / 1024)} KB
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className="flex gap-2">
-                                                <Button variant="outline" size="sm">
-                                                    <Download className="w-4 h-4 mr-2" />
-                                                    Tải xuống
-                                                </Button>
+                                {materials.map((mat: any) => (
+                                    <div key={mat.id} className="flex items-center justify-between p-4 border rounded-lg">
+                                        <div className="flex items-center gap-3">
+                                            <FileText className="w-8 h-8 text-blue-500" />
+                                            <div>
+                                                <p className="font-medium">{mat.fileName}</p>
+                                                <p className="text-sm text-gray-600">
+                                                    {mat.fileType.toUpperCase()} • {Math.round(mat.size / 1024)} KB
+                                                </p>
                                             </div>
                                         </div>
-                                    );
-                                })}
+                                        <div className="flex gap-2">
+                                            <Button variant="outline" size="sm">
+                                                <Download className="w-4 h-4 mr-2" />
+                                                Tải xuống
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         </TabsContent>
 
@@ -423,7 +322,7 @@ export default function CourseLearnPage() {
                                 </div>
 
                                 <div className="space-y-4">
-                                    {mockReviews.map(review => (
+                                    {reviews.map((review: any) => (
                                         <div key={review.id} className="border-b pb-4">
                                             <div className="flex items-start gap-3">
                                                 <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-sm font-medium">
@@ -444,7 +343,7 @@ export default function CourseLearnPage() {
                                                     </div>
                                                     <p className="text-gray-700 mb-2">{review.comment}</p>
                                                     <div className="flex items-center gap-4 text-sm text-gray-600">
-                                                        <span>{review.helpful} người thấy hữu ích</span>
+                                                        <span>{review.helpful || 0} người thấy hữu ích</span>
                                                         <Button variant="ghost" size="sm">
                                                             Hữu ích
                                                         </Button>
@@ -472,7 +371,7 @@ export default function CourseLearnPage() {
                         <TabsContent value="faq" className="mt-6">
                             <h3 className="text-lg font-semibold mb-4">Câu hỏi thường gặp</h3>
                             <div className="space-y-4">
-                                {mockFAQs.map(faq => (
+                                {faqs?.map((faq: any) => (
                                     <div key={faq.id} className="border rounded-lg p-4">
                                         <div className="flex items-start gap-3">
                                             <HelpCircle className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
@@ -482,7 +381,7 @@ export default function CourseLearnPage() {
                                             </div>
                                         </div>
                                     </div>
-                                ))}
+                                )) || <p className="text-gray-600">Chưa có câu hỏi nào.</p>}
                             </div>
                         </TabsContent>
                     </Tabs>

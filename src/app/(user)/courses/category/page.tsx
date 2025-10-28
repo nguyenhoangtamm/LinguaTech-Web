@@ -19,115 +19,34 @@ import { Course, CourseCategory } from "@/types/course";
 import Link from "next/link";
 import { routes } from "@/config/routes";
 import { cn } from "@/utils/class-names";
-
-// Mock data (same as courses page)
-const mockCategories: CourseCategory[] = [
-    { id: "1", name: "Frontend", slug: "frontend", description: "Phát triển giao diện người dùng với React, Vue, Angular", icon: "💻" },
-    { id: "2", name: "Backend", slug: "backend", description: "Phát triển server và API với Node.js, Python, Java", icon: "⚙️" },
-    { id: "3", name: "Mobile", slug: "mobile", description: "Phát triển ứng dụng di động với React Native, Flutter", icon: "📱" },
-    { id: "4", name: "DevOps", slug: "devops", description: "Vận hành và triển khai với Docker, Kubernetes, CI/CD", icon: "🚀" },
-    { id: "5", name: "Design", slug: "design", description: "Thiết kế UI/UX với Figma, Adobe Creative Suite", icon: "🎨" },
-    { id: "6", name: "Data Science", slug: "data-science", description: "Khoa học dữ liệu với Python, R, Machine Learning", icon: "📊" }
-];
-
-const mockCourses: Course[] = [
-    {
-        id: "1",
-        title: "React Advanced Patterns và Performance Optimization",
-        description: "Học các pattern nâng cao trong React và tối ưu hóa hiệu suất ứng dụng. Khóa học bao gồm Context API, Custom Hooks, Memoization và nhiều kỹ thuật khác.",
-        instructor: "Nguyễn Văn A",
-        duration: 40,
-        level: "advanced",
-        price: 1500000,
-        rating: 4.8,
-        studentsCount: 234,
-        category: mockCategories[0],
-        tags: ["React", "JavaScript", "TypeScript", "Performance"],
-        thumbnail: "/images/course1.jpg",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        isPublished: true
-    },
-    {
-        id: "7",
-        title: "Vue.js 3 Composition API Masterclass",
-        description: "Học Vue.js 3 từ cơ bản đến nâng cao với Composition API. Xây dựng ứng dụng thực tế với Pinia state management.",
-        instructor: "Lê Thị G",
-        duration: 32,
-        level: "intermediate",
-        price: 1300000,
-        rating: 4.7,
-        studentsCount: 187,
-        category: mockCategories[0],
-        tags: ["Vue.js", "JavaScript", "Composition API", "Pinia"],
-        thumbnail: "/images/course7.jpg",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        isPublished: true
-    },
-    {
-        id: "8",
-        title: "Angular 16 Complete Guide với Standalone Components",
-        description: "Khóa học Angular toàn diện với các tính năng mới nhất như Standalone Components, Signals và Angular CLI.",
-        instructor: "Phạm Văn H",
-        duration: 45,
-        level: "intermediate",
-        price: 1400000,
-        rating: 4.6,
-        studentsCount: 156,
-        category: mockCategories[0],
-        tags: ["Angular", "TypeScript", "RxJS", "Components"],
-        thumbnail: "/images/course8.jpg",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        isPublished: true
-    },
-    {
-        id: "2",
-        title: "Node.js Backend Development từ Zero đến Hero",
-        description: "Xây dựng API RESTful và GraphQL với Node.js, Express, và MongoDB. Học cách deploy production-ready applications.",
-        instructor: "Trần Thị B",
-        duration: 35,
-        level: "intermediate",
-        price: 1200000,
-        rating: 4.6,
-        studentsCount: 189,
-        category: mockCategories[1],
-        tags: ["Node.js", "Express", "MongoDB", "API"],
-        thumbnail: "/images/course2.jpg",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        isPublished: true
-    }
-];
+import { useCategoriesQuery, useCoursesQuery } from "@/queries/useCourse";
+import { CourseFilterParamsType } from "@/schemaValidations/course.schema";
 
 type ViewMode = "grid" | "list";
 
 export default function CoursesByCategoryPage() {
     const searchParams = useSearchParams();
     const router = useRouter();
-    const categorySlug = searchParams.get("category");
+    const categorySlug = searchParams.get("category") || "";
 
-    const [courses, setCourses] = useState<Course[]>([]);
-    const [category, setCategory] = useState<CourseCategory | null>(null);
     const [viewMode, setViewMode] = useState<ViewMode>("grid");
     const [levelFilter, setLevelFilter] = useState<string>("");
 
-    useEffect(() => {
-        if (categorySlug) {
-            // Find category
-            const foundCategory = mockCategories.find(cat => cat.slug === categorySlug);
-            setCategory(foundCategory || null);
+    // API queries
+    const { data: categoriesData = [] } = useCategoriesQuery();
+    const { data: coursesData, isLoading } = useCoursesQuery({
+        page: 1,
+        limit: 20,
+        sortOrder: "desc" as const,
+        category: categorySlug,
+        level: (levelFilter as "beginner" | "intermediate" | "advanced") || undefined,
+    });
 
-            // Filter courses by category
-            const filteredCourses = mockCourses.filter(course => course.category.slug === categorySlug);
-            setCourses(filteredCourses);
-        }
-    }, [categorySlug]);
+    const courses = coursesData?.data?.items || [];
+    const categories = Array.isArray(categoriesData) ? categoriesData : categoriesData?.data || [];
+    const category = categories.find((cat: CourseCategory) => cat.slug === categorySlug);
 
-    const filteredCourses = levelFilter
-        ? courses.filter(course => course.level === levelFilter)
-        : courses;
+    const filteredCourses = courses;
 
     const handleLevelFilter = (level: string) => {
         setLevelFilter(levelFilter === level ? "" : level);
@@ -157,7 +76,7 @@ export default function CoursesByCategoryPage() {
                                 </div>
                                 <p className="text-gray-700 text-sm line-clamp-2 mb-3">{course.description}</p>
                                 <div className="flex flex-wrap gap-2 mb-3">
-                                    {course.tags.slice(0, 3).map(tag => (
+                                    {course.tags.slice(0, 3).map((tag: string) => (
                                         <Badge key={tag} variant="secondary" className="text-xs">
                                             {tag}
                                         </Badge>
@@ -217,7 +136,7 @@ export default function CoursesByCategoryPage() {
                         <p className="text-gray-700 text-sm line-clamp-3 mb-4">{course.description}</p>
 
                         <div className="flex flex-wrap gap-1 mb-4">
-                            {course.tags.slice(0, 2).map(tag => (
+                            {course.tags.slice(0, 2).map((tag: string) => (
                                 <Badge key={tag} variant="secondary" className="text-xs">
                                     {tag}
                                 </Badge>
@@ -315,7 +234,7 @@ export default function CoursesByCategoryPage() {
                         { value: "beginner", label: "Cơ bản" },
                         { value: "intermediate", label: "Trung cấp" },
                         { value: "advanced", label: "Nâng cao" }
-                    ].map(level => (
+                    ].map((level: { value: string; label: string }) => (
                         <Button
                             key={level.value}
                             variant={levelFilter === level.value ? "default" : "outline"}
@@ -380,7 +299,7 @@ export default function CoursesByCategoryPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {mockCategories.filter(cat => cat.slug !== categorySlug).map(relatedCategory => (
+                        {categories.filter((cat: CourseCategory) => cat.slug !== categorySlug).map((relatedCategory: CourseCategory) => (
                             <Link
                                 key={relatedCategory.id}
                                 href={`${routes.user.coursesByCategory}?category=${relatedCategory.slug}`}

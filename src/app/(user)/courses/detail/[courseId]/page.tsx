@@ -22,97 +22,14 @@ import {
     Heart,
     Download
 } from "lucide-react";
-import { Course } from "@/types/course";
 import Link from "next/link";
 import { routes } from "@/config/routes";
+import { useCourseQuery } from "@/queries/useCourse";
+import { useModulesByCourseQuery } from "@/queries/useLesson";
+import { ModuleWithLessonsType } from "@/schemaValidations/lesson.schema";
+import { Course } from "@/types/course";
 
-// Mock course data
-const mockCourse: Course = {
-    id: "1",
-    title: "React Advanced Patterns và Performance Optimization",
-    description: "Khóa học chuyên sâu về React với các pattern nâng cao và kỹ thuật tối ưu hóa hiệu suất. Bạn sẽ học cách xây dựng ứng dụng React có hiệu suất cao, dễ maintain và scalable.",
-    instructor: "Nguyễn Văn A",
-    duration: 40,
-    level: "advanced",
-    price: 1500000,
-    rating: 4.8,
-    studentsCount: 234,
-    category: { id: "1", name: "Frontend", slug: "frontend" },
-    tags: ["React", "JavaScript", "TypeScript", "Performance"],
-    thumbnail: "/images/course1.jpg",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    isPublished: true
-};
-
-// Mock data aligned with DB layout: Modules -> Lessons -> LessonMaterials -> Materials
-const mockMaterials = [
-    { id: "m1", fileName: "slides-intro.pdf", fileUrl: "/files/slides-intro.pdf", fileType: "pdf", size: 1200 },
-    { id: "m2", fileName: "code-samples.zip", fileUrl: "/files/code-samples.zip", fileType: "zip", size: 20480 },
-    { id: "m3", fileName: "reading-advanced.md", fileUrl: "/files/reading-advanced.md", fileType: "md", size: 48 }
-];
-
-const mockModules = [
-    {
-        id: "mod1",
-        title: "Phần 1: Cơ sở và pattern",
-        order: 1,
-        lessons: [
-            { id: "l1", title: "Giới thiệu về Advanced Patterns", duration: 45, completed: true, materials: ["m1"] },
-            { id: "l2", title: "Custom Hooks và Logic Reuse", duration: 52, completed: true, materials: ["m2"] }
-        ]
-    },
-    {
-        id: "mod2",
-        title: "Phần 2: Performance và Production",
-        order: 2,
-        lessons: [
-            { id: "l3", title: "Performance Optimization với React.memo", duration: 41, completed: false, materials: ["m3"] },
-            { id: "l4", title: "Code Splitting và Lazy Loading", duration: 35, completed: false, materials: [] },
-            { id: "l5", title: "Testing Advanced Components", duration: 47, completed: false, materials: [] }
-        ]
-    }
-];
-
-// Flattened list of lessons (for legacy places that expect mockLessons)
-const mockLessons = mockModules.flatMap((m) =>
-    m.lessons.map((l) => ({ id: l.id, title: l.title, duration: l.duration, completed: l.completed }))
-);
-
-const mockCourseMaterials = [
-    { id: "cm1", courseId: "1", materialId: "m2" },
-    { id: "cm2", courseId: "1", materialId: "m1" }
-];
-
-const mockCourseType = { id: "ct1", name: "Professional" };
-
-const mockReviews = [
-    {
-        id: "1",
-        userName: "Trần Văn B",
-        avatar: "TB",
-        rating: 5,
-        comment: "Khóa học rất hay, giảng viên giải thích rõ ràng và có nhiều ví dụ thực tế. Đáng tiền!",
-        date: "2 ngày trước"
-    },
-    {
-        id: "2",
-        userName: "Lê Thị C",
-        avatar: "LC",
-        rating: 4,
-        comment: "Nội dung chất lượng, tuy nhiên một số phần hơi khó hiểu với người mới bắt đầu.",
-        date: "1 tuần trước"
-    },
-    {
-        id: "3",
-        userName: "Phạm Minh D",
-        avatar: "PD",
-        rating: 5,
-        comment: "Excellent course! Đã áp dụng được nhiều kỹ thuật vào dự án thực tế.",
-        date: "2 tuần trước"
-    }
-];
-
+// Mock instructor data (temporary until instructor API is ready)
 const mockInstructor = {
     name: "Nguyễn Văn A",
     avatar: "NA",
@@ -127,32 +44,44 @@ const mockInstructor = {
 
 export default function CourseDetailPage() {
     const params = useParams();
-    const courseId = params.id as string;
+    const courseId = params.courseId as string;
 
-    const [course, setCourse] = useState<Course | null>(null);
     const [isEnrolled, setIsEnrolled] = useState(false);
     const [progress, setProgress] = useState(25); // Mock progress
 
+    // API queries
+    const { data: course, isLoading: courseLoading, error: courseError } = useCourseQuery(courseId);
+    const { data: modules = [], isLoading: modulesLoading } = useModulesByCourseQuery(courseId);
+
     useEffect(() => {
-        // Mock API call to fetch course details
-        if (courseId) {
-            setCourse(mockCourse);
-            // Mock check if user is enrolled
+        // Mock check if user is enrolled
+        if (course) {
             setIsEnrolled(Math.random() > 0.5);
         }
-    }, [courseId]);
+    }, [course]);
 
-    if (!course) {
+    if (courseLoading || modulesLoading) {
         return (
             <div className="text-center py-12">
-                <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">Đang tải khóa học...</h2>
+                <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
+                <p className="mt-4 text-gray-600">Đang tải thông tin khóa học...</p>
             </div>
         );
     }
 
-    const completedLessons = mockLessons.filter(lesson => lesson.completed).length;
-    const totalLessons = mockLessons.length;
+    if (courseError || !course) {
+        return (
+            <div className="text-center py-12">
+                <p className="text-red-600">Không thể tải thông tin khóa học</p>
+            </div>
+        );
+    }
+
+    // Calculate progress from modules/lessons
+    const totalLessons = modules.reduce((acc: number, module: ModuleWithLessonsType) =>
+        acc + (module.lessons?.length || 0), 0);
+    const completedLessons = modules.reduce((acc: number, module: ModuleWithLessonsType) =>
+        acc + (module.lessons?.filter(lesson => lesson.isCompleted).length || 0), 0);
 
     return (
         <div className="space-y-6">
@@ -181,21 +110,19 @@ export default function CourseDetailPage() {
                             </div>
 
                             <div className="p-6">
-                                <div className="flex flex-wrap gap-2 mb-3">
+                                <div className="flex gap-2 mb-4">
                                     <Badge variant="outline">{course.category.name}</Badge>
                                     <Badge variant="secondary">
                                         {course.level === "beginner" ? "Cơ bản" :
                                             course.level === "intermediate" ? "Trung cấp" : "Nâng cao"}
                                     </Badge>
-                                    {/* Course Type from DB */}
-                                    <Badge variant="default">{mockCourseType.name}</Badge>
                                 </div>
 
                                 <h1 className="text-2xl font-bold text-gray-900 mb-3">{course.title}</h1>
                                 <p className="text-gray-600 mb-4">{course.description}</p>
 
                                 <div className="flex flex-wrap gap-2 mb-4">
-                                    {course.tags.map(tag => (
+                                    {course.tags.map((tag: string) => (
                                         <Link
                                             key={tag}
                                             href={`${routes.user.coursesByTag}?tag=${encodeURIComponent(tag)}`}
@@ -357,13 +284,13 @@ export default function CourseDetailPage() {
                             <div className="pt-4 border-t">
                                 <div className="flex justify-between items-center mb-4">
                                     <h4 className="font-medium">Nội dung khóa học</h4>
-                                    <span className="text-sm text-gray-600">{mockModules.length} phần</span>
+                                    <span className="text-sm text-gray-600">{modules.length} phần</span>
                                 </div>
                                 <div className="space-y-2">
-                                    {mockModules.map((mod, index) => (
-                                        <div key={mod.id} className="flex justify-between items-center text-sm">
-                                            <span className="text-gray-700">{mod.title}</span>
-                                            <span className="text-gray-500">{mod.lessons.length} bài</span>
+                                    {modules.map((module: ModuleWithLessonsType, index: number) => (
+                                        <div key={module.id} className="flex justify-between items-center text-sm">
+                                            <span className="text-gray-700">{module.title}</span>
+                                            <span className="text-gray-500">{module.lessons?.length || 0} bài</span>
                                         </div>
                                     ))}
                                 </div>

@@ -18,194 +18,77 @@ import {
     ChevronLeft,
     ChevronRight
 } from "lucide-react";
-import { Course, CourseCategory, CourseFilter } from "@/types/course";
+import { Course, CourseCategory } from "@/types/course";
 import Link from "next/link";
 import { routes } from "@/config/routes";
 import { cn } from "@/utils/class-names";
-
-// Mock data
-const mockCategories: CourseCategory[] = [
-    { id: "1", name: "Frontend", slug: "frontend", description: "Phát triển giao diện người dùng", icon: "💻" },
-    { id: "2", name: "Backend", slug: "backend", description: "Phát triển server và API", icon: "⚙️" },
-    { id: "3", name: "Mobile", slug: "mobile", description: "Phát triển ứng dụng di động", icon: "📱" },
-    { id: "4", name: "DevOps", slug: "devops", description: "Vận hành và triển khai", icon: "🚀" },
-    { id: "5", name: "Design", slug: "design", description: "Thiết kế UI/UX", icon: "🎨" },
-    { id: "6", name: "Data Science", slug: "data-science", description: "Khoa học dữ liệu", icon: "📊" }
-];
-
-const mockCourses: Course[] = [
-    {
-        id: "1",
-        title: "React Advanced Patterns và Performance Optimization",
-        description: "Học các pattern nâng cao trong React và tối ưu hóa hiệu suất ứng dụng. Khóa học bao gồm Context API, Custom Hooks, Memoization và nhiều kỹ thuật khác.",
-        instructor: "Nguyễn Văn A",
-        duration: 40,
-        level: "advanced",
-        price: 1500000,
-        rating: 4.8,
-        studentsCount: 234,
-        category: mockCategories[0],
-        tags: ["React", "JavaScript", "TypeScript", "Performance"],
-        thumbnail: "/images/course1.jpg",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        isPublished: true
-    },
-    {
-        id: "2",
-        title: "Node.js Backend Development từ Zero đến Hero",
-        description: "Xây dựng API RESTful và GraphQL với Node.js, Express, và MongoDB. Học cách deploy production-ready applications.",
-        instructor: "Trần Thị B",
-        duration: 35,
-        level: "intermediate",
-        price: 1200000,
-        rating: 4.6,
-        studentsCount: 189,
-        category: mockCategories[1],
-        tags: ["Node.js", "Express", "MongoDB", "API"],
-        thumbnail: "/images/course2.jpg",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        isPublished: true
-    },
-    {
-        id: "3",
-        title: "UI/UX Design Fundamentals với Figma",
-        description: "Học thiết kế giao diện người dùng từ cơ bản đến nâng cao. Thực hành với các dự án thực tế và xây dựng portfolio.",
-        instructor: "Lê Văn C",
-        duration: 25,
-        level: "beginner",
-        price: 900000,
-        rating: 4.7,
-        studentsCount: 145,
-        category: mockCategories[4],
-        tags: ["UI", "UX", "Figma", "Design"],
-        thumbnail: "/images/course3.jpg",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        isPublished: true
-    },
-    {
-        id: "4",
-        title: "Flutter Mobile Development Complete Course",
-        description: "Phát triển ứng dụng di động đa nền tảng với Flutter và Dart. Từ cơ bản đến nâng cao với state management và native features.",
-        instructor: "Phạm Thị D",
-        duration: 50,
-        level: "intermediate",
-        price: 1800000,
-        rating: 4.9,
-        studentsCount: 312,
-        category: mockCategories[2],
-        tags: ["Flutter", "Dart", "Mobile", "Cross-platform"],
-        thumbnail: "/images/course4.jpg",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        isPublished: true
-    },
-    {
-        id: "5",
-        title: "Python Data Science và Machine Learning",
-        description: "Khám phá thế giới Data Science với Python. Học pandas, numpy, scikit-learn và các thuật toán Machine Learning cơ bản.",
-        instructor: "Hoàng Văn E",
-        duration: 45,
-        level: "intermediate",
-        price: 1600000,
-        rating: 4.5,
-        studentsCount: 298,
-        category: mockCategories[5],
-        tags: ["Python", "Data Science", "Machine Learning", "Pandas"],
-        thumbnail: "/images/course5.jpg",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        isPublished: true
-    },
-    {
-        id: "6",
-        title: "DevOps với Docker, Kubernetes và CI/CD",
-        description: "Học containerization, orchestration và automation. Xây dựng pipeline CI/CD hiện đại cho các dự án thực tế.",
-        instructor: "Võ Thị F",
-        duration: 38,
-        level: "advanced",
-        price: 2000000,
-        rating: 4.8,
-        studentsCount: 167,
-        category: mockCategories[3],
-        tags: ["Docker", "Kubernetes", "CI/CD", "DevOps"],
-        thumbnail: "/images/course6.jpg",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        isPublished: true
-    }
-];
+import { useCoursesQuery, useCategoriesQuery } from "@/queries/useCourse";
+import { CourseFilterParamsType } from "@/schemaValidations/course.schema";
 
 type ViewMode = "grid" | "list";
 
+const getLevelLabel = (level: number): string => {
+    switch (Number(level)) {
+        case 1: return "Cơ bản";
+        case 2: return "Trung cấp";
+        case 3: return "Nâng cao";
+        default: return "Không xác định";
+    }
+};
+
 export default function CoursesPage() {
-    const [courses, setCourses] = useState<Course[]>(mockCourses);
-    const [filteredCourses, setFilteredCourses] = useState<Course[]>(mockCourses);
-    const [categories, setCategories] = useState<CourseCategory[]>(mockCategories);
     const [viewMode, setViewMode] = useState<ViewMode>("grid");
     const [currentPage, setCurrentPage] = useState(1);
-    const [filter, setFilter] = useState<CourseFilter>({});
+    const [pageSize, setPageSize] = useState(6);
+    const [filter, setFilter] = useState<Partial<CourseFilterParamsType>>({});
     const [searchQuery, setSearchQuery] = useState("");
 
-    const coursesPerPage = 6;
-    const totalPages = Math.ceil(filteredCourses.length / coursesPerPage);
-    const startIndex = (currentPage - 1) * coursesPerPage;
-    const endIndex = startIndex + coursesPerPage;
-    const currentCourses = filteredCourses.slice(startIndex, endIndex);
+    // Build API filter params (match CourseFilterParams from schema)
+    const apiFilterParams: CourseFilterParamsType = {
+        pageNumber: currentPage,
+        pageSize,
+        sortOrder: (filter.sortOrder as string) || "desc",
+        sortBy: filter.sortBy || undefined,
+        search: searchQuery || undefined,
+        category: filter.category || undefined,
+        level: filter.level as number | undefined,
+        priceMin: filter.priceMin || undefined,
+        priceMax: filter.priceMax || undefined,
+        rating: filter.rating || undefined,
+        tags: filter.tags || undefined,
+    };
 
-    // Filter courses based on search and filters
-    useEffect(() => {
-        let filtered = courses;
+    // API queries
+    const { data: coursesData, isLoading: coursesLoading, error: coursesError } = useCoursesQuery(apiFilterParams);
+    const { data: categoriesData, isLoading: categoriesLoading } = useCategoriesQuery();
 
-        // Search filter
-        if (searchQuery) {
-            filtered = filtered.filter(course =>
-                course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                course.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                course.instructor.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                course.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-            );
-        }
+    // According to schema: response shape is { data: Course[], message, meta: { pageNumber, pageSize, total, totalPages } }
+    const courses = coursesData?.data.data || [];
+    const categories = Array.isArray(categoriesData) ? categoriesData : categoriesData?.data || [];
+    const pagination = coursesData?.data || { pageNumber: 1, pageSize: pageSize, total: 0, totalPages: 1 };
 
-        // Category filter
-        if (filter.category) {
-            filtered = filtered.filter(course => course.category.slug === filter.category);
-        }
+    // Derived values
+    const filteredCourses = courses;
+    const currentCourses = courses;
+    const totalPages = pagination.totalPages;
 
-        // Level filter
-        if (filter.level) {
-            filtered = filtered.filter(course => course.level === filter.level);
-        }
-
-        // Price filter
-        if (filter.priceMin !== undefined) {
-            filtered = filtered.filter(course => course.price >= filter.priceMin!);
-        }
-        if (filter.priceMax !== undefined) {
-            filtered = filtered.filter(course => course.price <= filter.priceMax!);
-        }
-
-        // Rating filter
-        if (filter.rating) {
-            filtered = filtered.filter(course => course.rating >= filter.rating!);
-        }
-
-        setFilteredCourses(filtered);
-        setCurrentPage(1); // Reset to first page when filters change
-    }, [searchQuery, filter, courses]);
-
-    const handleFilterChange = (key: keyof CourseFilter, value: any) => {
+    const handleFilterChange = (key: keyof Partial<CourseFilterParamsType>, value: any) => {
         setFilter(prev => ({ ...prev, [key]: value }));
+        setCurrentPage(1); // Reset to first page when filter changes
     };
 
     const clearFilters = () => {
         setFilter({});
         setSearchQuery("");
+        setCurrentPage(1);
     };
 
-    const renderCourseCard = (course: Course) => {
+    const handleSearch = (query: string) => {
+        setSearchQuery(query);
+        setCurrentPage(1);
+    };
+
+    const renderCourseCard = (course: Course): React.ReactNode => {
         const courseUrl = `${routes.user.courseDetail}/${course.id}`;
 
         if (viewMode === "list") {
@@ -223,12 +106,12 @@ export default function CoursesPage() {
                                         <p className="text-gray-600 text-sm mb-2">Giảng viên: {course.instructor}</p>
                                     </div>
                                     <Badge variant="outline" className="ml-2">
-                                        {course.level}
+                                        {getLevelLabel(course.level)}
                                     </Badge>
                                 </div>
                                 <p className="text-gray-700 text-sm line-clamp-2 mb-3">{course.description}</p>
                                 <div className="flex flex-wrap gap-2 mb-3">
-                                    {course.tags.slice(0, 3).map(tag => (
+                                    {course.tags.slice(0, 3).map((tag: string) => (
                                         <Badge key={tag} variant="secondary" className="text-xs">
                                             {tag}
                                         </Badge>
@@ -278,7 +161,7 @@ export default function CoursesPage() {
                     </div>
                     <div className="p-6">
                         <div className="flex items-start justify-between mb-2">
-                            <Badge variant="outline">{course.level}</Badge>
+                            <Badge variant="outline">{getLevelLabel(course.level)}</Badge>
                             <Badge variant="secondary">{course.category.name}</Badge>
                         </div>
                         <h3 className="text-lg font-semibold line-clamp-2 mb-2">{course.title}</h3>
@@ -375,7 +258,7 @@ export default function CoursesPage() {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Tất cả danh mục</SelectItem>
-                                {categories.map(category => (
+                                {categories.map((category: any) => (
                                     <SelectItem key={category.id} value={category.slug}>
                                         {category.icon} {category.name}
                                     </SelectItem>
@@ -383,15 +266,16 @@ export default function CoursesPage() {
                             </SelectContent>
                         </Select>
 
-                        <Select value={filter.level || "all"} onValueChange={(value) => handleFilterChange("level", value === "all" ? undefined : value)}>
+                        <Select value={filter.level?.toString() || "all"} onValueChange={(value) => handleFilterChange("level", value === "all" ? undefined : parseInt(value))}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Cấp độ" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Tất cả cấp độ</SelectItem>
-                                <SelectItem value="beginner">Cơ bản</SelectItem>
-                                <SelectItem value="intermediate">Trung cấp</SelectItem>
-                                <SelectItem value="advanced">Nâng cao</SelectItem>
+                                {/* NOTE: backend expects numeric level. Mapping: 1=beginner, 2=intermediate, 3=advanced */}
+                                <SelectItem value="1">Cơ bản</SelectItem>
+                                <SelectItem value="2">Trung cấp</SelectItem>
+                                <SelectItem value="3">Nâng cao</SelectItem>
                             </SelectContent>
                         </Select>
 
@@ -407,7 +291,7 @@ export default function CoursesPage() {
 
             {/* Categories Quick Filter */}
             <div className="flex flex-wrap gap-2">
-                {categories.map(category => {
+                {categories.map((category: any) => {
                     const isActive = filter.category === category.slug;
                     return (
                         <Button

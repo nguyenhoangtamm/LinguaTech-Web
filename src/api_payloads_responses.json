@@ -1,0 +1,1238 @@
+{
+    "lessonApis": [
+        {
+            "name": "getLessons",
+            "method": "GET",
+            "endpoint": "/lessons",
+            "payload": {
+                "type": "LessonQueryParamsType",
+                "structure": {
+                    "courseId": "string (optional)",
+                    "moduleId": "string (optional)",
+                    "page": "number (default: 1)",
+                    "limit": "number (default: 10, max: 100)"
+                }
+            },
+            "response": {
+                "type": "ApiResponse<PaginatedResponse<LessonType>>",
+                "structure": {
+                    "data": {
+                        "data": [
+                            {
+                                "id": "string",
+                                "title": "string",
+                                "description": "string (optional)",
+                                "content": "string (optional)",
+                                "duration": "number",
+                                "order": "number",
+                                "isPublished": "boolean",
+                                "isCompleted": "boolean",
+                                "moduleId": "string",
+                                "createdAt": "Date",
+                                "updatedAt": "Date"
+                            }
+                        ],
+                        "meta": {
+                            "page": "number",
+                            "limit": "number",
+                            "total": "number",
+                            "totalPages": "number"
+                        }
+                    },
+                    "message": "string"
+                }
+            }
+        },
+        {
+            "name": "getLesson",
+            "method": "GET",
+            "endpoint": "/lessons/{id}",
+            "payload": null,
+            "response": {
+                "type": "ApiResponse<LessonType>",
+                "structure": {
+                    "data": {
+                        "id": "number",
+                        "title": "string",
+                        "description": "string (optional)",
+                        "content": "string (optional)",
+                        "duration": "number",
+                        "order": "number",
+                        "isPublished": "boolean",
+                        "isCompleted": "boolean",
+                        "moduleId": "string",
+                        "createdAt": "Date",
+                        "updatedAt": "Date"
+                    },
+                    "message": "string"
+                }
+            }
+        },
+        {
+            "name": "createLesson",
+            "method": "POST",
+            "endpoint": "/lessons/create",
+            "payload": {
+                "type": "CreateLessonBodyType",
+                "structure": {
+                    "title": "string (required, min: 1)",
+                    "description": "string (optional)",
+                    "content": "string (optional)",
+                    "duration": "number (required, min: 1)",
+                    "order": "number (required)",
+                    "moduleId": "string (required)",
+                    "isPublished": "boolean (default: false)"
+                }
+            },
+            "response": {
+                "type": "ApiResponse<LessonType>",
+                "structure": {
+                    "data": {
+                        "id": "number",
+                        "title": "string",
+                        "description": "string (optional)",
+                        "content": "string (optional)",
+                        "duration": "number",
+                        "order": "number",
+                        "isPublished": "boolean",
+                        "isCompleted": "boolean",
+                        "moduleId": "string",
+                        "createdAt": "Date",
+                        "updatedAt": "Date"
+                    },
+                    "message": "string"
+                }
+            }
+        },
+        {
+            "name": "updateLesson",
+            "method": "POST",
+            "endpoint": "/lessons/update/{id}",
+            "payload": {
+                "type": "UpdateLessonBodyType",
+                "structure": {
+                    "title": "string (optional)",
+                    "description": "string (optional)",
+                    "content": "string (optional)",
+                    "duration": "number (optional)",
+                    "order": "number (optional)",
+                    "moduleId": "string (optional)",
+                    "isPublished": "boolean (optional)"
+                }
+            },
+            "response": {
+                "type": "ApiResponse<LessonType>",
+                "structure": {
+                    "data": {
+                        "id": "number",
+                        "title": "string",
+                        "description": "string (optional)",
+                        "content": "string (optional)",
+                        "duration": "number",
+                        "order": "number",
+                        "isPublished": "boolean",
+                        "isCompleted": "boolean",
+                        "moduleId": "string",
+                        "createdAt": "Date",
+                        "updatedAt": "Date"
+                    },
+                    "message": "string"
+                }
+            }
+        },
+        {
+            "name": "deleteLesson",
+            "method": "POST",
+            "endpoint": "/lessons/delete/{id}",
+            "payload": null,
+            "response": {
+                "type": "ApiResponse<null>",
+                "structure": {
+                    "data": null,
+                    "message": "string"
+                }
+            }
+        },
+        {
+            "name": "completeLesson",
+            "method": "POST",
+            "endpoint": "/lessons/complete/{id}",
+            "payload": null,
+            "response": {
+                "type": "ApiResponse<LessonType>",
+                "structure": {
+                    "data": {
+                        "id": "number",
+                        "title": "string",
+                        "description": "string (optional)",
+                        "content": "string (optional)",
+                        "duration": "number",
+                        "order": "number",
+                        "isPublished": "boolean",
+                        "isCompleted": "boolean",
+                        "moduleId": "string",
+                        "createdAt": "Date",
+                        "updatedAt": "Date"
+                    },
+                    "message": "string"
+                }
+            }
+        }
+    ],
+    "moduleApis": [
+        {
+            "name": "getModulesByCourse",
+            "method": "GET",
+            "endpoint": "/courses/{courseId}/modules",
+            "payload": null,
+            "response": {
+                "type": "ApiResponse<ModuleWithLessonsType[]>",
+                "structure": {
+                    "data": [
+                        {
+                            "id": "string",
+                            "title": "string",
+                            "description": "string (optional)",
+                            "order": "number",
+                            "courseId": "string",
+                            "lessons": [
+                                {
+                                    "id": "string",
+                                    "title": "string",
+                                    "description": "string (optional)",
+                                    "content": "string (optional)",
+                                    "duration": "number",
+                                    "order": "number",
+                                    "isPublished": "boolean",
+                                    "isCompleted": "boolean",
+                                    "moduleId": "string",
+                                    "createdAt": "Date",
+                                    "updatedAt": "Date",
+                                    "materials": [
+                                        {
+                                            "id": "string",
+                                            "title": "string",
+                                            "fileName": "string",
+                                            "fileUrl": "string",
+                                            "fileType": "enum: pdf|video|image|document|audio",
+                                            "size": "number",
+                                            "lessonId": "string",
+                                            "createdAt": "Date",
+                                            "updatedAt": "Date"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "createdAt": "Date",
+                            "updatedAt": "Date"
+                        }
+                    ],
+                    "message": "string"
+                }
+            }
+        },
+        {
+            "name": "getModule",
+            "method": "GET",
+            "endpoint": "/modules/{id}",
+            "payload": null,
+            "response": {
+                "type": "ApiResponse<ModuleWithLessonsType>",
+                "structure": {
+                    "data": {
+                        "id": "number",
+                        "title": "string",
+                        "description": "string (optional)",
+                        "order": "number",
+                        "courseId": "string",
+                        "lessons": [
+                            {
+                                "id": "string",
+                                "title": "string",
+                                "description": "string (optional)",
+                                "content": "string (optional)",
+                                "duration": "number",
+                                "order": "number",
+                                "isPublished": "boolean",
+                                "isCompleted": "boolean",
+                                "moduleId": "string",
+                                "createdAt": "Date",
+                                "updatedAt": "Date",
+                                "materials": [
+                                    {
+                                        "id": "string",
+                                        "title": "string",
+                                        "fileName": "string",
+                                        "fileUrl": "string",
+                                        "fileType": "enum: pdf|video|image|document|audio",
+                                        "size": "number",
+                                        "lessonId": "string",
+                                        "createdAt": "Date",
+                                        "updatedAt": "Date"
+                                    }
+                                ]
+                            }
+                        ],
+                        "createdAt": "Date",
+                        "updatedAt": "Date"
+                    },
+                    "message": "string"
+                }
+            }
+        },
+        {
+            "name": "createModule",
+            "method": "POST",
+            "endpoint": "/modules/create",
+            "payload": {
+                "type": "CreateModuleBodyType",
+                "structure": {
+                    "title": "string (required, min: 1)",
+                    "description": "string (optional)",
+                    "order": "number (required)",
+                    "courseId": "string (required)"
+                }
+            },
+            "response": {
+                "type": "ApiResponse<ModuleType>",
+                "structure": {
+                    "data": {
+                        "id": "number",
+                        "title": "string",
+                        "description": "string (optional)",
+                        "order": "number",
+                        "courseId": "string",
+                        "createdAt": "Date",
+                        "updatedAt": "Date"
+                    },
+                    "message": "string"
+                }
+            }
+        },
+        {
+            "name": "updateModule",
+            "method": "POST",
+            "endpoint": "/modules/update/{id}",
+            "payload": {
+                "type": "UpdateModuleBodyType",
+                "structure": {
+                    "title": "string (optional)",
+                    "description": "string (optional)",
+                    "order": "number (optional)",
+                    "courseId": "string (optional)"
+                }
+            },
+            "response": {
+                "type": "ApiResponse<ModuleType>",
+                "structure": {
+                    "data": {
+                        "id": "number",
+                        "title": "string",
+                        "description": "string (optional)",
+                        "order": "number",
+                        "courseId": "string",
+                        "createdAt": "Date",
+                        "updatedAt": "Date"
+                    },
+                    "message": "string"
+                }
+            }
+        },
+        {
+            "name": "deleteModule",
+            "method": "POST",
+            "endpoint": "/modules/delete/{id}",
+            "payload": null,
+            "response": {
+                "type": "ApiResponse<null>",
+                "structure": {
+                    "data": null,
+                    "message": "string"
+                }
+            }
+        }
+    ],
+    "materialApis": [
+        {
+            "name": "getMaterialsByLesson",
+            "method": "GET",
+            "endpoint": "/lessons/{lessonId}/materials",
+            "payload": {
+                "type": "MaterialQueryParamsType",
+                "structure": {
+                    "lessonId": "string (optional)",
+                    "type": "enum: pdf|video|image|document|audio (optional)"
+                }
+            },
+            "response": {
+                "type": "ApiResponse<MaterialType[]>",
+                "structure": {
+                    "data": [
+                        {
+                            "id": "string",
+                            "title": "string",
+                            "fileName": "string",
+                            "fileUrl": "string",
+                            "fileType": "enum: pdf|video|image|document|audio",
+                            "size": "number",
+                            "lessonId": "string",
+                            "createdAt": "Date",
+                            "updatedAt": "Date"
+                        }
+                    ],
+                    "message": "string"
+                }
+            }
+        },
+        {
+            "name": "getMaterial",
+            "method": "GET",
+            "endpoint": "/materials/{id}",
+            "payload": null,
+            "response": {
+                "type": "ApiResponse<MaterialType>",
+                "structure": {
+                    "data": {
+                        "id": "number",
+                        "title": "string",
+                        "fileName": "string",
+                        "fileUrl": "string",
+                        "fileType": "enum: pdf|video|image|document|audio",
+                        "size": "number",
+                        "lessonId": "string",
+                        "createdAt": "Date",
+                        "updatedAt": "Date"
+                    },
+                    "message": "string"
+                }
+            }
+        },
+        {
+            "name": "createMaterial",
+            "method": "POST",
+            "endpoint": "/materials/create",
+            "payload": {
+                "type": "CreateMaterialBodyType",
+                "structure": {
+                    "title": "string (required, min: 1)",
+                    "fileName": "string (required)",
+                    "fileUrl": "string (required)",
+                    "fileType": "enum: pdf|video|image|document|audio (required)",
+                    "size": "number (required)",
+                    "lessonId": "string (required)"
+                }
+            },
+            "response": {
+                "type": "ApiResponse<MaterialType>",
+                "structure": {
+                    "data": {
+                        "id": "number",
+                        "title": "string",
+                        "fileName": "string",
+                        "fileUrl": "string",
+                        "fileType": "enum: pdf|video|image|document|audio",
+                        "size": "number",
+                        "lessonId": "string",
+                        "createdAt": "Date",
+                        "updatedAt": "Date"
+                    },
+                    "message": "string"
+                }
+            }
+        },
+        {
+            "name": "updateMaterial",
+            "method": "POST",
+            "endpoint": "/materials/update/{id}",
+            "payload": {
+                "type": "UpdateMaterialBodyType",
+                "structure": {
+                    "title": "string (optional)",
+                    "fileName": "string (optional)",
+                    "fileUrl": "string (optional)",
+                    "fileType": "enum (optional)",
+                    "size": "number (optional)",
+                    "lessonId": "string (optional)"
+                }
+            },
+            "response": {
+                "type": "ApiResponse<MaterialType>",
+                "structure": {
+                    "data": {
+                        "id": "number",
+                        "title": "string",
+                        "fileName": "string",
+                        "fileUrl": "string",
+                        "fileType": "enum: pdf|video|image|document|audio",
+                        "size": "number",
+                        "lessonId": "string",
+                        "createdAt": "Date",
+                        "updatedAt": "Date"
+                    },
+                    "message": "string"
+                }
+            }
+        },
+        {
+            "name": "deleteMaterial",
+            "method": "POST",
+            "endpoint": "/materials/delete/{id}",
+            "payload": null,
+            "response": {
+                "type": "ApiResponse<null>",
+                "structure": {
+                    "data": null,
+                    "message": "string"
+                }
+            }
+        },
+        {
+            "name": "downloadMaterial",
+            "method": "GET",
+            "endpoint": "/materials/{id}/download",
+            "payload": null,
+            "response": {
+                "type": "Blob",
+                "description": "File binary data"
+            }
+        }
+    ],
+    "courseApis": [
+        {
+            "name": "getCourses",
+            "method": "GET",
+            "endpoint": "/courses",
+            "payload": {
+                "type": "CourseFilterParamsType",
+                "structure": {
+                    "page": "number (default: 1)",
+                    "limit": "number (default: 10)",
+                    "search": "string (optional)",
+                    "category": "string (optional)",
+                    "level": "number (1-3) (optional)",
+                    "priceMin": "number (optional)",
+                    "priceMax": "number (optional)",
+                    "rating": "number (optional)",
+                    "tags": "array<string> (optional)",
+                    "sortBy": "enum: title|price|rating|createdAt|studentsCount (optional)",
+                    "sortOrder": "enum: asc|desc (default: desc)"
+                }
+            },
+            "response": {
+                "type": "CoursesListResType",
+                "structure": {
+                    "data": [
+                        {
+                            "id": "string",
+                            "title": "string",
+                            "description": "string",
+                            "instructor": "string",
+                            "duration": "number",
+                            "level": "enum: beginner|intermediate|advanced",
+                            "price": "number",
+                            "rating": "number",
+                            "studentsCount": "number",
+                            "category": {
+                                "id": "string",
+                                "name": "string",
+                                "slug": "string",
+                                "description": "string (nullable)",
+                                "icon": "string (nullable)",
+                                "createdAt": "Date",
+                                "updatedAt": "Date"
+                            },
+                            "tags": "array<string>",
+                            "thumbnail": "string",
+                            "videoUrl": "string (nullable)",
+                            "createdAt": "Date",
+                            "updatedAt": "Date",
+                            "isPublished": "boolean"
+                        }
+                    ],
+                    "message": "string",
+                    "meta": {
+                        "page": "number",
+                        "limit": "number",
+                        "total": "number",
+                        "totalPages": "number"
+                    }
+                }
+            }
+        },
+        {
+            "name": "getCourse",
+            "method": "GET",
+            "endpoint": "/courses/{id}",
+            "payload": null,
+            "response": {
+                "type": "CourseDetailResType",
+                "structure": {
+                    "data": {
+                        "id": "number",
+                        "title": "string",
+                        "description": "string",
+                        "instructor": "string",
+                        "duration": "number",
+                        "level": "number (1-3)",
+                        "price": "number",
+                        "rating": "number",
+                        "studentsCount": "number",
+                        "category": {
+                            "id": "string",
+                            "name": "string",
+                            "slug": "string",
+                            "description": "string (nullable)",
+                            "icon": "string (nullable)",
+                            "createdAt": "Date",
+                            "updatedAt": "Date"
+                        },
+                        "tags": "array<string>",
+                        "thumbnail": "string",
+                        "videoUrl": "string (nullable)",
+                        "createdAt": "Date",
+                        "updatedAt": "Date",
+                        "isPublished": "boolean"
+                    },
+                    "message": "string"
+                }
+            }
+        },
+        {
+            "name": "getCourseDetail",
+            "method": "GET",
+            "endpoint": "/courses/{id}/detail",
+            "payload": null,
+            "response": {
+                "type": "CourseDetailWithModulesResType",
+                "structure": {
+                    "data": {
+                        "course": {
+                            "id": "string",
+                            "title": "string",
+                            "description": "string",
+                            "instructor": "string",
+                            "duration": "number",
+                            "level": "number (1-3)",
+                            "price": "number",
+                            "rating": "number",
+                            "studentsCount": "number",
+                            "category": {
+                                "id": "string",
+                                "name": "string",
+                                "slug": "string",
+                                "description": "string (nullable)",
+                                "icon": "string (nullable)",
+                                "createdAt": "Date",
+                                "updatedAt": "Date"
+                            },
+                            "tags": "array<string>",
+                            "thumbnail": "string",
+                            "videoUrl": "string (nullable)",
+                            "createdAt": "Date",
+                            "updatedAt": "Date",
+                            "isPublished": "boolean"
+                        },
+                        "modules": [
+                            {
+                                "id": "string",
+                                "title": "string",
+                                "description": "string (optional)",
+                                "order": "number",
+                                "lessons": [
+                                    {
+                                        "id": "string",
+                                        "title": "string",
+                                        "duration": "number",
+                                        "completed": "boolean",
+                                        "materials": "array<string>",
+                                        "contentType": "enum: video|reading|quiz|assignment",
+                                        "order": "number"
+                                    }
+                                ]
+                            }
+                        ],
+                        "materials": [
+                            {
+                                "id": "string",
+                                "fileName": "string",
+                                "fileUrl": "string",
+                                "fileType": "string",
+                                "size": "number"
+                            }
+                        ],
+                        "instructor": {
+                            "name": "string",
+                            "avatar": "string",
+                            "title": "string",
+                            "company": "string",
+                            "experience": "string",
+                            "students": "number",
+                            "courses": "number",
+                            "rating": "number",
+                            "bio": "string"
+                        },
+                        "reviews": [
+                            {
+                                "id": "string",
+                                "userName": "string",
+                                "avatar": "string",
+                                "rating": "number",
+                                "comment": "string",
+                                "date": "string",
+                                "helpful": "number (optional)"
+                            }
+                        ],
+                        "faqs": [
+                            {
+                                "id": "string",
+                                "question": "string",
+                                "answer": "string"
+                            }
+                        ]
+                    },
+                    "message": "string"
+                }
+            }
+        },
+        {
+            "name": "createCourse",
+            "method": "POST",
+            "endpoint": "/courses/create",
+            "payload": {
+                "type": "CourseCreateBodyType",
+                "structure": {
+                    "title": "string (required)",
+                    "description": "string (required)",
+                    "instructor": "string (required)",
+                    "duration": "number (required, min: 1)",
+                    "level": "number (1-3) (required)",
+                    "price": "number (required, min: 0)",
+                    "categoryId": "string (required)",
+                    "tags": "array<string> (required)",
+                    "thumbnail": "string (optional)",
+                    "videoUrl": "string (optional)"
+                }
+            },
+            "response": {
+                "type": "CourseDetailResType",
+                "structure": {
+                    "data": {
+                        "id": "number",
+                        "title": "string",
+                        "description": "string",
+                        "instructor": "string",
+                        "duration": "number",
+                        "level": "enum: beginner|intermediate|advanced",
+                        "price": "number",
+                        "rating": "number",
+                        "studentsCount": "number",
+                        "category": {
+                            "id": "string",
+                            "name": "string",
+                            "slug": "string",
+                            "description": "string (nullable)",
+                            "icon": "string (nullable)",
+                            "createdAt": "Date",
+                            "updatedAt": "Date"
+                        },
+                        "tags": "array<string>",
+                        "thumbnail": "string",
+                        "videoUrl": "string (nullable)",
+                        "createdAt": "Date",
+                        "updatedAt": "Date",
+                        "isPublished": "boolean"
+                    },
+                    "message": "string"
+                }
+            }
+        },
+        {
+            "name": "updateCourse",
+            "method": "POST",
+            "endpoint": "/courses/update/{id}",
+            "payload": {
+                "type": "CourseUpdateBodyType",
+                "structure": {
+                    "title": "string (optional)",
+                    "description": "string (optional)",
+                    "instructor": "string (optional)",
+                    "duration": "number (optional)",
+                    "level": "enum (optional)",
+                    "price": "number (optional)",
+                    "categoryId": "string (optional)",
+                    "tags": "array<string> (optional)",
+                    "thumbnail": "string (optional)",
+                    "videoUrl": "string (optional)"
+                }
+            },
+            "response": {
+                "type": "CourseDetailResType",
+                "structure": {
+                    "data": {
+                        "id": "number",
+                        "title": "string",
+                        "description": "string",
+                        "instructor": "string",
+                        "duration": "number",
+                        "level": "enum: beginner|intermediate|advanced",
+                        "price": "number",
+                        "rating": "number",
+                        "studentsCount": "number",
+                        "category": {
+                            "id": "string",
+                            "name": "string",
+                            "slug": "string",
+                            "description": "string (nullable)",
+                            "icon": "string (nullable)",
+                            "createdAt": "Date",
+                            "updatedAt": "Date"
+                        },
+                        "tags": "array<string>",
+                        "thumbnail": "string",
+                        "videoUrl": "string (nullable)",
+                        "createdAt": "Date",
+                        "updatedAt": "Date",
+                        "isPublished": "boolean"
+                    },
+                    "message": "string"
+                }
+            }
+        },
+        {
+            "name": "deleteCourse",
+            "method": "POST",
+            "endpoint": "/courses/delete/{id}",
+            "payload": null,
+            "response": {
+                "type": "MessageResType",
+                "structure": {
+                    "message": "string"
+                }
+            }
+        },
+        {
+            "name": "getCategories",
+            "method": "GET",
+            "endpoint": "/courses/categories",
+            "payload": null,
+            "response": {
+                "type": "CourseCategoriesListResType",
+                "structure": {
+                    "data": [
+                        {
+                            "id": "string",
+                            "name": "string",
+                            "slug": "string",
+                            "description": "string (nullable)",
+                            "icon": "string (nullable)",
+                            "createdAt": "Date",
+                            "updatedAt": "Date"
+                        }
+                    ],
+                    "message": "string"
+                }
+            }
+        },
+        {
+            "name": "getCoursesByCategory",
+            "method": "GET",
+            "endpoint": "/courses/category/{categorySlug}",
+            "payload": {
+                "type": "CourseFilterParamsType",
+                "structure": {
+                    "page": "number (default: 1)",
+                    "limit": "number (default: 10)",
+                    "search": "string (optional)",
+                    "category": "string (optional)",
+                    "level": "enum: beginner|intermediate|advanced (optional)",
+                    "priceMin": "number (optional)",
+                    "priceMax": "number (optional)",
+                    "rating": "number (optional)",
+                    "tags": "array<string> (optional)",
+                    "sortBy": "enum: title|price|rating|createdAt|studentsCount (optional)",
+                    "sortOrder": "enum: asc|desc (default: desc)"
+                }
+            },
+            "response": {
+                "type": "CoursesListResType",
+                "structure": {
+                    "data": [
+                        {
+                            "id": "string",
+                            "title": "string",
+                            "description": "string",
+                            "instructor": "string",
+                            "duration": "number",
+                            "level": "enum: beginner|intermediate|advanced",
+                            "price": "number",
+                            "rating": "number",
+                            "studentsCount": "number",
+                            "category": {
+                                "id": "string",
+                                "name": "string",
+                                "slug": "string",
+                                "description": "string (nullable)",
+                                "icon": "string (nullable)",
+                                "createdAt": "Date",
+                                "updatedAt": "Date"
+                            },
+                            "tags": "array<string>",
+                            "thumbnail": "string",
+                            "videoUrl": "string (nullable)",
+                            "createdAt": "Date",
+                            "updatedAt": "Date",
+                            "isPublished": "boolean"
+                        }
+                    ],
+                    "message": "string",
+                    "meta": {
+                        "page": "number",
+                        "limit": "number",
+                        "total": "number",
+                        "totalPages": "number"
+                    }
+                }
+            }
+        },
+        {
+            "name": "enrollCourse",
+            "method": "POST",
+            "endpoint": "/enrollments/create",
+            "payload": {
+                "type": "EnrollmentCreateBodyType",
+                "structure": {
+                    "courseId": "string (required)"
+                }
+            },
+            "response": {
+                "type": "EnrollmentResType",
+                "structure": {
+                    "id": "string",
+                    "userId": "string",
+                    "courseId": "string",
+                    "enrolledAt": "Date",
+                    "status": "enum: active|completed|paused|cancelled",
+                    "progress": {
+                        "courseId": "string",
+                        "userId": "string",
+                        "completedLessons": "number",
+                        "totalLessons": "number",
+                        "progressPercentage": "number",
+                        "lastAccessedAt": "Date",
+                        "startedAt": "Date",
+                        "completedAt": "Date (nullable)"
+                    }
+                }
+            }
+        },
+        {
+            "name": "getUserEnrollments",
+            "method": "GET",
+            "endpoint": "/enrollments/my-courses",
+            "payload": null,
+            "response": {
+                "type": "UserEnrollmentsResType",
+                "structure": {
+                    "data": [
+                        {
+                            "enrollment": {
+                                "id": "string",
+                                "userId": "string",
+                                "courseId": "string",
+                                "enrolledAt": "Date",
+                                "status": "enum: active|completed|paused|cancelled",
+                                "progress": {
+                                    "courseId": "string",
+                                    "userId": "string",
+                                    "completedLessons": "number",
+                                    "totalLessons": "number",
+                                    "progressPercentage": "number",
+                                    "lastAccessedAt": "Date",
+                                    "startedAt": "Date",
+                                    "completedAt": "Date (nullable)"
+                                }
+                            },
+                            "course": {
+                                "id": "string",
+                                "title": "string",
+                                "description": "string",
+                                "instructor": "string",
+                                "duration": "number",
+                                "level": "enum: beginner|intermediate|advanced",
+                                "price": "number",
+                                "rating": "number",
+                                "studentsCount": "number",
+                                "category": {
+                                    "id": "string",
+                                    "name": "string",
+                                    "slug": "string",
+                                    "description": "string (nullable)",
+                                    "icon": "string (nullable)",
+                                    "createdAt": "Date",
+                                    "updatedAt": "Date"
+                                },
+                                "tags": "array<string>",
+                                "thumbnail": "string",
+                                "videoUrl": "string (nullable)",
+                                "createdAt": "Date",
+                                "updatedAt": "Date",
+                                "isPublished": "boolean"
+                            }
+                        }
+                    ],
+                    "message": "string"
+                }
+            }
+        },
+        {
+            "name": "checkEnrollment",
+            "method": "GET",
+            "endpoint": "/enrollments/check/{courseId}",
+            "payload": null,
+            "response": {
+                "type": "object",
+                "structure": {
+                    "data": {
+                        "isEnrolled": "boolean",
+                        "enrollment": {
+                            "id": "string",
+                            "userId": "string",
+                            "courseId": "string",
+                            "enrolledAt": "Date",
+                            "status": "enum: active|completed|paused|cancelled",
+                            "progress": {
+                                "courseId": "string",
+                                "userId": "string",
+                                "completedLessons": "number",
+                                "totalLessons": "number",
+                                "progressPercentage": "number",
+                                "lastAccessedAt": "Date",
+                                "startedAt": "Date",
+                                "completedAt": "Date (nullable)"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "name": "updateProgress",
+            "method": "POST",
+            "endpoint": "/enrollments/update-progress/{courseId}",
+            "payload": {
+                "type": "UpdateProgressBodyType",
+                "structure": {
+                    "lessonId": "string (required)",
+                    "completed": "boolean (required)",
+                    "timeSpent": "number (optional)"
+                }
+            },
+            "response": {
+                "type": "UpdateProgressResType",
+                "structure": {
+                    "data": {
+                        "progressPercentage": "number",
+                        "completedLessons": "number",
+                        "totalLessons": "number"
+                    },
+                    "message": "string"
+                }
+            }
+        },
+        {
+            "name": "getDashboardStats",
+            "method": "GET",
+            "endpoint": "/users/dashboard-stats",
+            "payload": null,
+            "response": {
+                "type": "UserDashboardStatsResType",
+                "structure": {
+                    "data": {
+                        "totalCourses": "number",
+                        "completedCourses": "number",
+                        "inProgressCourses": "number",
+                        "totalStudyHours": "number",
+                        "streak": "number",
+                        "achievements": [
+                            {
+                                "id": "string",
+                                "title": "string",
+                                "description": "string",
+                                "icon": "string",
+                                "unlockedAt": "Date",
+                                "type": "enum: course_completion|streak|study_hours|skill|other"
+                            }
+                        ]
+                    },
+                    "message": "string"
+                }
+            }
+        },
+        {
+            "name": "getRecentCourses",
+            "method": "GET",
+            "endpoint": "/courses/recent",
+            "payload": null,
+            "response": {
+                "type": "CoursesListResType",
+                "structure": {
+                    "data": [
+                        {
+                            "id": "string",
+                            "title": "string",
+                            "description": "string",
+                            "instructor": "string",
+                            "duration": "number",
+                            "level": "enum: beginner|intermediate|advanced",
+                            "price": "number",
+                            "rating": "number",
+                            "studentsCount": "number",
+                            "category": {
+                                "id": "string",
+                                "name": "string",
+                                "slug": "string",
+                                "description": "string (nullable)",
+                                "icon": "string (nullable)",
+                                "createdAt": "Date",
+                                "updatedAt": "Date"
+                            },
+                            "tags": "array<string>",
+                            "thumbnail": "string",
+                            "videoUrl": "string (nullable)",
+                            "createdAt": "Date",
+                            "updatedAt": "Date",
+                            "isPublished": "boolean"
+                        }
+                    ],
+                    "message": "string",
+                    "meta": {
+                        "page": "number",
+                        "limit": "number",
+                        "total": "number",
+                        "totalPages": "number"
+                    }
+                }
+            }
+        },
+        {
+            "name": "getContinueCourses",
+            "method": "GET",
+            "endpoint": "/enrollments/continue",
+            "payload": null,
+            "response": {
+                "type": "UserEnrollmentsResType",
+                "structure": {
+                    "data": [
+                        {
+                            "enrollment": {
+                                "id": "string",
+                                "userId": "string",
+                                "courseId": "string",
+                                "enrolledAt": "Date",
+                                "status": "enum: active|completed|paused|cancelled",
+                                "progress": {
+                                    "courseId": "string",
+                                    "userId": "string",
+                                    "completedLessons": "number",
+                                    "totalLessons": "number",
+                                    "progressPercentage": "number",
+                                    "lastAccessedAt": "Date",
+                                    "startedAt": "Date",
+                                    "completedAt": "Date (nullable)"
+                                }
+                            },
+                            "course": {
+                                "id": "string",
+                                "title": "string",
+                                "description": "string",
+                                "instructor": "string",
+                                "duration": "number",
+                                "level": "enum: beginner|intermediate|advanced",
+                                "price": "number",
+                                "rating": "number",
+                                "studentsCount": "number",
+                                "category": {
+                                    "id": "string",
+                                    "name": "string",
+                                    "slug": "string",
+                                    "description": "string (nullable)",
+                                    "icon": "string (nullable)",
+                                    "createdAt": "Date",
+                                    "updatedAt": "Date"
+                                },
+                                "tags": "array<string>",
+                                "thumbnail": "string",
+                                "videoUrl": "string (nullable)",
+                                "createdAt": "Date",
+                                "updatedAt": "Date",
+                                "isPublished": "boolean"
+                            }
+                        }
+                    ],
+                    "message": "string"
+                }
+            }
+        },
+        {
+            "name": "searchCourses",
+            "method": "GET",
+            "endpoint": "/courses/search",
+            "payload": {
+                "type": "string + CourseFilterParamsType (without search)",
+                "structure": {
+                    "search": "string (required)",
+                    "page": "number (default: 1)",
+                    "limit": "number (default: 10)",
+                    "category": "string (optional)",
+                    "level": "enum: beginner|intermediate|advanced (optional)",
+                    "priceMin": "number (optional)",
+                    "priceMax": "number (optional)",
+                    "rating": "number (optional)",
+                    "tags": "array<string> (optional)",
+                    "sortBy": "enum: title|price|rating|createdAt|studentsCount (optional)",
+                    "sortOrder": "enum: asc|desc (default: desc)"
+                }
+            },
+            "response": {
+                "type": "CoursesListResType",
+                "structure": {
+                    "data": [
+                        {
+                            "id": "string",
+                            "title": "string",
+                            "description": "string",
+                            "instructor": "string",
+                            "duration": "number",
+                            "level": "enum: beginner|intermediate|advanced",
+                            "price": "number",
+                            "rating": "number",
+                            "studentsCount": "number",
+                            "category": {
+                                "id": "string",
+                                "name": "string",
+                                "slug": "string",
+                                "description": "string (nullable)",
+                                "icon": "string (nullable)",
+                                "createdAt": "Date",
+                                "updatedAt": "Date"
+                            },
+                            "tags": "array<string>",
+                            "thumbnail": "string",
+                            "videoUrl": "string (nullable)",
+                            "createdAt": "Date",
+                            "updatedAt": "Date",
+                            "isPublished": "boolean"
+                        }
+                    ],
+                    "message": "string",
+                    "meta": {
+                        "page": "number",
+                        "limit": "number",
+                        "total": "number",
+                        "totalPages": "number"
+                    }
+                }
+            }
+        }
+    ]
+}

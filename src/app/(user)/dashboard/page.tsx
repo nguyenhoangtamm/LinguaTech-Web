@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -15,100 +14,68 @@ import {
     Target,
     Users
 } from "lucide-react";
-import { UserDashboardStats, Course, Enrollment } from "@/types/course";
 import Link from "next/link";
 import { routes } from "@/config/routes";
-
-// Mock data - thay thế bằng API calls thực tế
-const mockStats: UserDashboardStats = {
-    totalCourses: 12,
-    completedCourses: 4,
-    inProgressCourses: 3,
-    totalStudyHours: 127,
-    streak: 7,
-    achievements: [
-        {
-            id: "1",
-            title: "Học viên tích cực",
-            description: "Hoàn thành 5 khóa học",
-            icon: "🎓",
-            unlockedAt: new Date(),
-            type: "course_completion"
-        },
-        {
-            id: "2",
-            title: "Streak Master",
-            description: "Học 7 ngày liên tiếp",
-            icon: "🔥",
-            unlockedAt: new Date(),
-            type: "streak"
-        }
-    ]
-};
-
-const mockContinueCourses: (Course & { progress: number })[] = [
-    {
-        id: "1",
-        title: "React Advanced Patterns",
-        description: "Học các pattern nâng cao trong React",
-        instructor: "Nguyễn Văn A",
-        duration: 40,
-        level: "advanced",
-        price: 1500000,
-        rating: 4.8,
-        studentsCount: 234,
-        category: { id: "1", name: "Frontend", slug: "frontend" },
-        tags: ["React", "JavaScript", "TypeScript"],
-        thumbnail: "/images/course1.jpg",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        isPublished: true,
-        progress: 65
-    },
-    {
-        id: "2",
-        title: "Node.js Backend Development",
-        description: "Xây dựng API với Node.js và Express",
-        instructor: "Trần Thị B",
-        duration: 35,
-        level: "intermediate",
-        price: 1200000,
-        rating: 4.6,
-        studentsCount: 189,
-        category: { id: "2", name: "Backend", slug: "backend" },
-        tags: ["Node.js", "Express", "MongoDB"],
-        thumbnail: "/images/course2.jpg",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        isPublished: true,
-        progress: 30
-    }
-];
-
-const mockRecentCourses: Course[] = [
-    {
-        id: "3",
-        title: "UI/UX Design Fundamentals",
-        description: "Học thiết kế giao diện người dùng cơ bản",
-        instructor: "Lê Văn C",
-        duration: 25,
-        level: "beginner",
-        price: 900000,
-        rating: 4.7,
-        studentsCount: 145,
-        category: { id: "3", name: "Design", slug: "design" },
-        tags: ["UI", "UX", "Figma"],
-        thumbnail: "/images/course3.jpg",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        isPublished: true
-    }
-];
+import { useDashboardStatsQuery, useUserEnrollmentsQuery } from "@/queries/useCourse";
 
 export default function UserDashboard() {
-    const [stats, setStats] = useState<UserDashboardStats>(mockStats);
-    const [continueCourses, setContinueCourses] = useState(mockContinueCourses);
-    const [recentCourses, setRecentCourses] = useState(mockRecentCourses);
+    const { data: statsData, isLoading: statsLoading, error: statsError } = useDashboardStatsQuery();
+    const { data: enrollmentsData, isLoading: enrollmentsLoading, error: enrollmentsError } = useUserEnrollmentsQuery();
+
+    const stats = statsData?.data;
+    const enrollments = enrollmentsData?.data || [];
+
+    // Lấy khóa học đang học (có progress > 0 và < 100)
+    const continueCourses = enrollments
+        .filter((item: any) => item.enrollment.progress.progressPercentage > 0 && item.enrollment.progress.progressPercentage < 100)
+        .map((item: any) => ({
+            ...item.course,
+            progress: item.enrollment.progress.progressPercentage
+        }));
+
+    // Mock recent courses for now (sẽ được thay thế bằng API thật)
+    const recentCourses = [
+        {
+            id: "3",
+            title: "UI/UX Design Fundamentals",
+            description: "Học thiết kế giao diện người dùng cơ bản",
+            instructor: "Lê Văn C",
+            duration: 25,
+            level: "beginner" as const,
+            price: 900000,
+            rating: 4.7,
+            studentsCount: 145,
+            category: { id: "3", name: "Design", slug: "design" },
+            tags: ["UI", "UX", "Figma"],
+            thumbnail: "/images/course3.jpg",
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            isPublished: true
+        }
+    ];
+
+    if (statsLoading || enrollmentsLoading) {
+        return (
+            <div className="space-y-8">
+                <div className="text-center py-12">
+                    <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h2 className="text-xl font-semibold text-gray-900 mb-2">Đang tải dashboard...</h2>
+                </div>
+            </div>
+        );
+    }
+
+    if (statsError || enrollmentsError) {
+        return (
+            <div className="space-y-8">
+                <div className="text-center py-12">
+                    <BookOpen className="w-12 h-12 text-red-400 mx-auto mb-4" />
+                    <h2 className="text-xl font-semibold text-gray-900 mb-2">Có lỗi xảy ra</h2>
+                    <p className="text-gray-600">Vui lòng thử lại sau</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-8">
@@ -196,7 +163,7 @@ export default function UserDashboard() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {continueCourses.map((course) => (
+                        {continueCourses.map((course: any) => (
                             <div key={course.id} className="border rounded-lg p-4">
                                 <div className="flex items-start justify-between mb-2">
                                     <div>
@@ -232,7 +199,7 @@ export default function UserDashboard() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {stats.achievements.map((achievement) => (
+                        {stats.achievements.map((achievement: any) => (
                             <div key={achievement.id} className="flex items-center gap-3 p-3 border rounded-lg">
                                 <div className="text-2xl">{achievement.icon}</div>
                                 <div className="flex-1">

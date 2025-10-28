@@ -24,7 +24,7 @@ import { mockAssignments, mockUserSubmissions } from "@/data/assignments";
 
 export default function AssignmentPage() {
     const params = useParams();
-    const courseId = params.id as string;
+    const courseId = params.courseId as string;
     const lessonId = params.lessonId as string;
     const assignmentId = params.assignmentId as string;
 
@@ -252,8 +252,8 @@ export default function AssignmentPage() {
                                                                 <div
                                                                     key={option.id}
                                                                     className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${isSelected
-                                                                            ? "border-blue-500 bg-blue-50"
-                                                                            : "border-gray-200 hover:border-gray-300"
+                                                                        ? "border-blue-500 bg-blue-50"
+                                                                        : "border-gray-200 hover:border-gray-300"
                                                                         } ${showResult && isCorrect
                                                                             ? "border-green-500 bg-green-50"
                                                                             : showResult && isSelected && !isCorrect

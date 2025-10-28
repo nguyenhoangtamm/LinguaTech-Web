@@ -4,7 +4,7 @@ export interface Course {
     description: string;
     instructor: string;
     duration: number; // in hours
-    level: "beginner" | "intermediate" | "advanced";
+    level: number;
     price: number;
     rating: number;
     studentsCount: number;

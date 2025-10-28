@@ -19,6 +19,8 @@ import { Course } from "@/types/course";
 import Link from "next/link";
 import { routes } from "@/config/routes";
 import { cn } from "@/utils/class-names";
+import { useCoursesQuery } from "@/queries/useCourse";
+import { CourseFilterParamsType } from "@/schemaValidations/course.schema";
 
 // Mock data (same courses from other pages)
 const mockCourses: Course[] = [
@@ -106,38 +108,46 @@ type ViewMode = "grid" | "list";
 export default function CoursesByTagPage() {
     const searchParams = useSearchParams();
     const selectedTag = searchParams.get("tag");
+    const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-    const [courses, setCourses] = useState<Course[]>([]);
-    const [allTags, setAllTags] = useState<string[]>([]);
-    const [viewMode, setViewMode] = useState<ViewMode>("grid");
-    const [levelFilter, setLevelFilter] = useState<string>("");
+    // Use API to get courses with tag filter
+    const [filterParams, setFilterParams] = useState<CourseFilterParamsType>({
+        page: 1,
+        limit: 12,
+        search: "",
+        category: "",
+        level: undefined,
+        tags: selectedTag ? [selectedTag] : [],
+        sortBy: "createdAt",
+        sortOrder: "desc"
+    });
 
+    const { data: coursesResponse, isLoading, error } = useCoursesQuery(filterParams);
+    const courses = (coursesResponse as any)?.data || [];
+    const totalCourses = (coursesResponse as any)?.meta?.total || 0;
+
+    // Update filter when tag changes
     useEffect(() => {
-        setAllTags(getAllTags());
-
-        if (selectedTag) {
-            // Filter courses by tag
-            const filteredCourses = mockCourses.filter(course =>
-                course.tags.some(tag => tag.toLowerCase() === selectedTag.toLowerCase())
-            );
-            setCourses(filteredCourses);
-        }
+        setFilterParams(prev => ({
+            ...prev,
+            tags: selectedTag ? [selectedTag] : []
+        }));
     }, [selectedTag]);
 
-    const filteredCourses = levelFilter
-        ? courses.filter(course => course.level === levelFilter)
-        : courses;
-
-    const handleLevelFilter = (level: string) => {
-        setLevelFilter(levelFilter === level ? "" : level);
+    const handleLevelFilter = (level: "beginner" | "intermediate" | "advanced") => {
+        setFilterParams(prev => ({
+            ...prev,
+            level: prev.level === level ? undefined : level
+        }));
     };
 
     const getRelatedTags = (): string[] => {
         if (!selectedTag) return [];
 
+        // Extract unique tags from current courses
         const relatedTags = new Set<string>();
-        courses.forEach(course => {
-            course.tags.forEach(tag => {
+        courses.forEach((course: any) => {
+            course.tags.forEach((tag: string) => {
                 if (tag !== selectedTag && !relatedTags.has(tag)) {
                     relatedTags.add(tag);
                 }
@@ -310,7 +320,7 @@ export default function CoursesByTagPage() {
                                 </CardDescription>
                                 <div className="mt-2">
                                     <Badge variant="secondary">
-                                        {filteredCourses.length} khóa học
+                                        {courses.length} khóa học
                                     </Badge>
                                 </div>
                             </div>
@@ -332,9 +342,9 @@ export default function CoursesByTagPage() {
                     ].map(level => (
                         <Button
                             key={level.value}
-                            variant={levelFilter === level.value ? "default" : "outline"}
+                            variant={filterParams.level === level.value ? "default" : "outline"}
                             size="sm"
-                            onClick={() => handleLevelFilter(level.value)}
+                            onClick={() => handleLevelFilter(level.value as "beginner" | "intermediate" | "advanced")}
                         >
                             {level.label}
                         </Button>
@@ -364,23 +374,23 @@ export default function CoursesByTagPage() {
                 "grid gap-6",
                 viewMode === "grid" ? "md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"
             )}>
-                {filteredCourses.map(renderCourseCard)}
+                {courses.map(renderCourseCard)}
             </div>
 
             {/* Empty State */}
-            {filteredCourses.length === 0 && (
+            {courses.length === 0 && (
                 <Card>
                     <CardContent className="p-12 text-center">
                         <Tag className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                         <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có khóa học</h3>
                         <p className="text-gray-600 mb-4">
-                            {levelFilter
-                                ? `Chưa có khóa học ${levelFilter === "beginner" ? "cơ bản" : levelFilter === "intermediate" ? "trung cấp" : "nâng cao"} với tag "${selectedTag}".`
+                            {filterParams.level
+                                ? `Chưa có khóa học ${filterParams.level === "beginner" ? "cơ bản" : filterParams.level === "intermediate" ? "trung cấp" : "nâng cao"} với tag "${selectedTag}".`
                                 : `Chưa có khóa học nào với tag "${selectedTag}".`
                             }
                         </p>
-                        {levelFilter && (
-                            <Button onClick={() => setLevelFilter("")}>Xóa bộ lọc</Button>
+                        {filterParams.level && (
+                            <Button onClick={() => setFilterParams(prev => ({ ...prev, level: undefined }))}>Xóa bộ lọc</Button>
                         )}
                     </CardContent>
                 </Card>
@@ -413,30 +423,32 @@ export default function CoursesByTagPage() {
                 </Card>
             )}
 
-            {/* All Tags */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Tất cả tags</CardTitle>
-                    <CardDescription>Tìm kiếm khóa học theo tag</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex flex-wrap gap-2">
-                        {allTags.map(tag => (
-                            <Button
-                                key={tag}
-                                variant={tag === selectedTag ? "default" : "outline"}
-                                size="sm"
-                                asChild
-                            >
-                                <Link href={`${routes.user.coursesByTag}?tag=${encodeURIComponent(tag)}`}>
-                                    <Tag className="w-3 h-3 mr-2" />
-                                    {tag}
-                                </Link>
-                            </Button>
-                        ))}
-                    </div>
-                </CardContent>
-            </Card>
+            {/* Popular Tags */}
+            {getRelatedTags().length > 0 && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Các tag phổ biến</CardTitle>
+                        <CardDescription>Tìm kiếm khóa học theo tag phổ biến</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex flex-wrap gap-2">
+                            {getRelatedTags().map((tag: string) => (
+                                <Button
+                                    key={tag}
+                                    variant={tag === selectedTag ? "default" : "outline"}
+                                    size="sm"
+                                    asChild
+                                >
+                                    <Link href={`${routes.user.coursesByTag}?tag=${encodeURIComponent(tag)}`}>
+                                        <Tag className="w-3 h-3 mr-2" />
+                                        {tag}
+                                    </Link>
+                                </Button>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
         </div>
     );
 }
