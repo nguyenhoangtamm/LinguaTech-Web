@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { lessonApiRequest, moduleApiRequest, materialApiRequest } from '@/apiRequests/lesson';
+import { lessonApiRequest, moduleApiRequest, materialApiRequest, sectionApiRequest } from '@/apiRequests/lesson';
 import {
     LessonQueryParamsType,
     MaterialQueryParamsType,
@@ -8,7 +8,8 @@ import {
     CreateModuleBodyType,
     UpdateModuleBodyType,
     CreateMaterialBodyType,
-    UpdateMaterialBodyType
+    UpdateMaterialBodyType,
+    SectionType,
 } from '@/schemaValidations/lesson.schema';
 
 // Lesson queries
@@ -24,7 +25,7 @@ export const useLessonQuery = (id: string, enabled = true) => {
     return useQuery({
         queryKey: ['lesson', id],
         queryFn: () => lessonApiRequest.getLesson(id),
-        select: (data) => data.data,
+        select: (data) => data,
         enabled: !!id && enabled,
     });
 };
@@ -64,6 +65,16 @@ export const useMaterialQuery = (id: string, enabled = true) => {
         queryFn: () => materialApiRequest.getMaterial(id),
         select: (data) => data.data,
         enabled: !!id && enabled,
+    });
+};
+
+// Section queries
+export const useSectionsByLessonQuery = (lessonId: string, enabled = true) => {
+    return useQuery({
+        queryKey: ['sections', 'lesson', lessonId],
+        queryFn: () => sectionApiRequest.getSectionsByLesson(lessonId),
+        select: (data) => data.data,
+        enabled: !!lessonId && enabled,
     });
 };
 

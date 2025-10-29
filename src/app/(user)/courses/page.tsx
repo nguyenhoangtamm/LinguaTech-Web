@@ -63,7 +63,7 @@ export default function CoursesPage() {
     const { data: categoriesData, isLoading: categoriesLoading } = useCategoriesQuery();
 
     // According to schema: response shape is { data: Course[], message, meta: { pageNumber, pageSize, total, totalPages } }
-    const courses = coursesData?.data.data || [];
+    const courses = coursesData?.data || [];
     const categories = Array.isArray(categoriesData) ? categoriesData : categoriesData?.data || [];
     const pagination = coursesData?.data || { pageNumber: 1, pageSize: pageSize, total: 0, totalPages: 1 };
 

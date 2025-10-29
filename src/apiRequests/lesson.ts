@@ -12,6 +12,7 @@ import {
     ModuleType,
     MaterialType,
     ModuleWithLessonsType,
+    SectionType,
 } from "@/schemaValidations/lesson.schema";
 import { ApiResponse, PaginatedResponse } from "@/types/common";
 
@@ -100,4 +101,11 @@ export const materialApiRequest = {
     // Download material
     downloadMaterial: (id: number) =>
         http.get(`/materials/${id}/download`, { responseType: "blob" }),
+};
+
+// Section APIs
+export const sectionApiRequest = {
+    // Get sections by lesson ID
+    getSectionsByLesson: (lessonId: string) =>
+        http.get<ApiResponse<SectionType[]>>(`/lessons/${lessonId}/sections`),
 };

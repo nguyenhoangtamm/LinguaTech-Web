@@ -45,6 +45,17 @@ export const LessonWithMaterialsSchema = LessonSchema.extend({
     materials: z.array(MaterialSchema).optional(),
 });
 
+// Section schema
+export const SectionSchema = z.object({
+    id: z.string(),
+    title: z.string(),
+    content: z.string(),
+    order: z.number(),
+    lessonId: z.string(),
+    createdAt: z.date(),
+    updatedAt: z.date(),
+});
+
 // Module with lessons and materials
 export const ModuleWithLessonsSchema = ModuleSchema.extend({
     lessons: z.array(LessonWithMaterialsSchema).optional(),
@@ -101,6 +112,7 @@ export type LessonType = z.infer<typeof LessonSchema>;
 export type ModuleType = z.infer<typeof ModuleSchema>;
 export type MaterialType = z.infer<typeof MaterialSchema>;
 export type LessonWithMaterialsType = z.infer<typeof LessonWithMaterialsSchema>;
+export type SectionType = z.infer<typeof SectionSchema>;
 export type ModuleWithLessonsType = z.infer<typeof ModuleWithLessonsSchema>;
 export type LessonQueryParamsType = z.infer<typeof LessonQuerySchema>;
 export type MaterialQueryParamsType = z.infer<typeof MaterialQuerySchema>;

@@ -193,7 +193,7 @@ const courseApiRequest = {
     getMockCourses: (params?: CourseFilterParamsType) =>
         http.get<CoursesListResType>("/api/courses", { baseUrl: "" }),
 
-    getMockCourse: (id: string) =>
+    getMockCourse: (id: number) =>
         http.get<CourseDetailResType>(`/api/courses/${id}`, { baseUrl: "" }),
 
     getMockCourseDetail: (id: string) =>

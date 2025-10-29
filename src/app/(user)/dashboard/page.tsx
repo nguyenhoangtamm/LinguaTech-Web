@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { routes } from "@/config/routes";
-import { useDashboardStatsQuery, useUserEnrollmentsQuery } from "@/queries/useCourse";
+import { useDashboardStatsQuery, useUserEnrollmentsQuery, useRecentCoursesQuery } from "@/queries/useCourse";
 
 export default function UserDashboard() {
     const { data: statsData, isLoading: statsLoading, error: statsError } = useDashboardStatsQuery();
@@ -33,26 +33,8 @@ export default function UserDashboard() {
             progress: item.enrollment.progress.progressPercentage
         }));
 
-    // Mock recent courses for now (sẽ được thay thế bằng API thật)
-    const recentCourses = [
-        {
-            id: "3",
-            title: "UI/UX Design Fundamentals",
-            description: "Học thiết kế giao diện người dùng cơ bản",
-            instructor: "Lê Văn C",
-            duration: 25,
-            level: "beginner" as const,
-            price: 900000,
-            rating: 4.7,
-            studentsCount: 145,
-            category: { id: "3", name: "Design", slug: "design" },
-            tags: ["UI", "UX", "Figma"],
-            thumbnail: "/images/course3.jpg",
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            isPublished: true
-        }
-    ];
+    const { data: recentData, isLoading: recentLoading } = useRecentCoursesQuery();
+    const recentCourses = recentData?.data || [];
 
     if (statsLoading || enrollmentsLoading) {
         return (
@@ -231,7 +213,7 @@ export default function UserDashboard() {
                 </CardHeader>
                 <CardContent>
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {recentCourses.map((course) => (
+                        {recentCourses.map((course: any) => (
                             <div key={course.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
                                 <div className="aspect-video bg-gray-200 rounded-md mb-3 flex items-center justify-center">
                                     <BookOpen className="w-8 h-8 text-gray-400" />

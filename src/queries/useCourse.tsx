@@ -16,8 +16,8 @@ export const COURSE_QUERY_KEYS = {
     lists: () => [...COURSE_QUERY_KEYS.all, 'list'] as const,
     list: (params?: CourseFilterParamsType) => [...COURSE_QUERY_KEYS.lists(), params] as const,
     details: () => [...COURSE_QUERY_KEYS.all, 'detail'] as const,
-    detail: (id: string) => [...COURSE_QUERY_KEYS.details(), id] as const,
-    detailWithModules: (id: string) => [...COURSE_QUERY_KEYS.details(), id, 'modules'] as const,
+    detail: (id: number) => [...COURSE_QUERY_KEYS.details(), id] as const,
+    detailWithModules: (id: number) => [...COURSE_QUERY_KEYS.details(), id, 'modules'] as const,
     categories: () => [...COURSE_QUERY_KEYS.all, 'categories'] as const,
     categoryList: (categorySlug: string, params?: CourseFilterParamsType) =>
         [...COURSE_QUERY_KEYS.all, 'category', categorySlug, params] as const,
@@ -36,16 +36,16 @@ export const COURSE_QUERY_KEYS = {
 export const useCoursesQuery = (params?: CourseFilterParamsType, enabled: boolean = true) => {
     return useQuery({
         queryKey: COURSE_QUERY_KEYS.list(params),
-        queryFn: () => courseApiRequest.getCourses(params), // Sử dụng mock API
+        queryFn: () => courseApiRequest.getCourses(params),
         select: (data) => data, // Return the parsed response data
         enabled,
     });
 };
 
-export const useCourseQuery = (id: string, enabled: boolean = true) => {
+export const useCourseQuery = (id: number, enabled: boolean = true) => {
     return useQuery({
         queryKey: COURSE_QUERY_KEYS.detail(id),
-        queryFn: () => courseApiRequest.getMockCourse(id),
+        queryFn: () => courseApiRequest.getCourse(id),
         select: (data) => data?.data, // Extract the actual course data
         enabled: enabled && !!id,
     });
@@ -54,7 +54,7 @@ export const useCourseQuery = (id: string, enabled: boolean = true) => {
 export const useCourseDetailQuery = (id: string, enabled: boolean = true) => {
     return useQuery({
         queryKey: COURSE_QUERY_KEYS.detailWithModules(id),
-        queryFn: () => courseApiRequest.getMockCourseDetail(id),
+        queryFn: () => courseApiRequest.getCourseDetail(id),
         enabled: enabled && !!id,
     });
 };
@@ -62,7 +62,7 @@ export const useCourseDetailQuery = (id: string, enabled: boolean = true) => {
 export const useCategoriesQuery = (enabled: boolean = true) => {
     return useQuery({
         queryKey: COURSE_QUERY_KEYS.categories(),
-        queryFn: () => courseApiRequest.getMockCategories(),
+        queryFn: () => courseApiRequest.getCategories(),
         enabled,
     });
 };
@@ -95,7 +95,7 @@ export const useSearchCoursesQuery = (
 export const useUserEnrollmentsQuery = (enabled: boolean = true) => {
     return useQuery({
         queryKey: COURSE_QUERY_KEYS.userEnrollments(),
-        queryFn: () => courseApiRequest.getMockUserEnrollments(),
+        queryFn: () => courseApiRequest.getUserEnrollments(),
         enabled,
     });
 };
@@ -112,7 +112,7 @@ export const useCheckEnrollmentQuery = (courseId: string, enabled: boolean = tru
 export const useDashboardStatsQuery = (enabled: boolean = true) => {
     return useQuery({
         queryKey: COURSE_QUERY_KEYS.dashboardStats(),
-        queryFn: () => courseApiRequest.getMockDashboardStats(),
+        queryFn: () => courseApiRequest.getDashboardStats(),
         enabled,
     });
 };
@@ -149,7 +149,7 @@ export const useUpdateCourseMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ id, ...body }: { id: string } & CourseUpdateBodyType) =>
+        mutationFn: ({ id, ...body }: { id: number } & CourseUpdateBodyType) =>
             courseApiRequest.updateCourse({ id, ...body }),
         onSuccess: (data, variables) => {
             queryClient.invalidateQueries({ queryKey: COURSE_QUERY_KEYS.lists() });
@@ -163,7 +163,7 @@ export const useDeleteCourseMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (id: string) => courseApiRequest.deleteCourse(id),
+        mutationFn: (id: number) => courseApiRequest.deleteCourse(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: COURSE_QUERY_KEYS.lists() });
         },

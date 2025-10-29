@@ -32,198 +32,13 @@ import {
 import Link from "next/link";
 import { routes } from "@/config/routes";
 import { mockAssignments } from "@/data/assignments";
+import { useLessonQuery, useModulesByCourseQuery, useMaterialsByLessonQuery, useCompleteLessonMutation, useSectionsByLessonQuery } from "@/queries/useLesson";
+import { SectionType } from "@/schemaValidations/lesson.schema";
 
-// Mock lesson data
-const mockLessons = [
-    { id: "l1", title: "Giới thiệu về Advanced Patterns", duration: 45, completed: true, moduleId: "mod1" },
-    { id: "l2", title: "Custom Hooks và Logic Reuse", duration: 52, completed: true, moduleId: "mod1" },
-    { id: "l3", title: "Context API và Provider Pattern", duration: 38, completed: false, moduleId: "mod1" },
-    { id: "l4", title: "Performance Optimization với React.memo", duration: 41, completed: false, moduleId: "mod2" },
-    { id: "l5", title: "Code Splitting và Lazy Loading", duration: 35, completed: false, moduleId: "mod2" },
-    { id: "l6", title: "Testing Advanced Components", duration: 47, completed: false, moduleId: "mod2" },
-    { id: "l7", title: "Production Deployment Best Practices", duration: 33, completed: false, moduleId: "mod2" }
-];
-
-const mockCurrentLesson = {
-    id: "l1",
-    title: "Giới thiệu về Advanced Patterns",
-    description: "Trong bài học này, chúng ta sẽ tìm hiểu về các pattern nâng cao trong React như Higher-Order Components, Render Props, và Compound Components.",
-    duration: 45,
-    completed: false,
-    moduleId: "mod1",
-    materials: [
-        { id: "m1", fileName: "slides-intro.pdf", fileUrl: "/files/slides-intro.pdf", fileType: "pdf", size: 1200 },
-        { id: "m2", fileName: "code-samples.zip", fileUrl: "/files/code-samples.zip", fileType: "zip", size: 20480 }
-    ],
-    sections: [
-        {
-            id: "s1",
-            title: "Tổng quan",
-            order: 1,
-            content: `
-# Tổng quan
-
-Advanced Patterns trong React là những kỹ thuật và mẫu thiết kế giúp chúng ta viết code React hiệu quả hơn, dễ maintain và có thể tái sử dụng.
-
-Các pattern này là những cách tinh tế để tổ chức và chia sẻ logic component. Chúng rất hữu ích khi bạn cần:
-- Tái sử dụng logic giữa các components
-- Tránh prop drilling (prop drilling là khi bạn phải truyền prop qua nhiều component để đạt được component con)
-- Làm code dễ đọc và dễ maintain hơn
-            `
-        },
-        {
-            id: "s2",
-            title: "Higher-Order Components (HOC)",
-            order: 2,
-            content: `
-# Higher-Order Components (HOC)
-
-## Định nghĩa
-Higher-Order Component là một function nhận vào một component và trả về một component mới với các tính năng bổ sung.
-
-\`\`\`jsx
-const EnhancedComponent = higherOrderComponent(OriginalComponent);
-\`\`\`
-
-## Ví dụ cơ bản - withLoading HOC
-
-\`\`\`jsx
-function withLoading(WrappedComponent) {
-  return function WithLoadingComponent({ isLoading, ...props }) {
-    if (isLoading) {
-      return <div className="flex items-center justify-center p-4">
-        <div className="animate-spin">Loading...</div>
-      </div>;
-    }
-    return <WrappedComponent {...props} />;
-  };
-}
-
-// Sử dụng
-function UserList({ users }) {
-  return <ul>{users.map(u => <li key={u.id}>{u.name}</li>)}</ul>;
-}
-
-const UserListWithLoading = withLoading(UserList);
-
-// Trong component
-<UserListWithLoading isLoading={true} />
-\`\`\`
-
-## Lợi ích
-- **Tái sử dụng logic**: Một HOC có thể được sử dụng với nhiều components
-- **Abstraction**: Logic phức tạp được ẩn đi
-- **Props manipulation**: HOC có thể thêm, xoá, hoặc thay đổi props
-            `
-        },
-        {
-            id: "s3",
-            title: "Render Props Pattern",
-            order: 3,
-            content: `
-# Render Props Pattern
-
-## Định nghĩa
-Render Props là một kỹ thuật chia sẻ code giữa các React components bằng cách sử dụng một prop có giá trị là function.
-
-\`\`\`jsx
-<Mouse render={mouse => (
-  <h1>The mouse is at {mouse.x}, {mouse.y}</h1>
-)}/>
-\`\`\`
-
-## Ví dụ cơ bản - Mouse Tracker
-
-\`\`\`jsx
-class Mouse extends React.Component {
-  state = { x: 0, y: 0 };
-
-  handleMouseMove = (event) => {
-    this.setState({
-      x: event.clientX,
-      y: event.clientY
-    });
-  }
-
-  render() {
-    return (
-      <div style={{ height: '100vh' }} onMouseMove={this.handleMouseMove}>
-        {this.props.render(this.state)}
-      </div>
-    );
-  }
-}
-
-// Sử dụng
-<Mouse render={({ x, y }) => (
-  <h1>The mouse position is ({x}, {y})</h1>
-)}/>
-\`\`\`
-
-## Lợi ích
-- **Linh hoạt**: Component chứa logic có thể render bất cứ gì
-- **Tránh nesting**: Tránh "wrapper hell" so với HOC
-- **Dễ hiểu**: Rõ ràng logic nào được chia sẻ
-            `
-        },
-        {
-            id: "s4",
-            title: "Compound Components",
-            order: 4,
-            content: `
-# Compound Components Pattern
-
-## Định nghĩa
-Compound Components cho phép tạo ra các components có liên quan kết hợp với nhau để tạo một API linh hoạt.
-
-## Ví dụ - Select Component
-
-\`\`\`jsx
-// Định nghĩa
-const SelectContext = React.createContext();
-
-function Select({ value, onChange, children }) {
-  return (
-    <SelectContext.Provider value={{ value, onChange }}>
-      <div className="select-container">
-        {children}
-      </div>
-    </SelectContext.Provider>
-  );
-}
-
-function SelectOption({ value, children }) {
-  const { value: selectedValue, onChange } = useContext(SelectContext);
-  
-  return (
-    <div
-      className={selectedValue === value ? "selected" : ""}
-      onClick={() => onChange(value)}
-    >
-      {children}
-    </div>
-  );
-}
-
-// Sử dụng
-<Select value={country} onChange={setCountry}>
-  <SelectOption value="us">United States</SelectOption>
-  <SelectOption value="uk">United Kingdom</SelectOption>
-  <SelectOption value="ca">Canada</SelectOption>
-</Select>
-\`\`\`
-
-## Lợi ích
-- **Linh hoạt**: Child components có thể được sắp xếp theo bất kỳ cách nào
-- **Dễ sử dụng**: API rõ ràng và trực quan
-- **Composable**: Dễ dàng thêm tính năng mới
-            `
-        }
-    ]
-};
+// We'll use API hooks to fetch lesson, modules and materials
 
 // Separate components for each section that can load independently
-const ContentSection = ({ section, isLoading }: { section: any, isLoading: boolean }) => {
+const ContentSection = ({ section, isLoading }: { section: SectionType, isLoading: boolean }) => {
     const [fontSize, setFontSize] = useState(16);
     const [isBookmarked, setIsBookmarked] = useState(false);
 
@@ -524,34 +339,29 @@ export default function LessonDetailPage() {
     const params = useParams();
     const courseId = params.courseId as string;
     const lessonId = params.lessonId as string;
+    const { data: lesson, isLoading: lessonLoading } = useLessonQuery(lessonId);
+    const { data: modules, isLoading: modulesLoading } = useModulesByCourseQuery(courseId);
+    const { data: materialsFromApi, isLoading: materialsLoading } = useMaterialsByLessonQuery(lessonId);
+    const { data: sections, isLoading: sectionsLoading } = useSectionsByLessonQuery(lessonId);
+    const completeLessonMutation = useCompleteLessonMutation();
 
-    const [lesson, setLesson] = useState<any>(null);
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [rightPanelOpen, setRightPanelOpen] = useState(true);
     const [selectedSectionId, setSelectedSectionId] = useState<string>("s1");
-    const [loadingStates, setLoadingStates] = useState({
-        content: true,
-        materials: true,
-        assignments: true
-    });
+
+    // derive loading states from hooks
+    const loadingStates = {
+        content: lessonLoading || modulesLoading || sectionsLoading,
+        materials: materialsLoading,
+        assignments: false, // assignments still use mock data until API is available
+    };
 
     useEffect(() => {
-        // Mock API calls with different loading times for each section
-        setLesson(mockCurrentLesson);
-
-        // Simulate loading for each section
-        setTimeout(() => {
-            setLoadingStates(prev => ({ ...prev, content: false }));
-        }, 1000);
-
-        setTimeout(() => {
-            setLoadingStates(prev => ({ ...prev, materials: false }));
-        }, 1500);
-
-        setTimeout(() => {
-            setLoadingStates(prev => ({ ...prev, assignments: false }));
-        }, 2000);
-    }, [courseId, lessonId]);
+        // When sections data loads, pick the first section as selected by default
+        if (sections && sections.length > 0) {
+            setSelectedSectionId(sections[0].id);
+        }
+    }, [sections]);
 
     if (!lesson) {
         return (
@@ -562,9 +372,10 @@ export default function LessonDetailPage() {
         );
     }
 
-    const currentLessonIndex = mockLessons.findIndex(l => l.id === lessonId);
-    const previousLesson = currentLessonIndex > 0 ? mockLessons[currentLessonIndex - 1] : null;
-    const nextLesson = currentLessonIndex < mockLessons.length - 1 ? mockLessons[currentLessonIndex + 1] : null;
+    const lessons = modules?.flatMap((m: any) => (m.lessons || [])) || [];
+    const currentLessonIndex = lessons.findIndex((l: any) => String(l.id) === String(lessonId));
+    const previousLesson = currentLessonIndex > 0 ? lessons[currentLessonIndex - 1] : null;
+    const nextLesson = currentLessonIndex < lessons.length - 1 ? lessons[currentLessonIndex + 1] : null;
 
     return (
         <div className="flex h-screen bg-gray-50">
@@ -583,7 +394,7 @@ export default function LessonDetailPage() {
                     </div>
                 </div>
                 <div className="p-4 space-y-2 max-h-96 overflow-y-auto">
-                    {lesson?.sections?.map((section: any) => (
+                    {sections?.map((section: SectionType) => (
                         <button
                             key={section.id}
                             onClick={() => setSelectedSectionId(section.id)}
@@ -644,9 +455,9 @@ export default function LessonDetailPage() {
                 }}>
                     {/* Left Column - Content */}
                     <div className="space-y-6 overflow-y-auto">
-                        {lesson?.sections && (
+                        {sections && (
                             <ContentSection
-                                section={lesson.sections.find((s: any) => s.id === selectedSectionId) || lesson.sections[0]}
+                                section={sections.find((s: SectionType) => s.id === selectedSectionId) || sections[0]}
                                 isLoading={loadingStates.content}
                             />
                         )}
@@ -664,7 +475,12 @@ export default function LessonDetailPage() {
                                 <div></div>
                             )}
 
-                            <Button>
+                            <Button
+                                onClick={() => {
+                                    if (!lessonId) return;
+                                    completeLessonMutation.mutate(lessonId);
+                                }}
+                            >
                                 Hoàn thành bài học
                                 <CheckCircle className="w-4 h-4 ml-2" />
                             </Button>
@@ -719,7 +535,7 @@ export default function LessonDetailPage() {
                                     <TabsContent value="materials" className="mt-4">
                                         <Card>
                                             <CardContent className="p-4">
-                                                <MaterialsSection materials={lesson.materials} isLoading={loadingStates.materials} />
+                                                <MaterialsSection materials={materialsFromApi || lesson.materials || []} isLoading={loadingStates.materials} />
                                             </CardContent>
                                         </Card>
                                     </TabsContent>
