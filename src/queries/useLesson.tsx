@@ -21,60 +21,60 @@ export const useLessonsQuery = (params?: LessonQueryParamsType) => {
     });
 };
 
-export const useLessonQuery = (id: string, enabled = true) => {
+export const useLessonQuery = (id?: number, enabled = true) => {
     return useQuery({
         queryKey: ['lesson', id],
-        queryFn: () => lessonApiRequest.getLesson(id),
+        queryFn: () => lessonApiRequest.getLesson(id as number),
         select: (data) => data,
-        enabled: !!id && enabled,
+        enabled: id != null && enabled,
     });
 };
 
 // Module queries
-export const useModulesByCourseQuery = (courseId: string, enabled = true) => {
+export const useModulesByCourseQuery = (courseId?: number, enabled = true) => {
     return useQuery({
         queryKey: ['modules', 'course', courseId],
-        queryFn: () => moduleApiRequest.getModulesByCourse(courseId),
+        queryFn: () => moduleApiRequest.getModulesByCourse(courseId as number),
         select: (data) => data.data,
-        enabled: !!courseId && enabled,
+        enabled: courseId != null && enabled,
     });
 };
 
-export const useModuleQuery = (id: string, enabled = true) => {
+export const useModuleQuery = (id: number, enabled = true) => {
     return useQuery({
         queryKey: ['module', id],
         queryFn: () => moduleApiRequest.getModule(id),
         select: (data) => data.data,
-        enabled: !!id && enabled,
+        enabled: id != null && enabled,
     });
 };
 
 // Material queries
-export const useMaterialsByLessonQuery = (lessonId: string, params?: MaterialQueryParamsType, enabled = true) => {
+export const useMaterialsByLessonQuery = (lessonId?: number, params?: MaterialQueryParamsType, enabled = true) => {
     return useQuery({
         queryKey: ['materials', 'lesson', lessonId, params],
-        queryFn: () => materialApiRequest.getMaterialsByLesson(lessonId, params),
+        queryFn: () => materialApiRequest.getMaterialsByLesson(lessonId as number, params),
         select: (data) => data.data,
-        enabled: !!lessonId && enabled,
+        enabled: lessonId != null && enabled,
     });
 };
 
-export const useMaterialQuery = (id: string, enabled = true) => {
+export const useMaterialQuery = (id?: number, enabled = true) => {
     return useQuery({
         queryKey: ['material', id],
-        queryFn: () => materialApiRequest.getMaterial(id),
+        queryFn: () => materialApiRequest.getMaterial(id as number),
         select: (data) => data.data,
-        enabled: !!id && enabled,
+        enabled: id != null && enabled,
     });
 };
 
 // Section queries
-export const useSectionsByLessonQuery = (lessonId: string, enabled = true) => {
+export const useSectionsByLessonQuery = (lessonId?: number, enabled = true) => {
     return useQuery({
         queryKey: ['sections', 'lesson', lessonId],
-        queryFn: () => sectionApiRequest.getSectionsByLesson(lessonId),
+        queryFn: () => sectionApiRequest.getSectionsByLesson(lessonId as number),
         select: (data) => data.data,
-        enabled: !!lessonId && enabled,
+        enabled: lessonId != null && enabled,
     });
 };
 
@@ -95,7 +95,7 @@ export const useUpdateLessonMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ id, data }: { id: string; data: UpdateLessonBodyType }) =>
+        mutationFn: ({ id, data }: { id: number; data: UpdateLessonBodyType }) =>
             lessonApiRequest.updateLesson(id, data),
         onSuccess: (_, { id }) => {
             queryClient.invalidateQueries({ queryKey: ['lesson', id] });
@@ -109,7 +109,7 @@ export const useDeleteLessonMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (id: string) => lessonApiRequest.deleteLesson(id),
+        mutationFn: (id: number) => lessonApiRequest.deleteLesson(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['lessons'] });
             queryClient.invalidateQueries({ queryKey: ['modules'] });
@@ -121,7 +121,7 @@ export const useCompleteLessonMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (id: string) => lessonApiRequest.completeLesson(id),
+        mutationFn: (id: number) => lessonApiRequest.completeLesson(id),
         onSuccess: (_, id) => {
             queryClient.invalidateQueries({ queryKey: ['lesson', id] });
             queryClient.invalidateQueries({ queryKey: ['lessons'] });
@@ -145,7 +145,7 @@ export const useUpdateModuleMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ id, data }: { id: string; data: UpdateModuleBodyType }) =>
+        mutationFn: ({ id, data }: { id: number; data: UpdateModuleBodyType }) =>
             moduleApiRequest.updateModule(id, data),
         onSuccess: (_, { id }) => {
             queryClient.invalidateQueries({ queryKey: ['module', id] });
@@ -158,7 +158,7 @@ export const useDeleteModuleMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (id: string) => moduleApiRequest.deleteModule(id),
+        mutationFn: (id: number) => moduleApiRequest.deleteModule(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['modules'] });
         },
@@ -181,7 +181,7 @@ export const useUpdateMaterialMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ id, data }: { id: string; data: UpdateMaterialBodyType }) =>
+        mutationFn: ({ id, data }: { id: number; data: UpdateMaterialBodyType }) =>
             materialApiRequest.updateMaterial(id, data),
         onSuccess: (_, { id }) => {
             queryClient.invalidateQueries({ queryKey: ['material', id] });
@@ -194,7 +194,7 @@ export const useDeleteMaterialMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (id: string) => materialApiRequest.deleteMaterial(id),
+        mutationFn: (id: number) => materialApiRequest.deleteMaterial(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['materials'] });
         },

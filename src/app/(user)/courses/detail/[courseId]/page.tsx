@@ -44,7 +44,8 @@ const mockInstructor = {
 
 export default function CourseDetailPage() {
     const params = useParams();
-    const courseId = params.courseId as string;
+    const courseIdParam = params.courseId as string | undefined;
+    const courseId = courseIdParam ? Number(courseIdParam) : undefined;
 
     const [isEnrolled, setIsEnrolled] = useState(false);
     const [progress, setProgress] = useState(25); // Mock progress

@@ -16,14 +16,14 @@ export const COURSE_QUERY_KEYS = {
     lists: () => [...COURSE_QUERY_KEYS.all, 'list'] as const,
     list: (params?: CourseFilterParamsType) => [...COURSE_QUERY_KEYS.lists(), params] as const,
     details: () => [...COURSE_QUERY_KEYS.all, 'detail'] as const,
-    detail: (id: number) => [...COURSE_QUERY_KEYS.details(), id] as const,
-    detailWithModules: (id: number) => [...COURSE_QUERY_KEYS.details(), id, 'modules'] as const,
+    detail: (id?: number) => [...COURSE_QUERY_KEYS.details(), id] as const,
+    detailWithModules: (id?: number) => [...COURSE_QUERY_KEYS.details(), id, 'modules'] as const,
     categories: () => [...COURSE_QUERY_KEYS.all, 'categories'] as const,
     categoryList: (categorySlug: string, params?: CourseFilterParamsType) =>
         [...COURSE_QUERY_KEYS.all, 'category', categorySlug, params] as const,
     enrollments: () => ['enrollments'] as const,
     userEnrollments: () => [...COURSE_QUERY_KEYS.enrollments(), 'user'] as const,
-    checkEnrollment: (courseId: string) => [...COURSE_QUERY_KEYS.enrollments(), 'check', courseId] as const,
+    checkEnrollment: (courseId: number) => [...COURSE_QUERY_KEYS.enrollments(), 'check', courseId] as const,
     dashboard: () => ['dashboard'] as const,
     dashboardStats: () => [...COURSE_QUERY_KEYS.dashboard(), 'stats'] as const,
     recentCourses: () => [...COURSE_QUERY_KEYS.all, 'recent'] as const,
@@ -42,20 +42,20 @@ export const useCoursesQuery = (params?: CourseFilterParamsType, enabled: boolea
     });
 };
 
-export const useCourseQuery = (id: number, enabled: boolean = true) => {
+export const useCourseQuery = (id?: number, enabled: boolean = true) => {
     return useQuery({
         queryKey: COURSE_QUERY_KEYS.detail(id),
-        queryFn: () => courseApiRequest.getCourse(id),
+        queryFn: () => courseApiRequest.getCourse(id as number),
         select: (data) => data?.data, // Extract the actual course data
-        enabled: enabled && !!id,
+        enabled: enabled && id != null,
     });
 };
 
-export const useCourseDetailQuery = (id: string, enabled: boolean = true) => {
+export const useCourseDetailQuery = (id?: number, enabled: boolean = true) => {
     return useQuery({
         queryKey: COURSE_QUERY_KEYS.detailWithModules(id),
-        queryFn: () => courseApiRequest.getCourseDetail(id),
-        enabled: enabled && !!id,
+        queryFn: () => courseApiRequest.getCourseDetail(id as number),
+        enabled: enabled && id != null,
     });
 };
 
@@ -100,11 +100,11 @@ export const useUserEnrollmentsQuery = (enabled: boolean = true) => {
     });
 };
 
-export const useCheckEnrollmentQuery = (courseId: string, enabled: boolean = true) => {
+export const useCheckEnrollmentQuery = (courseId?: number, enabled: boolean = true) => {
     return useQuery({
-        queryKey: COURSE_QUERY_KEYS.checkEnrollment(courseId),
-        queryFn: () => courseApiRequest.checkEnrollment(courseId),
-        enabled: enabled && !!courseId,
+        queryKey: COURSE_QUERY_KEYS.checkEnrollment(courseId as number),
+        queryFn: () => courseApiRequest.checkEnrollment(courseId as number),
+        enabled: enabled && courseId != null,
     });
 };
 
@@ -187,7 +187,7 @@ export const useUpdateProgressMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ courseId, ...body }: { courseId: string } & UpdateProgressBodyType) =>
+        mutationFn: ({ courseId, ...body }: { courseId: number } & UpdateProgressBodyType) =>
             courseApiRequest.updateProgress({ courseId, ...body }),
         onSuccess: (data, variables) => {
             queryClient.invalidateQueries({ queryKey: COURSE_QUERY_KEYS.userEnrollments() });

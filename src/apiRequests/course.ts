@@ -123,7 +123,7 @@ const courseApiRequest = {
             baseUrl: "http://localhost:5013/api/v1",
         }),
 
-    checkEnrollment: (courseId: string) =>
+    checkEnrollment: (courseId: number) =>
         http.get<{
             data: { isEnrolled: boolean; enrollment?: EnrollmentResType };
         }>(`/enrollments/check/${courseId}`, {
@@ -134,7 +134,7 @@ const courseApiRequest = {
     updateProgress: ({
         courseId,
         ...body
-    }: { courseId: string } & UpdateProgressBodyType) =>
+    }: { courseId: number } & UpdateProgressBodyType) =>
         http.post<UpdateProgressResType>(
             `/enrollments/update-progress/${courseId}`,
             body,
@@ -196,7 +196,7 @@ const courseApiRequest = {
     getMockCourse: (id: number) =>
         http.get<CourseDetailResType>(`/api/courses/${id}`, { baseUrl: "" }),
 
-    getMockCourseDetail: (id: string) =>
+    getMockCourseDetail: (id: number) =>
         http.get<CourseDetailWithModulesResType>(`/api/courses/${id}/detail`, {
             baseUrl: "",
         }),

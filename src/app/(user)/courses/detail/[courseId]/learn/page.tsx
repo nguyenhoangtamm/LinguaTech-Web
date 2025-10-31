@@ -32,7 +32,9 @@ import { Course } from "@/types/course";
 
 export default function CourseLearnPage() {
     const params = useParams();
-    const courseId = params.courseId as string;
+    const courseIdParam = params.courseId as string | undefined;
+
+    const courseId = Number(courseIdParam);
 
     const [isEnrolled, setIsEnrolled] = useState(false);
     const [progress, setProgress] = useState(25);
@@ -46,6 +48,14 @@ export default function CourseLearnPage() {
         }
     }, [courseDetail]);
 
+    if (!courseIdParam) {
+        return (
+            <div className="text-center py-12">
+                <p className="text-red-600">Không tìm thấy courseId trong đường dẫn</p>
+            </div>
+        );
+    }
+    
     if (courseLoading) {
         return (
             <div className="text-center py-12">

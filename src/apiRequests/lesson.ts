@@ -48,7 +48,7 @@ export const lessonApiRequest = {
 // Module APIs
 export const moduleApiRequest = {
     // Get modules by course ID
-    getModulesByCourse: (courseId: string) =>
+    getModulesByCourse: (courseId: number) =>
         http.get<ApiResponse<ModuleWithLessonsType[]>>(
             `/courses/${courseId}/modules`
         ),
@@ -74,7 +74,7 @@ export const moduleApiRequest = {
 export const materialApiRequest = {
     // Get materials by lesson ID
     getMaterialsByLesson: (
-        lessonId: string,
+        lessonId: number,
         params?: MaterialQueryParamsType
     ) =>
         http.get<ApiResponse<MaterialType[]>>(
@@ -106,6 +106,6 @@ export const materialApiRequest = {
 // Section APIs
 export const sectionApiRequest = {
     // Get sections by lesson ID
-    getSectionsByLesson: (lessonId: string) =>
+    getSectionsByLesson: (lessonId: number) =>
         http.get<ApiResponse<SectionType[]>>(`/lessons/${lessonId}/sections`),
 };

@@ -146,7 +146,7 @@ const ContentSection = ({ section, isLoading }: { section: SectionType, isLoadin
 };
 
 // Assignment section component
-const AssignmentsSection = ({ assignments, lessonId, courseId, isLoading }: { assignments: any[], lessonId: string, courseId: string, isLoading: boolean }) => {
+const AssignmentsSection = ({ assignments, lessonId, courseId, isLoading }: { assignments: any[], lessonId: string | number, courseId: string | number, isLoading: boolean }) => {
     if (isLoading) {
         return (
             <div className="p-4">
@@ -158,7 +158,7 @@ const AssignmentsSection = ({ assignments, lessonId, courseId, isLoading }: { as
         );
     }
 
-    const lessonAssignments = assignments.filter(a => a.lessonId === lessonId && !a.isDeleted);
+    const lessonAssignments = assignments.filter(a => String(a.lessonId) === String(lessonId) && !a.isDeleted);
 
     return (
         <div className="space-y-4">
@@ -337,8 +337,10 @@ const ReadingNotesSection = ({ lesson, isLoading }: { lesson: any, isLoading: bo
 
 export default function LessonDetailPage() {
     const params = useParams();
-    const courseId = params.courseId as string;
-    const lessonId = params.lessonId as string;
+    const courseIdParam = params.courseId as string | undefined;
+    const lessonIdParam = params.lessonId as string | undefined;
+    const courseId = courseIdParam ? Number(courseIdParam) : undefined;
+    const lessonId = lessonIdParam ? Number(lessonIdParam) : undefined;
     const { data: lesson, isLoading: lessonLoading } = useLessonQuery(lessonId);
     const { data: modules, isLoading: modulesLoading } = useModulesByCourseQuery(courseId);
     const { data: materialsFromApi, isLoading: materialsLoading } = useMaterialsByLessonQuery(lessonId);
@@ -371,6 +373,8 @@ export default function LessonDetailPage() {
             </div>
         );
     }
+
+    const lessonData: any = (lesson as any)?.data ?? (lesson as any);
 
     const lessons = modules?.flatMap((m: any) => (m.lessons || [])) || [];
     const currentLessonIndex = lessons.findIndex((l: any) => String(l.id) === String(lessonId));
@@ -436,7 +440,7 @@ export default function LessonDetailPage() {
                                     Chi tiết
                                 </Link>
                                 <span>/</span>
-                                <span className="text-gray-900">{lesson.title}</span>
+                                <span className="text-gray-900">{lessonData?.title}</span>
                             </div>
                         </div>
                         <Button variant="outline" asChild>
@@ -524,8 +528,8 @@ export default function LessonDetailPage() {
                                             <CardContent className="p-4">
                                                 <AssignmentsSection
                                                     assignments={mockAssignments}
-                                                    lessonId={lessonId as string}
-                                                    courseId={courseId as string}
+                                                    lessonId={lessonId ?? ''}
+                                                    courseId={courseId ?? ''}
                                                     isLoading={loadingStates.assignments}
                                                 />
                                             </CardContent>
@@ -535,7 +539,7 @@ export default function LessonDetailPage() {
                                     <TabsContent value="materials" className="mt-4">
                                         <Card>
                                             <CardContent className="p-4">
-                                                <MaterialsSection materials={materialsFromApi || lesson.materials || []} isLoading={loadingStates.materials} />
+                                                <MaterialsSection materials={materialsFromApi || lessonData?.materials || []} isLoading={loadingStates.materials} />
                                             </CardContent>
                                         </Card>
                                     </TabsContent>

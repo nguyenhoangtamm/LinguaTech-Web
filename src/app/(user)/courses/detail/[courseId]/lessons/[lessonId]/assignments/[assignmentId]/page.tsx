@@ -24,9 +24,12 @@ import { mockAssignments, mockUserSubmissions } from "@/data/assignments";
 
 export default function AssignmentPage() {
     const params = useParams();
-    const courseId = params.courseId as string;
-    const lessonId = params.lessonId as string;
-    const assignmentId = params.assignmentId as string;
+    const courseIdParam = params.courseId as string | undefined;
+    const lessonIdParam = params.lessonId as string | undefined;
+    const assignmentIdParam = params.assignmentId as string | undefined;
+    const courseId = courseIdParam ? Number(courseIdParam) : undefined;
+    const lessonId = lessonIdParam ? Number(lessonIdParam) : undefined;
+    const assignmentId = assignmentIdParam ?? '';
 
     const [assignment, setAssignment] = useState<any>(null);
     const [submission, setSubmission] = useState<any>(null);
