@@ -1,77 +1,212 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-    ArrowLeft,
-    Clock,
-    CheckCircle,
-    AlertCircle,
-    HelpCircle,
-    Save,
+    Panel,
+    Button,
+    Badge,
+    Progress,
+    RadioGroup,
+    Radio,
+    Input,
+    Divider,
+    Loader,
+    Message,
+    useToaster,
+    Modal,
+    Grid,
+    Row,
+    Col,
+    FlexboxGrid,
+    Tag,
+    Notification,
+} from "rsuite";
+import {
+    ArrowLeftLine,
+    Time,
+    CheckRound,
     Send,
-    ChevronDown,
-    ChevronUp,
-} from "lucide-react";
+    Close,
+    Detail as InfoIcon,
+} from "@rsuite/icons";
 import { routes } from "@/config/routes";
-import { mockAssignments, mockUserSubmissions } from "@/data/assignments";
+import { useAssignment, useUserSubmission, useSubmitAssignment } from "@/queries/useAssignment";
+import { Assignment, Question, SubmissionAnswer, AnswerRequest } from "@/apiRequests/assignment";
+import AssignmentResults from "@/components/assignments/AssignmentResults";
+
+// ============================================================================
+// Utility Functions
+// ============================================================================
+
+/**
+ * Note: debouncing and auto-save disabled — answers are only sent on submit.
+ */
+
+/**
+ * Format date to locale string
+ */
+const formatDueDate = (date: string | Date): string => {
+    try {
+        return new Date(date).toLocaleDateString("vi-VN", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+        });
+    } catch {
+        return "Không xác định";
+    }
+};
+
+/**
+ * Calculate days remaining until due date
+ */
+const calculateDaysRemaining = (dueDate: string | Date): number => {
+    try {
+        return Math.ceil(
+            (new Date(dueDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+        );
+    } catch {
+        return -1;
+    }
+};
+
+/**
+ * Validate parameters
+ */
+const validateParams = (
+    courseId?: string | number,
+    lessonId?: string | number,
+    assignmentId?: string
+): { valid: boolean; message?: string } => {
+    if (!assignmentId || assignmentId === "") {
+        return { valid: false, message: "ID bài tập không hợp lệ" };
+    }
+    if (!courseId || !lessonId) {
+        return { valid: false, message: "ID khóa học hoặc bài học không hợp lệ" };
+    }
+    return { valid: true };
+};
 
 export default function AssignmentPage() {
     const params = useParams();
+    const router = useRouter();
+    const toaster = useToaster();
+
+    // Parse URL parameters
     const courseIdParam = params.courseId as string | undefined;
     const lessonIdParam = params.lessonId as string | undefined;
     const assignmentIdParam = params.assignmentId as string | undefined;
+
     const courseId = courseIdParam ? Number(courseIdParam) : undefined;
     const lessonId = lessonIdParam ? Number(lessonIdParam) : undefined;
-    const assignmentId = assignmentIdParam ?? '';
+    const assignmentId = assignmentIdParam ?? "";
 
-    const [assignment, setAssignment] = useState<any>(null);
-    const [submission, setSubmission] = useState<any>(null);
-    const [answers, setAnswers] = useState<any>({});
+    // Validate parameters
+    const paramValidation = validateParams(courseId, lessonId, assignmentId);
+
+    // State management
+    const [answers, setAnswers] = useState<Record<string, string>>({});
     const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set());
-    const [isSubmitted, setIsSubmitted] = useState(false);
     const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
+    // lastSaved removed since auto-save is disabled
+    const [submitError, setSubmitError] = useState<string | null>(null);
 
+    // API hooks
+    const {
+        data: assignment,
+        isLoading: loadingAssignment,
+        error: assignmentError,
+    } = useAssignment(assignmentId);
+    const {
+        data: submission,
+        isLoading: loadingSubmission,
+        refetch: refetchSubmission,
+    } = useUserSubmission(assignmentId);
+    const submitMutation = useSubmitAssignment();
+    // Auto-save disabled: we only submit on explicit user action
+    const isSaving = false;
+
+    // Debounced answers for auto-save (auto-save disabled)
+    // const debouncedAnswers = useDebounce(answers, 2000);
+
+    // Computed values
+    const isSubmitted = useMemo(
+        () => submission?.status === "submitted" || submission?.status === "graded",
+        [submission?.status]
+    );
+    const isGraded = useMemo(() => submission?.status === "graded", [submission?.status]);
+
+    const totalScore = useMemo(
+        () => assignment?.questions?.reduce((sum: number, q: Question) => sum + q.score, 0) || 0,
+        [assignment?.questions]
+    );
+
+    const userScore = useMemo(() => submission?.score || 0, [submission?.score]);
+
+    const daysRemaining = useMemo(
+        () => (assignment?.dueDate ? calculateDaysRemaining(assignment.dueDate) : -1),
+        [assignment]
+    );
+
+    const isOverdue = useMemo(() => daysRemaining < 0, [daysRemaining]);
+
+    const completionPercentage = useMemo(
+        () => (isGraded && totalScore > 0 ? (userScore / totalScore) * 100 : 0),
+        [isGraded, userScore, totalScore]
+    );
+
+    const answeredCount = useMemo(() => Object.keys(answers).length, [answers]);
+
+    const totalQuestions = useMemo(() => assignment?.questions?.length || 0, [assignment?.questions]);
+
+    const progressPercentage = useMemo(
+        () => (totalQuestions > 0 ? (answeredCount / totalQuestions) * 100 : 0),
+        [answeredCount, totalQuestions]
+    );
+
+    // Initialize answers from existing submission or draft
     useEffect(() => {
-        // Mock API call
-        const foundAssignment = mockAssignments.find(a => a.id === assignmentId);
-        setAssignment(foundAssignment);
-
-        const userSubmission = (mockUserSubmissions as any)[assignmentId];
-        if (userSubmission) {
-            setSubmission(userSubmission);
-            setIsSubmitted(userSubmission.status === "submitted");
-
-            // Initialize answers with existing submission
-            const initialAnswers: any = {};
-            userSubmission.answers.forEach((ans: any) => {
-                initialAnswers[ans.questionId] = ans.answer || (ans.isCorrect ? ans.score : null);
+        if (submission?.answers) {
+            const initialAnswers: Record<string, string> = {};
+            submission.answers.forEach((ans: SubmissionAnswer) => {
+                if (ans.selectedOptionId) {
+                    initialAnswers[ans.questionId] = ans.selectedOptionId;
+                } else if (ans.answer) {
+                    initialAnswers[ans.questionId] = ans.answer;
+                }
             });
             setAnswers(initialAnswers);
         }
-    }, [assignmentId]);
+    }, [submission?.answers]);
 
-    if (!assignment) {
-        return (
-            <div className="text-center py-12">
-                <div className="animate-pulse">Đang tải bài tập...</div>
-            </div>
-        );
-    }
+    // Expand all questions by default when assignment data is loaded so options are visible
+    useEffect(() => {
+        if (assignment?.questions && assignment.questions.length > 0) {
+            const ids = new Set<string>(assignment.questions.map((q: Question) => q.id));
+            setExpandedQuestions(ids);
+        }
+    }, [assignment?.questions]);
 
-    const totalScore = assignment.questions.reduce((sum: number, q: any) => sum + q.score, 0);
-    const userScore = submission?.score || 0;
-    const essayQuestions = assignment.questions.filter((q: any) => q.questionTypeId === "essay");
-    const multipleChoiceQuestions = assignment.questions.filter((q: any) => q.questionTypeId === "multiple_choice");
+    // Auto-save draft answers disabled. We only save/submit when the user clicks submit.
 
-    const toggleQuestion = (questionId: string) => {
-        setExpandedQuestions(prev => {
+    const handleAnswerChange = useCallback(
+        (questionId: string, value: string | number | any) => {
+            if (!isSubmitted) {
+                setAnswers((prev) => ({
+                    ...prev,
+                    [questionId]: String(value),
+                }));
+                setSubmitError(null);
+            }
+        },
+        [isSubmitted]
+    );
+
+    const toggleQuestion = useCallback((questionId: string) => {
+        setExpandedQuestions((prev) => {
             const newSet = new Set(prev);
             if (newSet.has(questionId)) {
                 newSet.delete(questionId);
@@ -80,351 +215,653 @@ export default function AssignmentPage() {
             }
             return newSet;
         });
-    };
+    }, []);
 
-    const handleAnswerChange = (questionId: string, value: string) => {
-        setAnswers((prev: any) => ({
-            ...prev,
-            [questionId]: value,
-        }));
-    };
+    const handleSubmit = useCallback(() => {
+        if (answeredCount === 0) {
+            setSubmitError("Bạn phải trả lời ít nhất một câu hỏi");
+            return;
+        }
 
-    const handleSaveAnswer = (questionId: string) => {
-        // Mock save - in real app would call API
-        console.log(`Answer saved for question ${questionId}`);
-    };
+        try {
+            const answersArray: AnswerRequest[] = Object.entries(answers).map(([questionId, answer]) => {
+                const question = assignment?.questions?.find((q: Question) => q.id === questionId);
+                const isMultipleChoice = question?.questionTypeId === "multiple_choice";
 
-    const handleSubmit = () => {
-        setIsSubmitted(true);
-        setShowConfirmSubmit(false);
-        // Mock submission - in real app would call API
-        console.log("Assignment submitted", answers);
-    };
+                return {
+                    questionId,
+                    answer: isMultipleChoice ? "" : answer,
+                    selectedOptionId: isMultipleChoice ? answer : undefined,
+                };
+            });
 
-    const daysRemaining = Math.ceil((new Date(assignment.dueDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-    const isOverdue = daysRemaining < 0;
+            submitMutation.mutate(
+                { assignmentId, data: { answers: answersArray } },
+                {
+                    onSuccess: () => {
+                        setShowConfirmSubmit(false);
+                        setSubmitError(null);
+                        refetchSubmission();
+                        toaster.push(
+                            <Notification type="success" header="Thành công">
+                                Bài tập đã được nộp thành công!
+                            </Notification>,
+                            { duration: 5000 }
+                        );
+                    },
+                    onError: (error: any) => {
+                        const errorMessage =
+                            error?.message || "Có lỗi xảy ra khi nộp bài tập. Vui lòng thử lại.";
+                        setSubmitError(errorMessage);
+                        toaster.push(
+                            <Notification type="error" header="Lỗi">
+                                {errorMessage}
+                            </Notification>,
+                            { duration: 5000 }
+                        );
+                    },
+                }
+            );
+        } catch (error) {
+            const errorMessage =
+                error instanceof Error ? error.message : "Có lỗi xảy ra. Vui lòng thử lại.";
+            setSubmitError(errorMessage);
+        }
+    }, [answers, assignment?.questions, assignmentId, submitMutation, refetchSubmission, toaster, answeredCount]);
+
+    // =========================================================================
+    // Render: Loading State
+    // =========================================================================
+    if (loadingAssignment || loadingSubmission) {
+        return (
+            <div style={{ padding: "50px", textAlign: "center", minHeight: "100vh" }}>
+                <Loader size="lg" content="Đang tải bài tập..." />
+            </div>
+        );
+    }
+
+    // =========================================================================
+    // Render: Parameter Validation Error
+    // =========================================================================
+    if (!paramValidation.valid) {
+        return (
+            <div style={{ padding: "50px", textAlign: "center", minHeight: "100vh" }}>
+                <Message type="error" header="Lỗi">
+                    {paramValidation.message}
+                </Message>
+            </div>
+        );
+    }
+
+    // =========================================================================
+    // Render: API Error State
+    // =========================================================================
+    if (assignmentError) {
+        return (
+            <div style={{ padding: "50px", textAlign: "center", minHeight: "100vh" }}>
+                <Message type="error" header="Lỗi tải bài tập">
+                    {assignmentError instanceof Error
+                        ? assignmentError.message
+                        : "Không thể tải bài tập. Vui lòng thử lại."}
+                </Message>
+                <Button
+                    appearance="primary"
+                    style={{ marginTop: "16px" }}
+                    onClick={() => window.location.reload()}
+                >
+                    Thử lại
+                </Button>
+            </div>
+        );
+    }
+
+    // =========================================================================
+    // Render: Assignment Not Found
+    // =========================================================================
+    if (!assignment) {
+        return (
+            <div style={{ padding: "50px", textAlign: "center", minHeight: "100vh" }}>
+                <Message type="warning" header="Không tìm thấy">
+                    Bài tập không tồn tại hoặc đã bị xóa.
+                </Message>
+                <Button
+                    appearance="primary"
+                    style={{ marginTop: "16px" }}
+                    as={Link}
+                    href={`/courses/detail/${courseId}/lessons/${lessonId}`}
+                >
+                    Quay lại bài học
+                </Button>
+            </div>
+        );
+    }
+
+    // =========================================================================
+    // Render: No Questions in Assignment
+    // =========================================================================
+    if (!assignment.questions || assignment.questions.length === 0) {
+        return (
+            <div style={{ padding: "50px", textAlign: "center", minHeight: "100vh" }}>
+                <Message type="warning" header="Chưa có câu hỏi">
+                    Bài tập này chưa có câu hỏi nào.
+                </Message>
+                <Button
+                    appearance="primary"
+                    style={{ marginTop: "16px" }}
+                    as={Link}
+                    href={`/courses/detail/${courseId}/lessons/${lessonId}`}
+                >
+                    Quay lại bài học
+                </Button>
+            </div>
+        );
+    }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div style={{ backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
             {/* Header */}
-            <div className="bg-white border-b sticky top-0 z-10">
-                <div className="max-w-7xl mx-auto px-6 py-4">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <Link href={routes.user.courses} className="hover:text-gray-900">
+            <Panel
+                bordered
+                style={{
+                    backgroundColor: 'white',
+                    borderRadius: 0,
+                    marginBottom: 0,
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 10
+                }}
+            >
+                <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '16px' }}>
+                    <FlexboxGrid justify="space-between" align="middle" style={{ marginBottom: '16px' }}>
+                        <FlexboxGrid.Item style={{ fontSize: '14px', color: '#666' }}>
+                            <Link href={routes.user.courses} style={{ color: '#666', textDecoration: 'none' }}>
                                 Khóa học
                             </Link>
-                            <span>/</span>
-                            <Link href={`/courses/detail/${courseId}`} className="hover:text-gray-900">
-                                React Advanced
+                            <span style={{ margin: '0 8px' }}>/</span>
+                            <Link href={`/courses/detail/${courseId}`} style={{ color: '#666', textDecoration: 'none' }}>
+                                Chi tiết khóa học
                             </Link>
-                            <span>/</span>
-                            <Link href={`/courses/detail/${courseId}/learn`} className="hover:text-gray-900">
-                                Chi tiết
-                            </Link>
-                            <span>/</span>
-                            <Link href={`/courses/detail/${courseId}/lessons/${lessonId}`} className="hover:text-gray-900">
+                            <span style={{ margin: '0 8px' }}>/</span>
+                            <Link href={`/courses/detail/${courseId}/lessons/${lessonId}`} style={{ color: '#666', textDecoration: 'none' }}>
                                 Bài học
                             </Link>
-                            <span>/</span>
-                            <span className="text-gray-900 font-medium">{assignment.title}</span>
-                        </div>
-                        <Button variant="outline" size="sm" asChild>
-                            <Link href={`/courses/detail/${courseId}/lessons/${lessonId}`}>
-                                <ArrowLeft className="w-4 h-4 mr-2" />
+                            <span style={{ margin: '0 8px' }}>/</span>
+                            <span style={{ color: '#333', fontWeight: 500 }}>{assignment.title}</span>
+                        </FlexboxGrid.Item>
+                        <FlexboxGrid.Item>
+                            <Button
+                                appearance="ghost"
+                                size="sm"
+                                as={Link}
+                                href={`/courses/detail/${courseId}/lessons/${lessonId}`}
+                                startIcon={<ArrowLeftLine />}
+                            >
                                 Quay lại
-                            </Link>
-                        </Button>
-                    </div>
+                            </Button>
+                        </FlexboxGrid.Item>
+                    </FlexboxGrid>
                 </div>
-            </div>
+            </Panel>
 
             {/* Main Content */}
-            <div className="max-w-7xl mx-auto px-6 py-8">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Left Column - Assignment Content */}
-                    <div className="lg:col-span-2 space-y-6">
-                        {/* Assignment Header */}
-                        <Card>
-                            <CardHeader>
-                                <div className="flex items-start justify-between">
-                                    <div className="flex-1">
-                                        <CardTitle className="text-2xl mb-2">{assignment.title}</CardTitle>
-                                        <CardDescription className="text-base">{assignment.description}</CardDescription>
-                                    </div>
-                                    <Badge variant={isOverdue ? "destructive" : "default"}>
-                                        {isOverdue ? "Quá hạn" : "Chưa nộp"}
-                                    </Badge>
-                                </div>
-                            </CardHeader>
-                        </Card>
+            <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px' }}>
+                <Grid fluid>
+                    <Row gutter={24}>
+                        {/* Left Column - Assignment Content */}
+                        <Col lg={16} md={24} sm={24}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
-                        {/* Questions */}
-                        <div className="space-y-4">
-                            <h3 className="font-semibold text-lg">Câu hỏi</h3>
-                            {assignment.questions.map((question: any, index: number) => {
-                                const isExpanded = expandedQuestions.has(question.id);
-                                const userAnswer = answers[question.id];
-                                const isEssay = question.questionTypeId === "essay";
+                                {/* Assignment Header */}
+                                <Panel bordered style={{ backgroundColor: 'white' }}>
+                                    <FlexboxGrid justify="space-between" align="top">
+                                        <FlexboxGrid.Item style={{ flex: 1 }}>
+                                            <h2 style={{ margin: '0 0 8px 0', fontSize: '24px', fontWeight: 600 }}>
+                                                {assignment.title}
+                                            </h2>
+                                            <p style={{ margin: '0', color: '#666', fontSize: '16px' }}>
+                                                {assignment.description}
+                                            </p>
+                                        </FlexboxGrid.Item>
+                                        <FlexboxGrid.Item>
+                                            <Badge
+                                                color={isOverdue ? 'red' : isSubmitted ? 'green' : 'blue'}
+                                                content={isOverdue ? 'Quá hạn' : isSubmitted ? 'Đã nộp' : 'Chưa nộp'}
+                                            />
+                                        </FlexboxGrid.Item>
+                                    </FlexboxGrid>
+                                </Panel>
 
-                                return (
-                                    <Card key={question.id} className={`${isSubmitted ? "bg-gray-50" : ""}`}>
-                                        <CardHeader className="cursor-pointer" onClick={() => toggleQuestion(question.id)}>
-                                            <div className="flex items-start justify-between">
-                                                <div className="flex-1">
-                                                    <div className="flex items-center gap-3">
-                                                        <span className="font-semibold text-lg">Câu {index + 1}</span>
-                                                        <Badge variant="outline">{question.score} điểm</Badge>
-                                                        {isEssay && <Badge variant="secondary">Tự luận</Badge>}
-                                                        {!isEssay && <Badge variant="secondary">Trắc nghiệm</Badge>}
-                                                    </div>
-                                                    <p className="mt-2 text-gray-700 font-medium">{question.content}</p>
-                                                </div>
-                                                <Button variant="ghost" size="sm">
-                                                    {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                                                </Button>
-                                            </div>
-                                        </CardHeader>
-
-                                        {isExpanded && (
-                                            <CardContent className="space-y-4 border-t pt-4">
-                                                {/* Instructions for essay */}
-                                                {isEssay && question.instructions && (
-                                                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                                                        <h4 className="font-medium text-blue-900 mb-2">Hướng dẫn:</h4>
-                                                        <ul className="text-sm text-blue-800 space-y-1">
-                                                            {question.instructions.split("\n").filter((line: string) => line.trim()).map((line: string, i: number) => (
-                                                                <li key={i}>{line}</li>
-                                                            ))}
-                                                        </ul>
-                                                    </div>
-                                                )}
-
-                                                {/* Essay Answer */}
-                                                {isEssay && !isSubmitted && (
-                                                    <div className="space-y-3">
-                                                        <label className="block text-sm font-medium">Câu trả lời của bạn:</label>
-                                                        <textarea
-                                                            value={userAnswer || ""}
-                                                            onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                                                            placeholder="Nhập câu trả lời của bạn tại đây..."
-                                                            className="w-full p-3 border rounded-lg resize-vertical min-h-32 font-mono text-sm"
-                                                        />
-                                                        <div className="flex justify-end">
-                                                            <Button
-                                                                size="sm"
-                                                                variant="outline"
-                                                                onClick={() => handleSaveAnswer(question.id)}
-                                                            >
-                                                                <Save className="w-4 h-4 mr-2" />
-                                                                Lưu tạm
-                                                            </Button>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {/* Essay Answer Display - Submitted */}
-                                                {isEssay && isSubmitted && submission?.answers?.find((a: any) => a.questionId === question.id) && (
-                                                    <div className="space-y-3">
-                                                        <div className="bg-gray-100 p-4 rounded-lg">
-                                                            <p className="text-sm font-medium text-gray-600 mb-2">Câu trả lời của bạn:</p>
-                                                            <p className="text-gray-800 whitespace-pre-wrap font-mono text-sm">
-                                                                {submission.answers.find((a: any) => a.questionId === question.id)?.answer}
-                                                            </p>
-                                                        </div>
-                                                        {submission.answers.find((a: any) => a.questionId === question.id)?.feedback && (
-                                                            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                                                                <p className="text-sm font-medium text-green-900 mb-2">Nhận xét từ giáo viên:</p>
-                                                                <p className="text-green-800">
-                                                                    {submission.answers.find((a: any) => a.questionId === question.id)?.feedback}
-                                                                </p>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                )}
-
-                                                {/* Multiple Choice */}
-                                                {!isEssay && (
-                                                    <div className="space-y-3">
-                                                        {question.options.map((option: any, optIndex: number) => {
-                                                            const isSelected = userAnswer === option.id;
-                                                            const isCorrect = option.isCorrect;
-                                                            const showResult = isSubmitted && submission?.answers?.find((a: any) => a.questionId === question.id);
-
-                                                            return (
-                                                                <div
-                                                                    key={option.id}
-                                                                    className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${isSelected
-                                                                        ? "border-blue-500 bg-blue-50"
-                                                                        : "border-gray-200 hover:border-gray-300"
-                                                                        } ${showResult && isCorrect
-                                                                            ? "border-green-500 bg-green-50"
-                                                                            : showResult && isSelected && !isCorrect
-                                                                                ? "border-red-500 bg-red-50"
-                                                                                : ""
-                                                                        } ${isSubmitted ? "cursor-not-allowed opacity-75" : ""}`}
-                                                                    onClick={() => !isSubmitted && handleAnswerChange(question.id, option.id)}
-                                                                >
-                                                                    <div className="flex items-start gap-3">
-                                                                        <div
-                                                                            className={`w-5 h-5 rounded-full border-2 mt-0.5 flex-shrink-0 ${isSelected ? "border-blue-500 bg-blue-500" : "border-gray-300"
-                                                                                }`}
-                                                                        />
-                                                                        <span className={`text-sm flex-1 ${isSelected ? "font-medium" : ""}`}>
-                                                                            {option.content}
-                                                                        </span>
-                                                                        {showResult && isCorrect && <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />}
-                                                                        {showResult && isSelected && !isCorrect && <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />}
-                                                                    </div>
-                                                                </div>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                )}
-                                            </CardContent>
-                                        )}
-                                    </Card>
-                                );
-                            })}
-                        </div>
-
-                        {/* Submit Button */}
-                        {!isSubmitted && (
-                            <Card className="bg-blue-50 border-blue-200">
-                                <CardContent className="p-6">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <h3 className="font-medium mb-1">Sẵn sàng nộp bài tập?</h3>
-                                            <p className="text-sm text-gray-600">Đảm bảo bạn đã hoàn thành tất cả các câu hỏi.</p>
-                                        </div>
-                                        <Button size="lg" onClick={() => setShowConfirmSubmit(true)}>
-                                            <Send className="w-4 h-4 mr-2" />
-                                            Nộp bài
-                                        </Button>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        )}
-                    </div>
-
-                    {/* Right Column - Summary */}
-                    <div className="space-y-6">
-                        {/* Score Summary */}
-                        {isSubmitted && (
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Kết quả</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="text-center">
-                                        <div className="text-4xl font-bold text-blue-600 mb-2">
-                                            {userScore}/{totalScore}
-                                        </div>
-                                        <div className="text-sm text-gray-600">
-                                            Đạt {((userScore / totalScore) * 100).toFixed(1)}%
-                                        </div>
-                                    </div>
-                                    <Progress value={(userScore / totalScore) * 100} className="h-3" />
-                                    <div className="pt-2 border-t">
-                                        <p className="text-sm text-gray-600 mb-2">Nộp lúc: {submission?.submittedAt?.toLocaleString("vi-VN")}</p>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        )}
-
-                        {/* Due Date */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-lg">Thông tin bài tập</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div>
-                                    <p className="text-sm text-gray-600 mb-1">Loại bài tập</p>
-                                    <div className="flex gap-2">
-                                        {essayQuestions.length > 0 && <Badge>Tự luận ({essayQuestions.length})</Badge>}
-                                        {multipleChoiceQuestions.length > 0 && <Badge>Trắc nghiệm ({multipleChoiceQuestions.length})</Badge>}
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <p className="text-sm text-gray-600 mb-1">Tổng điểm</p>
-                                    <p className="text-2xl font-bold text-gray-900">{totalScore} điểm</p>
-                                </div>
-
-                                <div className="border-t pt-4">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <Clock className="w-4 h-4 text-orange-500" />
-                                        <p className="text-sm font-medium">Hạn nộp</p>
-                                    </div>
-                                    <p className="text-sm text-gray-600 mb-1">
-                                        {new Date(assignment.dueDate).toLocaleDateString("vi-VN", {
-                                            weekday: "long",
-                                            year: "numeric",
-                                            month: "long",
-                                            day: "numeric",
-                                        })}
-                                    </p>
-                                    <p
-                                        className={`text-sm font-medium ${isOverdue ? "text-red-600" : daysRemaining <= 1 ? "text-orange-600" : "text-green-600"
-                                            }`}
-                                    >
-                                        {isOverdue ? `Quá hạn ${Math.abs(daysRemaining)} ngày` : `Còn ${daysRemaining} ngày`}
-                                    </p>
-                                </div>
-
+                                {/* Progress Panel */}
                                 {!isSubmitted && (
-                                    <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                                        <p className="text-xs text-yellow-800">
-                                            ⚠️ Bạn chưa nộp bài tập này. Hãy hoàn thành và nộp trước hạn chót.
-                                        </p>
-                                    </div>
+                                    <Panel bordered style={{ backgroundColor: '#f0f9ff', borderColor: '#0ea5e9' }}>
+                                        <h4 style={{ margin: '0 0 12px 0', color: '#0ea5e9' }}>Tiến độ làm bài</h4>
+                                        <div style={{ marginBottom: '8px' }}>
+                                            <span style={{ fontSize: '14px', color: '#666' }}>
+                                                Đã trả lời {answeredCount}/{totalQuestions} câu hỏi
+                                            </span>
+                                        </div>
+                                        <Progress.Line
+                                            percent={progressPercentage}
+                                            strokeColor="#0ea5e9"
+                                            style={{ marginBottom: '12px' }}
+                                        />
+                                        {/* Auto-save disabled: no saving indicator shown */}
+                                    </Panel>
                                 )}
-                            </CardContent>
-                        </Card>
 
-                        {/* Instructions */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-lg flex items-center gap-2">
-                                    <HelpCircle className="w-4 h-4" />
-                                    Hướng dẫn
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-2 text-sm text-gray-600">
-                                <p>• Đọc kỹ từng câu hỏi trước khi trả lời</p>
-                                <p>• Sử dụng nút &quot;Lưu tạm&quot; để lưu câu trả lời tự luận</p>
-                                <p>• Kiểm tra lại câu trả lời của bạn trước khi nộp</p>
-                                <p>• Sau khi nộp, bạn không thể chỉnh sửa câu trả lời</p>
-                                <p>• Giáo viên sẽ chấm bài trong vòng 3-5 ngày</p>
-                            </CardContent>
-                        </Card>
-                    </div>
-                </div>
+                                {/* Questions */}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                    <h3 style={{ margin: '0', fontSize: '18px', fontWeight: 600 }}>Câu hỏi</h3>
+
+                                    {assignment.questions?.map((question: Question, index: number) => {
+                                        const isExpanded = expandedQuestions.has(question.id);
+                                        const userAnswer = answers[question.id];
+                                        const isEssay = question.questionTypeId === 'essay';
+                                        const submissionAnswer = submission?.answers?.find((a: SubmissionAnswer) => a.questionId === question.id);
+
+                                        return (
+                                            <Panel
+                                                key={question.id}
+                                                bordered
+                                                collapsible
+                                                expanded={isExpanded}
+                                                onToggle={() => toggleQuestion(question.id)}
+                                                style={{
+                                                    backgroundColor: isSubmitted ? '#f9f9f9' : 'white',
+                                                    border: isSubmitted && submissionAnswer ?
+                                                        (submissionAnswer.isCorrect ? '2px solid #10b981' : '2px solid #ef4444') :
+                                                        undefined
+                                                }}
+                                                header={
+                                                    <FlexboxGrid justify="space-between" align="middle">
+                                                        <FlexboxGrid.Item style={{ flex: 1 }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                                                                <span style={{ fontSize: '16px', fontWeight: 600 }}>
+                                                                    Câu {index + 1}
+                                                                </span>
+                                                                <Tag color="blue">{question.score} điểm</Tag>
+                                                                <Tag color={isEssay ? 'orange' : 'cyan'}>
+                                                                    {isEssay ? 'Tự luận' : 'Trắc nghiệm'}
+                                                                </Tag>
+                                                                {userAnswer && !isSubmitted && (
+                                                                    <Tag color="green">Đã trả lời</Tag>
+                                                                )}
+                                                                {isSubmitted && submissionAnswer && (
+                                                                    <Tag color={submissionAnswer.isCorrect ? 'green' : 'red'}>
+                                                                        {submissionAnswer.isCorrect ? 'Đúng' : 'Sai'}
+                                                                        {submissionAnswer.score !== undefined && (
+                                                                            ` (${submissionAnswer.score}/${question.score})`
+                                                                        )}
+                                                                    </Tag>
+                                                                )}
+                                                            </div>
+                                                            <p style={{
+                                                                margin: '8px 0 0 0',
+                                                                color: '#333',
+                                                                fontWeight: 500,
+                                                                fontSize: '15px'
+                                                            }}>
+                                                                {question.content}
+                                                            </p>
+                                                        </FlexboxGrid.Item>
+                                                    </FlexboxGrid>
+                                                }
+                                            >
+                                                <div style={{ padding: '16px 0', borderTop: '1px solid #e5e7eb' }}>
+                                                    {/* Essay Instructions */}
+                                                    {isEssay && question.instructions && (
+                                                        <Message
+                                                            type="info"
+                                                            style={{ marginBottom: '16px' }}
+                                                            header="Hướng dẫn:"
+                                                        >
+                                                            <div style={{ whiteSpace: 'pre-line' }}>
+                                                                {question.instructions}
+                                                            </div>
+                                                        </Message>
+                                                    )}
+
+                                                    {/* Essay Answer Input */}
+                                                    {isEssay && !isSubmitted && (
+                                                        <div style={{ marginBottom: '16px' }}>
+                                                            <label style={{
+                                                                display: 'block',
+                                                                marginBottom: '8px',
+                                                                fontSize: '14px',
+                                                                fontWeight: 500
+                                                            }}>
+                                                                Câu trả lời của bạn:
+                                                            </label>
+                                                            <Input
+                                                                as="textarea"
+                                                                rows={6}
+                                                                value={userAnswer || ''}
+                                                                onChange={(value) => handleAnswerChange(question.id, value)}
+                                                                placeholder="Nhập câu trả lời của bạn tại đây..."
+                                                                style={{ fontFamily: 'monospace', fontSize: '14px' }}
+                                                            />
+                                                        </div>
+                                                    )}
+
+                                                    {/* Essay Answer Display - Submitted */}
+                                                    {isEssay && isSubmitted && submissionAnswer && (
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                                            <Panel
+                                                                bordered
+                                                                style={{ backgroundColor: '#f3f4f6', padding: '16px' }}
+                                                                header={<span style={{ fontSize: '14px', fontWeight: 500 }}>Câu trả lời của bạn:</span>}
+                                                            >
+                                                                <div style={{
+                                                                    whiteSpace: 'pre-wrap',
+                                                                    fontFamily: 'monospace',
+                                                                    fontSize: '14px',
+                                                                    color: '#374151'
+                                                                }}>
+                                                                    {submissionAnswer.answer}
+                                                                </div>
+                                                            </Panel>
+
+                                                            {submissionAnswer.feedback && (
+                                                                <Message
+                                                                    type="success"
+                                                                    header="Nhận xét từ giáo viên:"
+                                                                    style={{ backgroundColor: '#f0fdf4', borderColor: '#22c55e' }}
+                                                                >
+                                                                    {submissionAnswer.feedback}
+                                                                </Message>
+                                                            )}
+                                                        </div>
+                                                    )}
+
+                                                    {/* Multiple Choice Options */}
+                                                    {!isEssay && (
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                                            <RadioGroup
+                                                                name={`question-${question.id}`}
+                                                                value={userAnswer || ''}
+                                                                onChange={(value) => handleAnswerChange(question.id, value)}
+                                                                disabled={isSubmitted}
+                                                            >
+                                                                {question.options?.map((option, optIndex) => {
+                                                                    const isSelected = userAnswer === option.id;
+                                                                    const isCorrect = option.isCorrect;
+                                                                    const showResult = isSubmitted && submissionAnswer;
+
+                                                                    return (
+                                                                        <div
+                                                                            key={option.id}
+                                                                            style={{
+                                                                                padding: '12px',
+                                                                                border: '2px solid',
+                                                                                borderColor: showResult && isCorrect ? '#22c55e' :
+                                                                                    showResult && isSelected && !isCorrect ? '#ef4444' :
+                                                                                        isSelected ? '#3b82f6' : '#e5e7eb',
+                                                                                borderRadius: '8px',
+                                                                                backgroundColor: showResult && isCorrect ? '#f0fdf4' :
+                                                                                    showResult && isSelected && !isCorrect ? '#fef2f2' :
+                                                                                        isSelected ? '#eff6ff' : 'white',
+                                                                                cursor: isSubmitted ? 'not-allowed' : 'pointer',
+                                                                                opacity: isSubmitted ? 0.8 : 1,
+                                                                                transition: 'all 0.2s ease'
+                                                                            }}
+                                                                        >
+                                                                            <FlexboxGrid align="middle" style={{ gap: '12px' }}>
+                                                                                <FlexboxGrid.Item>
+                                                                                    <Radio value={option.id} disabled={isSubmitted}>
+                                                                                        {option.content}
+                                                                                    </Radio>
+                                                                                </FlexboxGrid.Item>
+                                                                                <FlexboxGrid.Item>
+                                                                                    {showResult && isCorrect && (
+                                                                                        <CheckRound style={{ color: '#22c55e', fontSize: '20px' }} />
+                                                                                    )}
+                                                                                    {showResult && isSelected && !isCorrect && (
+                                                                                        <Close style={{ color: '#ef4444', fontSize: '20px' }} />
+                                                                                    )}
+                                                                                </FlexboxGrid.Item>
+                                                                            </FlexboxGrid>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </RadioGroup>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </Panel>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Submit Section */}
+                                {!isSubmitted && (
+                                    <>
+                                        {submitError && (
+                                            <Message
+                                                type="error"
+                                                header="Lỗi nộp bài"
+                                                showIcon
+                                                closable
+                                                onClose={() => setSubmitError(null)}
+                                            >
+                                                {submitError}
+                                            </Message>
+                                        )}
+                                        <Panel
+                                            bordered
+                                            style={{
+                                                backgroundColor: '#dbeafe',
+                                                borderColor: '#3b82f6',
+                                                padding: '24px'
+                                            }}
+                                        >
+                                            <FlexboxGrid justify="space-between" align="middle">
+                                                <FlexboxGrid.Item>
+                                                    <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: 600 }}>
+                                                        Sẵn sàng nộp bài tập?
+                                                    </h3>
+                                                    <p style={{ margin: '0', fontSize: '14px', color: '#666' }}>
+                                                        Đảm bảo bạn đã hoàn thành tất cả các câu hỏi.
+                                                    </p>
+                                                </FlexboxGrid.Item>
+                                                <FlexboxGrid.Item>
+                                                    <Button
+                                                        appearance="primary"
+                                                        size="lg"
+                                                        startIcon={<Send />}
+                                                        onClick={() => setShowConfirmSubmit(true)}
+                                                        disabled={answeredCount === 0}
+                                                        loading={submitMutation.isPending}
+                                                    >
+                                                        Nộp bài
+                                                    </Button>
+                                                </FlexboxGrid.Item>
+                                            </FlexboxGrid>
+                                        </Panel>
+                                    </>
+                                )}
+                            </div>
+                        </Col>
+
+                        {/* Right Column - Summary */}
+                        <Col lg={8} md={24} sm={24}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
+                                {/* Score Summary */}
+                                {isSubmitted && submission && (
+                                    <AssignmentResults
+                                        assignment={assignment}
+                                        submission={submission}
+                                    />
+                                )}
+
+                                {/* Assignment Info */}
+                                <Panel bordered header="Thông tin bài tập" style={{ backgroundColor: 'white' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+                                        <div>
+                                            <p style={{
+                                                fontSize: '14px',
+                                                color: '#666',
+                                                margin: '0 0 4px 0'
+                                            }}>
+                                                Loại bài tập
+                                            </p>
+                                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                                {assignment.questions?.some((q: Question) => q.questionTypeId === 'essay') && (
+                                                    <Tag color="orange">
+                                                        Tự luận ({assignment.questions?.filter((q: Question) => q.questionTypeId === 'essay').length})
+                                                    </Tag>
+                                                )}
+                                                {assignment.questions?.some((q: Question) => q.questionTypeId === 'multiple_choice') && (
+                                                    <Tag color="cyan">
+                                                        Trắc nghiệm ({assignment.questions?.filter((q: Question) => q.questionTypeId === 'multiple_choice').length})
+                                                    </Tag>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <p style={{
+                                                fontSize: '14px',
+                                                color: '#666',
+                                                margin: '0 0 4px 0'
+                                            }}>
+                                                Tổng điểm
+                                            </p>
+                                            <p style={{
+                                                fontSize: '24px',
+                                                fontWeight: 'bold',
+                                                color: '#333',
+                                                margin: 0
+                                            }}>
+                                                {totalScore} điểm
+                                            </p>
+                                        </div>
+
+                                        <Divider />
+
+                                        <div>
+                                            <div style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '8px',
+                                                marginBottom: '12px'
+                                            }}>
+                                                <Time style={{ color: '#f59e0b', fontSize: '16px' }} />
+                                                <p style={{
+                                                    fontSize: '14px',
+                                                    fontWeight: 500,
+                                                    margin: 0
+                                                }}>
+                                                    Hạn nộp
+                                                </p>
+                                            </div>
+                                            <p style={{
+                                                fontSize: '14px',
+                                                color: '#666',
+                                                margin: '0 0 4px 0'
+                                            }}>
+                                                {new Date(assignment.dueDate).toLocaleDateString('vi-VN', {
+                                                    weekday: 'long',
+                                                    year: 'numeric',
+                                                    month: 'long',
+                                                    day: 'numeric',
+                                                })}
+                                            </p>
+                                            <p style={{
+                                                fontSize: '14px',
+                                                fontWeight: 500,
+                                                margin: 0,
+                                                color: isOverdue ? '#ef4444' :
+                                                    daysRemaining <= 1 ? '#f59e0b' : '#22c55e'
+                                            }}>
+                                                {isOverdue ?
+                                                    `Quá hạn ${Math.abs(daysRemaining)} ngày` :
+                                                    `Còn ${daysRemaining} ngày`
+                                                }
+                                            </p>
+                                        </div>
+
+                                        {!isSubmitted && (
+                                            <Message
+                                                type="warning"
+                                                style={{ margin: 0 }}
+                                                header="⚠️ Chưa nộp bài"
+                                            >
+                                                <div style={{ fontSize: '12px' }}>
+                                                    Bạn chưa nộp bài tập này. Hãy hoàn thành và nộp trước hạn chót.
+                                                </div>
+                                            </Message>
+                                        )}
+                                    </div>
+                                </Panel>
+
+                                {/* Instructions */}
+                                <Panel
+                                    bordered
+                                    header={
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <InfoIcon style={{ fontSize: '16px' }} />
+                                            Hướng dẫn
+                                        </div>
+                                    }
+                                    style={{ backgroundColor: 'white' }}
+                                >
+                                    <div style={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '8px',
+                                        fontSize: '14px',
+                                        color: '#666'
+                                    }}>
+                                        <p style={{ margin: 0 }}>• Đọc kỹ từng câu hỏi trước khi trả lời</p>
+                                        <p style={{ margin: 0 }}>• Câu trả lời sẽ được tự động lưu trong quá trình làm bài</p>
+                                        <p style={{ margin: 0 }}>• Kiểm tra lại câu trả lời của bạn trước khi nộp</p>
+                                        <p style={{ margin: 0 }}>• Sau khi nộp, bạn không thể chỉnh sửa câu trả lời</p>
+                                        <p style={{ margin: 0 }}>• Giáo viên sẽ chấm bài trong vòng 3-5 ngày</p>
+                                    </div>
+                                </Panel>
+                            </div>
+                        </Col>
+                    </Row>
+                </Grid>
             </div>
 
-            {/* Confirm Submit Dialog */}
-            {showConfirmSubmit && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <Card className="max-w-md">
-                        <CardHeader>
-                            <CardTitle>Xác nhận nộp bài</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <p className="text-gray-600">
-                                Bạn có chắc chắn muốn nộp bài tập này? Sau khi nộp, bạn không thể chỉnh sửa câu trả lời.
-                            </p>
-                            <div className="flex gap-3 justify-end">
-                                <Button variant="outline" onClick={() => setShowConfirmSubmit(false)}>
-                                    Hủy
-                                </Button>
-                                <Button onClick={handleSubmit}>
-                                    Xác nhận nộp
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-            )}
+            {/* Confirm Submit Modal */}
+            <Modal
+                open={showConfirmSubmit}
+                onClose={() => setShowConfirmSubmit(false)}
+                size="sm"
+            >
+                <Modal.Header>
+                    <Modal.Title>Xác nhận nộp bài</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <p style={{ margin: '0', color: '#666' }}>
+                        Bạn có chắc chắn muốn nộp bài tập này? Sau khi nộp, bạn không thể chỉnh sửa câu trả lời.
+                    </p>
+                    <div style={{ marginTop: '16px' }}>
+                        <p style={{ fontSize: '14px', color: '#666', margin: '0' }}>
+                            Đã trả lời: <strong>{answeredCount}/{totalQuestions}</strong> câu hỏi
+                        </p>
+                    </div>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button
+                        appearance="subtle"
+                        onClick={() => setShowConfirmSubmit(false)}
+                    >
+                        Hủy
+                    </Button>
+                    <Button
+                        appearance="primary"
+                        onClick={handleSubmit}
+                        loading={submitMutation.isPending}
+                    >
+                        Xác nhận nộp
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </div>
     );
 }

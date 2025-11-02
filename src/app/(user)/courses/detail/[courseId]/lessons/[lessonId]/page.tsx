@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { routes } from "@/config/routes";
-import { mockAssignments } from "@/data/assignments";
+import { useAssignmentsByLesson } from "@/queries/useAssignment";
 import { useLessonQuery, useModulesByCourseQuery, useMaterialsByLessonQuery, useCompleteLessonMutation, useSectionsByLessonQuery } from "@/queries/useLesson";
 import { SectionType } from "@/schemaValidations/lesson.schema";
 
@@ -145,20 +145,46 @@ const ContentSection = ({ section, isLoading }: { section: SectionType, isLoadin
     );
 };
 
-// Assignment section component
-const AssignmentsSection = ({ assignments, lessonId, courseId, isLoading }: { assignments: any[], lessonId: string | number, courseId: string | number, isLoading: boolean }) => {
+// Assignment section component  
+const AssignmentsSection = ({ lessonId, courseId }: { lessonId: string | number, courseId: string | number }) => {
+    const { data: assignmentsResponse, isLoading, error } = useAssignmentsByLesson(String(lessonId));
+
     if (isLoading) {
         return (
             <div className="p-4">
                 <div className="animate-pulse space-y-4">
                     <div className="h-4 bg-gray-200 rounded w-3/4"></div>
                     <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                    <div className="space-y-3">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="border rounded-lg p-4">
+                                <div className="h-4 bg-gray-200 rounded w-2/3 mb-2"></div>
+                                <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
+                                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
         );
     }
 
-    const lessonAssignments = assignments.filter(a => String(a.lessonId) === String(lessonId) && !a.isDeleted);
+    if (error) {
+        return (
+            <div className="p-4">
+                <div className="text-center py-8 text-red-500">
+                    <HelpCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p>Không thể tải danh sách bài tập</p>
+                    <p className="text-sm mt-1">Vui lòng thử lại sau</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Extract assignments data from response
+    const lessonAssignments = Array.isArray(assignmentsResponse) ?
+        assignmentsResponse :
+        (assignmentsResponse?.data || []);
 
     return (
         <div className="space-y-4">
@@ -174,7 +200,7 @@ const AssignmentsSection = ({ assignments, lessonId, courseId, isLoading }: { as
                 </div>
             ) : (
                 <div className="space-y-3">
-                    {lessonAssignments.map(assignment => {
+                    {lessonAssignments.map((assignment: any) => {
                         const totalQuestions = assignment.questions?.length || 0;
                         const essayQuestions = assignment.questions?.filter((q: any) => q.questionTypeId === "essay").length || 0;
                         const multipleChoiceQuestions = assignment.questions?.filter((q: any) => q.questionTypeId === "multiple_choice").length || 0;
@@ -355,7 +381,6 @@ export default function LessonDetailPage() {
     const loadingStates = {
         content: lessonLoading || modulesLoading || sectionsLoading,
         materials: materialsLoading,
-        assignments: false, // assignments still use mock data until API is available
     };
 
     useEffect(() => {
@@ -527,10 +552,8 @@ export default function LessonDetailPage() {
                                         <Card>
                                             <CardContent className="p-4">
                                                 <AssignmentsSection
-                                                    assignments={mockAssignments}
                                                     lessonId={lessonId ?? ''}
                                                     courseId={courseId ?? ''}
-                                                    isLoading={loadingStates.assignments}
                                                 />
                                             </CardContent>
                                         </Card>
@@ -539,7 +562,10 @@ export default function LessonDetailPage() {
                                     <TabsContent value="materials" className="mt-4">
                                         <Card>
                                             <CardContent className="p-4">
-                                                <MaterialsSection materials={materialsFromApi || lessonData?.materials || []} isLoading={loadingStates.materials} />
+                                                <MaterialsSection
+                                                    materials={materialsFromApi || lessonData?.materials || []}
+                                                    isLoading={loadingStates.materials}
+                                                />
                                             </CardContent>
                                         </Card>
                                     </TabsContent>

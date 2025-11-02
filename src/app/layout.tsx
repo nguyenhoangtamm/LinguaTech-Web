@@ -6,6 +6,7 @@ import GlobalModal from "@/app/shared/modal-views/container";
 import { cn } from "@/utils/class-names";
 import "@/app/globals.css";
 // import "@/app/style.css";
+import "rsuite/dist/rsuite.min.css";
 import AppProvider from "@/components/app-provider";
 import { Toaster } from "@/components/ui/toaster";
 
