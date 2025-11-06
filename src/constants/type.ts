@@ -10,9 +10,10 @@ export const TokenType = {
 export const Role = {
     Admin: "Admin",
     User: "User",
+    Teacher: "Teacher",
 } as const;
 
-export const RoleValues = [Role.Admin, Role.User] as const;
+export const RoleValues = [Role.Admin, Role.User, Role.Teacher] as const;
 export const DeviceStatus: SelectOptionType[] = [
     { label: "DeActive", value: "-1" },
     { label: "Normal", value: "0" },

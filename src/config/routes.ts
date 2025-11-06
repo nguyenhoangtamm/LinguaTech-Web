@@ -55,4 +55,23 @@ export const routes = {
         ) =>
             `/courses/detail/${courseId}/lessons/${lessonId}/assignments/${assignmentId}`,
     },
+    teacher: {
+        dashboard: "/my-courses",
+        myCourses: "/my-courses",
+        createCourse: "/my-courses/create",
+        editCourse: (courseId: string) => `/my-courses/${courseId}/edit`,
+        courseDetail: (courseId: string) => `/my-courses/${courseId}`,
+        courseModules: (courseId: string) => `/my-courses/${courseId}/modules`,
+        createModule: (courseId: string) => `/my-courses/${courseId}/modules/create`,
+        editModule: (courseId: string, moduleId: string) => `/my-courses/${courseId}/modules/${moduleId}/edit`,
+        courseLessons: (courseId: string, moduleId: string) => `/my-courses/${courseId}/modules/${moduleId}/lessons`,
+        createLesson: (courseId: string, moduleId: string) => `/my-courses/${courseId}/modules/${moduleId}/lessons/create`,
+        editLesson: (courseId: string, moduleId: string, lessonId: string) => `/my-courses/${courseId}/modules/${moduleId}/lessons/${lessonId}/edit`,
+        courseAssignments: (courseId: string) => `/my-courses/${courseId}/assignments`,
+        createAssignment: (courseId: string) => `/my-courses/${courseId}/assignments/create`,
+        editAssignment: (courseId: string, assignmentId: string) => `/my-courses/${courseId}/assignments/${assignmentId}/edit`,
+        courseStudents: (courseId: string) => `/my-courses/${courseId}/students`,
+        courseSettings: (courseId: string) => `/my-courses/${courseId}/settings`,
+    },
 };
+

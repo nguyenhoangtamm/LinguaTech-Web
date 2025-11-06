@@ -11,6 +11,30 @@ export const ROLE_PERMISSIONS = {
         allowedPaths: ["/manage/**", "/dashboard/**", "/courses/**"],
         restrictedPaths: [],
     },
+    [Role.Teacher]: {
+        name: "Giáo viên",
+        description: "Quản lý khóa học và bài tập của mình",
+        allowedPaths: [
+            "/dashboard/**",
+            "/courses/**",
+            "/my-courses/**",
+            "/profile/**",
+            "/manage/calendar",
+            "/manage/attendance-tracking",
+            "/manage/attendance-history",
+        ],
+        restrictedPaths: [
+            "/manage/users",
+            "/manage/roles",
+            "/manage/permissions",
+            "/manage/configs",
+            "/manage/logging",
+            "/manage/areas",
+            "/manage/devices",
+            "/manage/dashboard",
+            "/manage/projects/project-list",
+        ],
+    },
     [Role.User]: {
         name: "Người dùng",
         description: "Truy cập hạn chế vào hệ thống",
@@ -104,6 +128,8 @@ export function getDefaultHomePage(userRole: RoleType): string {
     switch (userRole) {
         case Role.Admin:
             return "/manage/roles";
+        case Role.Teacher:
+            return "/my-courses";
         case Role.User:
             return "/dashboard";
         default:
