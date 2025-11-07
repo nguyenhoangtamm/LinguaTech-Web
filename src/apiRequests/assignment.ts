@@ -1,151 +1,77 @@
 import http from "@/lib/http";
-import { SubmissionStatus } from "@/lib/enums/submission-status";
+import {
+    AssignmentListResType,
+    AssignmentResType,
+    AssignmentDetailResType,
+    CreateAssignmentBodyType,
+    UpdateAssignmentBodyType,
+    FilterAssignmentType,
+    GetAllAssignmentsResType,
+    AssignmentOperationResType,
+} from "@/schemaValidations/assignment.schema";
 
-// Assignment API endpoints
-const assignmentApiRequest = {
-    // Get assignment details by ID
-    getAssignmentById: (assignmentId: string) =>
-        http.get<Assignment>(`/assignments/${assignmentId}`),
-
-    // Get assignments for a lesson
-    getAssignmentsByLesson: (lessonId: string) =>
-        http.get<{ data: Assignment[]; message: string }>(
-            `/assignments/lesson/${lessonId}`
-        ),
-
-    // Submit assignment answers
-    submitAssignment: (assignmentId: string, body: SubmitAssignmentRequest) =>
-        http.post<SubmitAssignmentResponse>(
-            `/submissions/${assignmentId}/submit`,
-            body
-        ),
-
-    // Save draft answers (auto-save)
-    saveDraftAnswers: (assignmentId: string, body: SaveDraftRequest) =>
-        http.post<SaveDraftResponse>(
-            `/assignments/${assignmentId}/draft`,
-            body
-        ),
-
-    // Get user's submission for an assignment
-    getUserSubmission: (assignmentId: string) =>
-        http.get<UserSubmission>(`/submissions/by-assignment/${assignmentId}`),
-
-    // Get all submissions for an assignment (for teachers)
-    getAssignmentSubmissions: (assignmentId: string) =>
-        http.get<{ data: UserSubmission[]; message: string }>(
-            `/submissions/by-assignment/${assignmentId}`
-        ),
-
-    // Grade assignment submission
-    gradeSubmission: (submissionId: string, body: GradeSubmissionRequest) =>
-        http.post<GradeSubmissionResponse>(
-            `/submissions/${submissionId}/grade`,
-            body
-        ),
+const buildUrlWithParams = (baseUrl: string, params: Record<string, any>) => {
+    const queryString = new URLSearchParams(params).toString();
+    return queryString ? `${baseUrl}?${queryString}` : baseUrl;
 };
 
-// Type definitions for assignment-related requests and responses
-export interface Assignment {
-    id: string;
-    title: string;
-    description: string;
-    dueDate: string | Date;
-    completionDate: string | Date | null;
-    isDeleted: boolean;
-    lessonId: string;
-    createdAt: string | Date;
-    updatedAt: string | Date;
-    totalScore: number;
-    questions: Question[];
-}
+// Assignment API endpoints based on api.json
+const assignmentApiRequest = {
+    // Create assignment
+    create: (body: CreateAssignmentBodyType) =>
+        http.post<AssignmentOperationResType>(
+            "/api/v1/assignments/create",
+            body
+        ),
 
-export interface Question {
-    id: string;
-    content: string;
-    score: number;
-    createdAt: string | Date;
-    updatedAt: string | Date;
-    isDeleted: boolean;
-    assignmentId: string;
-    questionTypeId: "essay" | "multiple_choice" | "true_false" | "fill_blank";
-    instructions?: string;
-    options?: QuestionOption[];
-}
+    // Update assignment
+    update: (id: number, body: UpdateAssignmentBodyType) =>
+        http.post<AssignmentOperationResType>(
+            `/api/v1/assignments/update/${id}`,
+            body
+        ),
 
-export interface QuestionOption {
-    id: string;
-    content: string;
-    isCorrect: boolean;
-    questionId: string;
-}
+    // Delete assignment
+    delete: (id: number) =>
+        http.post<AssignmentOperationResType>(
+            `/api/v1/assignments/delete/${id}`,
+            null
+        ),
 
-export interface AnswerRequest {
-    questionId: string;
-    answer?: string;
-    selectedOptionId?: string; // For multiple choice questions
-}
+    // Get assignment by ID (with questions)
+    getById: (id: number) =>
+        http.get<AssignmentDetailResType>(`/api/v1/assignments/${id}`),
 
-export interface SubmitAssignmentRequest {
-    answers: AnswerRequest[];
-}
+    // Get all assignments (simple list)
+    getAll: () =>
+        http.get<GetAllAssignmentsResType>("/api/v1/assignments/get-all"),
 
-export interface SubmitAssignmentResponse {
-    submissionId: string;
-    score: number | null;
-    submittedAt: string | Date;
-    status: SubmissionStatus;
-    message: string;
-}
+    // Get assignments with pagination and filters
+    list: (filters: {
+        pageNumber: number;
+        pageSize: number;
+        keyword?: string;
+        lessonId?: number;
+        dueDateFrom?: string;
+        dueDateTo?: string;
+        minScore?: number;
+        maxScore?: number;
+    }) => {
+        const params = Object.fromEntries(
+            Object.entries(filters).filter(
+                ([_, value]) => value !== undefined && value !== ""
+            )
+        );
+        return http.get<AssignmentListResType>(
+            buildUrlWithParams("/api/v1/assignments/get-pagination", params)
+        );
+    },
 
-export interface SaveDraftRequest {
-    answers: AnswerRequest[];
-}
-
-export interface SaveDraftResponse {
-    message: string;
-    savedAt: string | Date;
-}
-
-export interface UserSubmission {
-    id: string;
-    assignmentId: string;
-    userId: string;
-    score: number | null;
-    submittedAt: string | Date | null;
-    gradedAt: string | Date | null;
-    status: SubmissionStatus;
-    answers: SubmissionAnswer[];
-    feedback?: string;
-}
-
-export interface SubmissionAnswer {
-    id: string;
-    questionId: string;
-    answer?: string;
-    selectedOptionId?: string;
-    isCorrect?: boolean;
-    score?: number;
-    feedback?: string;
-}
-
-export interface GradeSubmissionRequest {
-    answers: GradeAnswerRequest[];
-    totalScore: number;
-    feedback?: string;
-}
-
-export interface GradeAnswerRequest {
-    answerId: string;
-    score: number;
-    feedback?: string;
-}
-
-export interface GradeSubmissionResponse {
-    submissionId: string;
-    totalScore: number;
-    gradedAt: string | Date;
-    message: string;
-}
+    // Get assignments by lesson ID
+    getByLesson: (lessonId: number) =>
+        http.get<GetAllAssignmentsResType>(
+            `/api/v1/assignments/lesson/${lessonId}`
+        ),
+};
 
 export default assignmentApiRequest;

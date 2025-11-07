@@ -83,12 +83,6 @@ export default function Header() {
             <HeaderMenuRight />
           </div>
         </div>
-
-        {/* Middle Section: Horizontal Menu */}
-        <div className="hidden lg:flex w-full justify-center px-4 py-3 2xl:px-8 3xl:px-10 4xl:px-12 border-b border-primary-200">
-          <HorizontalMenu />
-        </div>
-
         {/* Bottom Section: Breadcrumb */}
         <div className="flex w-full px-4 py-2 2xl:px-8 3xl:px-10 4xl:px-12 bg-white">
           <PageHeader />

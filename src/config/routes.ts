@@ -31,6 +31,10 @@ export const routes = {
             rolePermission: "/manage/roles/config-permissions",
             permissions: "/manage/permissions",
             menu: "/manage/menus",
+            // New management pages
+            assignments: "/manage/assignments",
+            questions: "/manage/questions",
+            userManagement: "/manage/user-management",
         },
     },
     auth: {

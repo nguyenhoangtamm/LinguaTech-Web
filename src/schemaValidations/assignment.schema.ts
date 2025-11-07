@@ -1,207 +1,170 @@
 import z from "zod";
 
-// ============================================================================
-// Question Schemas
-// ============================================================================
-
-export const QuestionOptionSchema = z.object({
-    id: z.string(),
-    content: z
-        .string()
-        .min(1, { message: "Nội dung tùy chọn không được để trống" }),
-    isCorrect: z.boolean(),
-    questionId: z.string(),
-});
-
-export const QuestionSchema = z.object({
-    id: z.string(),
-    content: z
-        .string()
-        .min(1, { message: "Nội dung câu hỏi không được để trống" }),
-    score: z.number().positive({ message: "Điểm phải lớn hơn 0" }),
-    createdAt: z.string().transform((val) => new Date(val)),
-    updatedAt: z.string().transform((val) => new Date(val)),
-    isDeleted: z.boolean().default(false),
-    assignmentId: z.string(),
-    questionTypeId: z.enum([
-        "essay",
-        "multiple_choice",
-        "true_false",
-        "fill_blank",
-    ]),
-    instructions: z.string().optional(),
-    options: z.array(QuestionOptionSchema).optional(),
-});
-
-// ============================================================================
-// Assignment Schemas
-// ============================================================================
-
-export const AssignmentCreateBody = z.object({
-    title: z
-        .string()
-        .min(1, { message: "Tiêu đề không được để trống" })
-        .max(255),
-    description: z
-        .string()
-        .min(1, { message: "Mô tả không được để trống" })
-        .max(1000),
-    dueDate: z
-        .string()
-        .datetime({ message: "Hạn nộp phải là định dạng ngày tháng hợp lệ" }),
-    lessonId: z.string().min(1, { message: "ID bài học không được để trống" }),
-    totalScore: z.number().positive({ message: "Tổng điểm phải lớn hơn 0" }),
-    questions: z.array(QuestionSchema).optional(),
-});
-
-export const AssignmentUpdateBody = AssignmentCreateBody.partial();
-
-export const AssignmentRes = z.object({
-    id: z.string(),
+// Assignment Schema based on API structure
+export const AssignmentSchema = z.object({
+    id: z.number(),
+    lessonId: z.number(),
     title: z.string(),
     description: z.string(),
-    dueDate: z.string().transform((val) => new Date(val)),
-    completionDate: z
-        .string()
-        .transform((val) => new Date(val))
-        .nullable(),
-    isDeleted: z.boolean().default(false),
-    lessonId: z.string(),
-    createdAt: z.string().transform((val) => new Date(val)),
-    updatedAt: z.string().transform((val) => new Date(val)),
-    totalScore: z.number(),
-    questions: z.array(QuestionSchema),
+    dueDate: z.string(), // DateTime as string from API
+    maxScore: z.number(),
+    lessonTitle: z.string().optional(),
+    moduleTitle: z.string().optional(),
+    courseTitle: z.string().optional(),
+    createdDate: z.string().optional(),
+    updatedDate: z.string().optional(),
+    createdBy: z.string().optional(),
+    updatedBy: z.string().optional(),
 });
 
+export type AssignmentType = z.TypeOf<typeof AssignmentSchema>;
+
+// Question Detail Schema (for assignment detail response)
+export const QuestionDetailDto = z.object({
+    id: z.number(),
+    assignmentId: z.number(),
+    questionTypeId: z.number(),
+    content: z.string(),
+    score: z.number(),
+    questionTypeName: z.string().optional(),
+});
+
+// Assignment Detail Schema (with questions)
+export const AssignmentDetailSchema = AssignmentSchema.extend({
+    questions: z.array(QuestionDetailDto),
+});
+
+export type AssignmentDetailType = z.TypeOf<typeof AssignmentDetailSchema>;
+
+// Paginated Assignment Response
+export const AssignmentPaginatedData = z.object({
+    data: z.array(AssignmentSchema),
+    totalPages: z.number(),
+    totalCount: z.number(),
+    pageSize: z.number(),
+});
+
+// Assignment List Response
 export const AssignmentListRes = z.object({
-    data: z.array(AssignmentRes),
     message: z.string(),
-    totalCount: z.number().optional(),
-    page: z.number().optional(),
-    pageSize: z.number().optional(),
+    succeeded: z.boolean(),
+    data: AssignmentPaginatedData,
+    code: z.number(),
 });
 
-// ============================================================================
-// Submission Answer Schemas
-// ============================================================================
+export type AssignmentListResType = z.TypeOf<typeof AssignmentListRes>;
 
-export const AnswerRequestSchema = z
+// Assignment Single Response
+export const AssignmentRes = z.object({
+    message: z.string(),
+    succeeded: z.boolean(),
+    data: AssignmentSchema,
+    code: z.number(),
+});
+
+export type AssignmentResType = z.TypeOf<typeof AssignmentRes>;
+
+// Assignment Detail Response
+export const AssignmentDetailRes = z.object({
+    message: z.string(),
+    succeeded: z.boolean(),
+    data: AssignmentDetailSchema,
+    code: z.number(),
+});
+
+export type AssignmentDetailResType = z.TypeOf<typeof AssignmentDetailRes>;
+
+// Create Assignment Body
+export const CreateAssignmentBody = z
     .object({
-        questionId: z
-            .string()
-            .min(1, { message: "ID câu hỏi không được để trống" }),
-        answer: z.string().optional(),
-        selectedOptionId: z.string().optional(),
+        lessonId: z.number({ required_error: "Vui lòng chọn bài học" }),
+        title: z
+            .string({ required_error: "Vui lòng nhập tiêu đề" })
+            .trim()
+            .min(1, { message: "Tiêu đề không được để trống" })
+            .max(500, { message: "Tiêu đề không được vượt quá 500 ký tự" }),
+        description: z
+            .string({ required_error: "Vui lòng nhập mô tả" })
+            .trim()
+            .min(1, { message: "Mô tả không được để trống" }),
+        dueDate: z
+            .string({ required_error: "Vui lòng chọn hạn nộp" })
+            .min(1, { message: "Hạn nộp không được để trống" }),
+        maxScore: z
+            .number({ required_error: "Vui lòng nhập điểm tối đa" })
+            .positive({ message: "Điểm tối đa phải lớn hơn 0" }),
     })
-    .refine((data) => data.answer || data.selectedOptionId, {
-        message: "Phải có câu trả lời hoặc lựa chọn",
-        path: ["answer"],
-    });
+    .strict();
 
-export const SubmitAssignmentRequestBody = z.object({
-    answers: z
-        .array(AnswerRequestSchema)
-        .min(1, { message: "Phải có ít nhất một câu trả lời" }),
+export type CreateAssignmentBodyType = z.TypeOf<typeof CreateAssignmentBody>;
+
+// Update Assignment Body
+export const UpdateAssignmentBody = z
+    .object({
+        id: z.number(),
+        title: z
+            .string()
+            .trim()
+            .min(1, { message: "Tiêu đề không được để trống" })
+            .max(500, { message: "Tiêu đề không được vượt quá 500 ký tự" })
+            .optional(),
+        description: z
+            .string()
+            .trim()
+            .min(1, { message: "Mô tả không được để trống" })
+            .optional(),
+        dueDate: z
+            .string()
+            .min(1, { message: "Hạn nộp không được để trống" })
+            .optional(),
+        maxScore: z
+            .number()
+            .positive({ message: "Điểm tối đa phải lớn hơn 0" })
+            .optional(),
+    })
+    .strict();
+
+export type UpdateAssignmentBodyType = z.TypeOf<typeof UpdateAssignmentBody>;
+
+// Filter Assignment Type
+export const FilterAssignmentSchema = z.object({
+    keyword: z.string().optional(),
+    lessonId: z.number().optional(),
+    dueDateFrom: z.string().optional(),
+    dueDateTo: z.string().optional(),
+    minScore: z.number().optional(),
+    maxScore: z.number().optional(),
 });
 
-export const SaveDraftRequestBody = z.object({
-    answers: z.array(AnswerRequestSchema).min(0),
+export type FilterAssignmentType = z.TypeOf<typeof FilterAssignmentSchema>;
+
+// Simple Assignment DTO for lists/dropdowns
+export const GetAllAssignmentsDto = z.object({
+    id: z.number(),
+    title: z.string(),
+    description: z.string().optional(),
+    dueDate: z.string(),
+    maxScore: z.number(),
+    lessonTitle: z.string().optional(),
 });
 
-// ============================================================================
-// Submission Answer Response Schemas
-// ============================================================================
-
-export const SubmissionAnswerSchema = z.object({
-    id: z.string(),
-    questionId: z.string(),
-    answer: z.string().optional(),
-    selectedOptionId: z.string().optional(),
-    isCorrect: z.boolean().optional(),
-    score: z.number().nonnegative().optional(),
-    feedback: z.string().optional(),
-});
-
-export const UserSubmissionRes = z.object({
-    id: z.string(),
-    assignmentId: z.string(),
-    userId: z.string(),
-    score: z.number().nonnegative().nullable(),
-    submittedAt: z
-        .string()
-        .transform((val) => (val ? new Date(val) : null))
-        .nullable(),
-    gradedAt: z
-        .string()
-        .transform((val) => (val ? new Date(val) : null))
-        .nullable(),
-    status: z.string(), // Allow any string status from API
-    answers: z.array(SubmissionAnswerSchema),
-    feedback: z.string().optional(),
-    createdAt: z
-        .string()
-        .transform((val) => new Date(val))
-        .optional(),
-    updatedAt: z
-        .string()
-        .transform((val) => new Date(val))
-        .optional(),
-});
-
-export const SubmitAssignmentResponse = z.object({
-    submissionId: z.string(),
-    score: z.number().nonnegative().nullable(),
-    submittedAt: z.string().transform((val) => new Date(val)),
-    status: z.string(),
+export const GetAllAssignmentsRes = z.object({
     message: z.string(),
+    succeeded: z.boolean(),
+    data: z.array(GetAllAssignmentsDto),
+    code: z.number(),
 });
 
-export const SaveDraftResponse = z.object({
+export type GetAllAssignmentsResType = z.TypeOf<typeof GetAllAssignmentsRes>;
+
+// Result type for create/update/delete operations
+export const AssignmentOperationRes = z.object({
     message: z.string(),
-    savedAt: z.string().transform((val) => new Date(val)),
+    succeeded: z.boolean(),
+    data: z.number(), // Returns ID
+    code: z.number(),
 });
 
-// ============================================================================
-// Grading Schemas
-// ============================================================================
-
-export const GradeAnswerRequestSchema = z.object({
-    answerId: z
-        .string()
-        .min(1, { message: "ID câu trả lời không được để trống" }),
-    score: z.number().nonnegative({ message: "Điểm không được âm" }),
-    feedback: z.string().optional(),
-});
-
-export const GradeSubmissionRequestBody = z.object({
-    answers: z
-        .array(GradeAnswerRequestSchema)
-        .min(1, { message: "Phải có ít nhất một câu trả lời" }),
-    totalScore: z.number().positive({ message: "Tổng điểm phải lớn hơn 0" }),
-    feedback: z.string().optional(),
-});
-
-export const GradeSubmissionResponse = z.object({
-    submissionId: z.string(),
-    totalScore: z.number().nonnegative(),
-    gradedAt: z.string().transform((val) => new Date(val)),
-    message: z.string(),
-});
-
-// ============================================================================
-// Type Exports
-// ============================================================================
-
-export type QuestionOption = z.infer<typeof QuestionOptionSchema>;
-export type Question = z.infer<typeof QuestionSchema>;
-export type Assignment = z.infer<typeof AssignmentRes>;
-export type AssignmentList = z.infer<typeof AssignmentListRes>;
-export type AnswerRequest = z.infer<typeof AnswerRequestSchema>;
-export type SubmitAssignmentRequest = z.infer<
-    typeof SubmitAssignmentRequestBody
+export type AssignmentOperationResType = z.TypeOf<
+    typeof AssignmentOperationRes
 >;
-export type SaveDraftRequest = z.infer<typeof SaveDraftRequestBody>;
-export type SubmissionAnswer = z.infer<typeof SubmissionAnswerSchema>;
-export type UserSubmission = z.infer<typeof UserSubmissionRes>;
-export type GradeAnswerRequest = z.infer<typeof GradeAnswerRequestSchema>;
-export type GradeSubmissionRequest = z.infer<typeof GradeSubmissionRequestBody>;
