@@ -41,6 +41,7 @@ export const ROLE_PERMISSIONS = {
         allowedPaths: [
             "/dashboard/**",
             "/courses/**",
+            "/my-courses/**",
             "/manage/calendar",
             "/manage/attendance-tracking",
             "/manage/attendance-history",
