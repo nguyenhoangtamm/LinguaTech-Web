@@ -15,20 +15,56 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Upload, Loader2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import {
+    ArrowLeft,
+    Upload,
+    Loader2,
+    Plus,
+    X,
+    Video,
+    FileText,
+    BookOpen,
+    Edit,
+    Trash2,
+    GripVertical
+} from "lucide-react";
 import Link from "next/link";
 import { routes } from "@/config/routes";
 import { toast } from "@/hooks/use-toast";
 
+interface LessonData {
+    id: string;
+    title: string;
+    description: string;
+    duration: number;
+    videoUrl?: string;
+    order: number;
+}
+
+interface ModuleData {
+    id: string;
+    title: string;
+    description: string;
+    order: number;
+    lessons: LessonData[];
+}
+
 interface CourseFormData {
     title: string;
     description: string;
-    category: string;
-    level: string;
+    instructor: string;
+    categoryId: string;
+    courseTypeId: string;
+    level: number;
     price: number | "";
     duration: number | "";
     thumbnail: File | null;
-    thumbnail_preview: string;
+    thumbnailPreview: string;
+    videoUrl: string;
+    isPublished: boolean;
+    tags: string[];
+    modules: ModuleData[];
 }
 
 const courseCategories = [
@@ -42,10 +78,23 @@ const courseCategories = [
     { id: "8", name: "Other", icon: "📚" },
 ];
 
+const courseTypes = [
+    { id: "1", name: "Khóa học trực tuyến", description: "Học tự do theo thời gian" },
+    { id: "2", name: "Khóa học trực tiếp", description: "Có giảng viên hướng dẫn trực tiếp" },
+    { id: "3", name: "Khóa học kết hợp", description: "Kết hợp trực tuyến và trực tiếp" },
+];
+
 const courseLevels = [
-    { value: "beginner", label: "Cơ bản - Dành cho người mới bắt đầu" },
-    { value: "intermediate", label: "Trung bình - Có kinh nghiệm cơ bản" },
-    { value: "advanced", label: "Nâng cao - Có kinh nghiệm sâu" },
+    { value: 1, label: "Cơ bản - Dành cho người mới bắt đầu" },
+    { value: 2, label: "Trung bình - Có kinh nghiệm cơ bản" },
+    { value: 3, label: "Nâng cao - Có kinh nghiệm sâu" },
+];
+
+const availableTags = [
+    "JavaScript", "Python", "React", "Node.js", "TypeScript",
+    "Vue.js", "Angular", "PHP", "Java", "C#", "Flutter",
+    "React Native", "Machine Learning", "AI", "DevOps",
+    "Docker", "Kubernetes", "AWS", "Azure", "UI/UX"
 ];
 
 export default function CreateCoursePage() {
@@ -54,12 +103,18 @@ export default function CreateCoursePage() {
     const [formData, setFormData] = useState<CourseFormData>({
         title: "",
         description: "",
-        category: "",
-        level: "beginner",
+        instructor: "",
+        categoryId: "",
+        courseTypeId: "",
+        level: 1,
         price: "",
         duration: "",
         thumbnail: null,
-        thumbnail_preview: "/images/course-placeholder.jpg",
+        thumbnailPreview: "/images/course-placeholder.jpg",
+        videoUrl: "",
+        isPublished: false,
+        tags: [],
+        modules: [],
     });
 
     const handleInputChange = (

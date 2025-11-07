@@ -47,6 +47,7 @@ export const ROLE_PERMISSIONS = {
             "/manage/attendance-history",
             "/manage/projects/my-projects",
             "/profile/**",
+            "/become-instructor/**"
         ],
         restrictedPaths: [
             "/manage/users",

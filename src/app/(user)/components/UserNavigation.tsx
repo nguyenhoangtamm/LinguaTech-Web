@@ -10,7 +10,8 @@ import {
     Search,
     User,
     Bell,
-    Settings
+    Settings,
+    GraduationCap
 } from "lucide-react";
 import ProfileMenu from "@/layouts/profile-menu";
 import RoleDisplay from "@/layouts/role-dropdown";
@@ -72,6 +73,13 @@ export default function UserNavigation() {
 
                     {/* User actions */}
                     <div className="flex items-center space-x-4">
+                        <Link
+                            href={routes.user.becomeInstructor}
+                            className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+                        >
+                            <GraduationCap className="w-4 h-4 mr-2" />
+                            Trở thành giảng viên
+                        </Link>
                         <button className="p-2 text-gray-600 hover:text-gray-900 rounded-md">
                             <Bell className="w-5 h-5" />
                         </button>

@@ -6,13 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { 
-    Plus, 
-    Search, 
-    Filter, 
-    Edit, 
-    Trash2, 
-    Eye, 
+import {
+    Plus,
+    Search,
+    Filter,
+    Edit,
+    Trash2,
+    Eye,
     MoreVertical,
     Users,
     BarChart3,
@@ -409,12 +409,20 @@ export default function TeacherCoursesPage() {
                         Quản lý và theo dõi các khóa học của bạn
                     </p>
                 </div>
-                <Button asChild>
-                    <Link href={routes.teacher.createCourse}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Tạo khóa học mới
-                    </Link>
-                </Button>
+                <div className="flex space-x-3">
+                    <Button variant="outline" asChild>
+                        <Link href={routes.teacher.createCourse}>
+                            <Plus className="w-4 h-4 mr-2" />
+                            Tạo khóa học (Cũ)
+                        </Link>
+                    </Button>
+                    <Button asChild>
+                        <Link href={routes.teacher.createCourseNew}>
+                            <Plus className="w-4 h-4 mr-2" />
+                            Tạo khóa học mới
+                        </Link>
+                    </Button>
+                </div>
             </div>
 
             {/* Stats Cards */}
@@ -510,8 +518,8 @@ export default function TeacherCoursesPage() {
                                 {status === "all"
                                     ? "Tất cả"
                                     : status === "published"
-                                    ? "Đã xuất bản"
-                                    : "Bản nháp"}
+                                        ? "Đã xuất bản"
+                                        : "Bản nháp"}
                             </Button>
                         ))}
                     </div>
@@ -559,7 +567,7 @@ export default function TeacherCoursesPage() {
                         </p>
                         {!searchQuery && statusFilter === "all" && (
                             <Button asChild>
-                                <Link href={routes.teacher.createCourse}>
+                                <Link href={routes.teacher.createCourseNew}>
                                     <Plus className="w-4 h-4 mr-2" />
                                     Tạo khóa học mới
                                 </Link>
