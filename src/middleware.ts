@@ -11,6 +11,11 @@ import { convertRoleIdToRole } from "@/utils/role-converter";
 import { jwtDecode } from "jwt-decode";
 import type { TokenPayload } from "@/types/jwt.types";
 
+// TEMPORARY: when true, bypass role-based permission checks and allow any
+// authenticated role to access any page. This is intended for short-term
+// debugging. Remove or set to false to restore normal permission checks.
+const ALLOW_ALL_ROLES = true;
+
 export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
     const accessToken = request.cookies.get("accessToken")?.value;
@@ -60,7 +65,10 @@ export function middleware(request: NextRequest) {
     }
 
     // Kiểm tra quyền truy cập
-    if (!hasPermission(userRole, pathname)) {
+    // If ALLOW_ALL_ROLES is enabled, skip permission checks so all roles can
+    // access pages. This preserves authentication but temporarily disables
+    // authorization.
+    if (!ALLOW_ALL_ROLES && !hasPermission(userRole, pathname)) {
         // Không có quyền, redirect về trang chủ phù hợp với role
         const homePage = getDefaultHomePage(userRole);
 

@@ -1,0 +1,2127 @@
+{
+  "apis": [
+    {
+      "controller": "AssignmentsController",
+      "endpoints": [
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/assignments/create",
+          "payload": {
+            "type": "CreateAssignmentRequest",
+            "properties": {
+              "LessonId": "int",
+              "Title": "string",
+              "Description": "string",
+              "DueDate": "DateTime",
+              "MaxScore": "double"
+            }
+          },
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Tạo assignment mới cho lesson, trả về ID của assignment nếu thành công."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/assignments/update/{id}",
+          "payload": {
+            "type": "UpdateAssignmentRequest",
+            "properties": {
+              "Id": "int",
+              "Title": "string?",
+              "Description": "string?",
+              "DueDate": "DateTime?",
+              "MaxScore": "double?"
+            }
+          },
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Cập nhật assignment theo ID, trả về ID nếu thành công."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/assignments/delete/{id}",
+          "payload": null,
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Xóa assignment theo ID, trả về ID nếu thành công."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/assignments/{id}",
+          "payload": null,
+          "response": {
+            "type": "Result<GetAssignmentDto>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": {
+                "Id": "int",
+                "LessonId": "int",
+                "Title": "string",
+                "Description": "string",
+                "DueDate": "DateTime",
+                "MaxScore": "double",
+                "LessonTitle": "string",
+                "ModuleTitle": "string",
+                "CourseTitle": "string",
+                "CreatedDate": "DateTime?",
+                "UpdatedDate": "DateTime?",
+                "CreatedBy": "string",
+                "UpdatedBy": "string?",
+                "Questions": "List<QuestionDetailDto>"
+              },
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy chi tiết assignment theo ID, bao gồm danh sách câu hỏi."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/assignments/get-all",
+          "payload": null,
+          "response": {
+            "type": "Result<List<GetAllAssignmentsDto>>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "List<GetAllAssignmentsDto>",
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy danh sách tất cả assignments."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/assignments/get-pagination",
+          "payload": {
+            "type": "GetAssignmentsWithPaginationQuery",
+            "properties": {
+              "PageNumber": "int",
+              "PageSize": "int",
+              "Keyword": "string?",
+              "LessonId": "int?",
+              "DueDateFrom": "DateTime?",
+              "DueDateTo": "DateTime?",
+              "MinScore": "double?",
+              "MaxScore": "double?"
+            }
+          },
+          "response": {
+            "type": "Result<PaginatedResult<GetAssignmentsWithPaginationDto>>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": {
+                "Data": "List<GetAssignmentsWithPaginationDto>",
+                "TotalPages": "int",
+                "TotalCount": "int",
+                "PageSize": "int"
+              },
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy danh sách assignments với phân trang và bộ lọc."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/assignments/lesson/{lessonId}",
+          "payload": null,
+          "response": {
+            "type": "Result<List<GetAllAssignmentsDto>>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "List<GetAllAssignmentsDto>",
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy danh sách assignments theo lesson ID."
+        }
+      ]
+    },
+    {
+      "controller": "QuestionsController",
+      "endpoints": [
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/questions/create",
+          "payload": {
+            "type": "CreateQuestionRequest",
+            "properties": {
+              "AssignmentId": "int",
+              "QuestionTypeId": "int",
+              "Content": "string",
+              "Score": "double"
+            }
+          },
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Tạo câu hỏi mới cho assignment, trả về ID của câu hỏi."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/questions/update/{id}",
+          "payload": {
+            "type": "UpdateQuestionRequest",
+            "properties": {
+              "Id": "int",
+              "Content": "string?",
+              "Score": "double?",
+              "QuestionTypeId": "int?"
+            }
+          },
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Cập nhật câu hỏi theo ID."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/questions/delete/{id}",
+          "payload": null,
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Xóa câu hỏi theo ID."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/questions/{id}",
+          "payload": null,
+          "response": {
+            "type": "Result<GetQuestionDto>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": {
+                "Id": "int",
+                "AssignmentId": "int",
+                "QuestionTypeId": "int",
+                "Content": "string",
+                "Score": "double",
+                "AssignmentTitle": "string",
+                "QuestionTypeName": "string",
+                "LessonTitle": "string",
+                "ModuleTitle": "string",
+                "CourseTitle": "string",
+                "CreatedDate": "DateTime?",
+                "UpdatedDate": "DateTime?",
+                "CreatedBy": "string",
+                "UpdatedBy": "string?"
+              },
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy chi tiết câu hỏi theo ID."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/questions/get-all",
+          "payload": null,
+          "response": {
+            "type": "Result<List<GetAllQuestionsDto>>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "List<GetAllQuestionsDto>",
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy danh sách tất cả câu hỏi."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/questions/get-pagination",
+          "payload": {
+            "type": "GetQuestionsWithPaginationQuery",
+            "properties": {
+              "PageNumber": "int",
+              "PageSize": "int",
+              "Keyword": "string?",
+              "AssignmentId": "int?",
+              "QuestionTypeId": "int?",
+              "MinScore": "double?",
+              "MaxScore": "double?"
+            }
+          },
+          "response": {
+            "type": "Result<PaginatedResult<GetQuestionsWithPaginationDto>>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": {
+                "Data": "List<GetQuestionsWithPaginationDto>",
+                "TotalPages": "int",
+                "TotalCount": "int",
+                "PageSize": "int"
+              },
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy danh sách câu hỏi với phân trang."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/questions/assignment/{assignmentId}",
+          "payload": null,
+          "response": {
+            "type": "Result<List<GetAllQuestionsDto>>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "List<GetAllQuestionsDto>",
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy danh sách câu hỏi theo assignment ID."
+        }
+      ]
+    },
+    {
+      "controller": "UsersController",
+      "endpoints": [
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/users/create",
+          "payload": {
+            "type": "CreateUserRequest",
+            "properties": {
+              "Username": "string",
+              "Email": "string",
+              "Password": "string",
+              "FirstName": "string",
+              "LastName": "string",
+              "Gender": "Gender (enum)",
+              "RoleId": "int"
+            }
+          },
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Tạo user mới, trả về ID."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/users/update/{id}",
+          "payload": {
+            "type": "UpdateUserRequest",
+            "properties": {
+              "Id": "int",
+              "Username": "string?",
+              "Email": "string?",
+              "Password": "string?",
+              "FirstName": "string?",
+              "LastName": "string?",
+              "Gender": "Gender?",
+              "RoleId": "int?",
+              "Status": "UserStatus?"
+            }
+          },
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Cập nhật user theo ID."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/users/delete/{id}",
+          "payload": null,
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Xóa user theo ID."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/users/{id}",
+          "payload": null,
+          "response": {
+            "type": "Result<GetUserDto>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": {
+                "Id": "int",
+                "Username": "string",
+                "Email": "string",
+                "Fullname": "string",
+                "Status": "UserStatus",
+                "RoleId": "int",
+                "RoleName": "string",
+                "CreatedDate": "DateTime?",
+                "UpdatedDate": "DateTime?",
+                "Profile": "ProfileDto?"
+              },
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy chi tiết user theo ID."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/users/get-all",
+          "payload": null,
+          "response": {
+            "type": "Result<List<GetAllUsersDto>>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "List<GetAllUsersDto>",
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy danh sách tất cả users."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/users/get-pagination",
+          "payload": {
+            "type": "GetUsersWithPaginationQuery",
+            "properties": {
+              "PageNumber": "int",
+              "PageSize": "int",
+              "Keyword": "string?"
+            }
+          },
+          "response": {
+            "type": "Result<PaginatedResult<GetUsersWithPaginationDto>>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": {
+                "Data": "List<GetUsersWithPaginationDto>",
+                "TotalPages": "int",
+                "TotalCount": "int",
+                "PageSize": "int"
+              },
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy danh sách users với phân trang."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/users/me",
+          "payload": null,
+          "response": {
+            "type": "Result<GetUserDto>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "GetUserDto",
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy thông tin user hiện tại."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/users/dashboard-stats",
+          "payload": null,
+          "response": {
+            "type": "Result<UserDashboardStatsResType>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": {
+                "TotalCourses": "int",
+                "CompletedCourses": "int",
+                "InProgressCourses": "int",
+                "TotalStudyHours": "int",
+                "Streak": "int",
+                "Achievements": "List<AchievementType>"
+              },
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy thống kê dashboard của user."
+        }
+      ]
+    },
+    {
+      "controller": "RolesController",
+      "endpoints": [
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/roles/create",
+          "payload": {
+            "type": "CreateRoleRequest",
+            "properties": {
+              "Name": "string",
+              "Description": "string"
+            }
+          },
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Tạo role mới, trả về ID."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/roles/update/{id}",
+          "payload": {
+            "type": "UpdateRoleRequest",
+            "properties": {
+              "Id": "int",
+              "Name": "string",
+              "Description": "string"
+            }
+          },
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Cập nhật role theo ID."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/roles/delete/{id}",
+          "payload": null,
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Xóa role theo ID."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/roles/{id}",
+          "payload": null,
+          "response": {
+            "type": "Result<GetRoleDto>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": {
+                "Id": "int",
+                "Name": "string",
+                "Description": "string",
+                "CreatedDate": "DateTime?",
+                "UpdatedDate": "DateTime?"
+              },
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy chi tiết role theo ID."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/roles/get-all",
+          "payload": null,
+          "response": {
+            "type": "Result<List<GetAllRolesDto>>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "List<GetAllRolesDto>",
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy danh sách tất cả roles."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/roles/get-pagination",
+          "payload": {
+            "type": "GetRolesWithPaginationQuery",
+            "properties": {
+              "PageNumber": "int",
+              "PageSize": "int",
+              "SearchTerm": "string?"
+            }
+          },
+          "response": {
+            "type": "Result<PaginatedResult<GetRolesWithPaginationDto>>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": {
+                "Data": "List<GetRolesWithPaginationDto>",
+                "TotalPages": "int",
+                "TotalCount": "int",
+                "PageSize": "int"
+              },
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy danh sách roles với phân trang."
+        }
+      ]
+    },
+    {
+      "controller": "SubmissionsController",
+      "endpoints": [
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/submissions/create",
+          "payload": {
+            "type": "CreateSubmissionRequest",
+            "properties": {
+              "AssignmentId": "int",
+              "UserId": "int",
+              "FileUrl": "string",
+              "Score": "double?",
+              "Feedback": "string",
+              "Status": "int"
+            }
+          },
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Tạo submission mới, trả về ID."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/submissions/update/{id}",
+          "payload": {
+            "type": "UpdateSubmissionRequest",
+            "properties": {
+              "Id": "int",
+              "AssignmentId": "int",
+              "UserId": "int",
+              "FileUrl": "string",
+              "Score": "double?",
+              "Feedback": "string",
+              "Status": "int"
+            }
+          },
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Cập nhật submission theo ID."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/submissions/delete/{id}",
+          "payload": null,
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Xóa submission theo ID."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/submissions/{id}",
+          "payload": null,
+          "response": {
+            "type": "Result<GetSubmissionDto>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": {
+                "Id": "int",
+                "AssignmentId": "int",
+                "UserId": "int",
+                "FileUrl": "string",
+                "Score": "double?",
+                "Feedback": "string",
+                "Status": "int",
+                "SubmittedAt": "DateTime?",
+                "GradedAt": "DateTime?"
+              },
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy chi tiết submission theo ID."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/submissions/get-all",
+          "payload": null,
+          "response": {
+            "type": "Result<List<GetAllSubmissionsDto>>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "List<GetAllSubmissionsDto>",
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy danh sách tất cả submissions."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/submissions/by-assignment/{assignmentId}",
+          "payload": null,
+          "response": {
+            "type": "Result<List<GetAllSubmissionsDto>>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "List<GetAllSubmissionsDto>",
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy danh sách submissions theo assignment ID."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/submissions/by-user/{userId}",
+          "payload": null,
+          "response": {
+            "type": "Result<List<GetAllSubmissionsDto>>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "List<GetAllSubmissionsDto>",
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy danh sách submissions theo user ID."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/submissions/get-pagination",
+          "payload": {
+            "type": "GetSubmissionsWithPaginationQuery",
+            "properties": {
+              "PageNumber": "int",
+              "PageSize": "int",
+              "SearchTerm": "string?",
+              "AssignmentId": "int?",
+              "UserId": "int?",
+              "MinScore": "double?",
+              "MaxScore": "double?"
+            }
+          },
+          "response": {
+            "type": "Result<PaginatedResult<GetSubmissionsWithPaginationDto>>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": {
+                "Data": "List<GetSubmissionsWithPaginationDto>",
+                "TotalPages": "int",
+                "TotalCount": "int",
+                "PageSize": "int"
+              },
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy danh sách submissions với phân trang."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/submissions/current-user-submission/{assignmentId}",
+          "payload": null,
+          "response": {
+            "type": "Result<GetSubmissionDto>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "GetSubmissionDto",
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy submission hiện tại của user cho assignment."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/submissions/{assignmentId}/submit",
+          "payload": {
+            "type": "SubmitAssignmentRequest",
+            "properties": {
+              "Answers": "List<AnswerOptionRequest>"
+            }
+          },
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Nộp assignment với answers."
+        },
+        {
+          "method": "PUT",
+          "endpoint": "/api/v1/submissions/{assignmentId}/draft",
+          "payload": {
+            "type": "SaveDraftRequest",
+            "properties": {
+              "Answers": "List<AnswerOptionRequest>"
+            }
+          },
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Lưu draft answers cho assignment."
+        }
+      ]
+    },
+    {
+      "controller": "EnrollmentsController",
+      "endpoints": [
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/enrollments/create",
+          "payload": {
+            "type": "CreateEnrollmentRequest",
+            "properties": {
+              "CourseId": "int"
+            }
+          },
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Đăng ký khóa học, trả về ID enrollment."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/enrollments/my-courses",
+          "payload": null,
+          "response": {
+            "type": "Result<List<UserEnrollmentType>>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "List<UserEnrollmentType>",
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy danh sách khóa học đã đăng ký của user."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/enrollments/check/{courseId}",
+          "payload": null,
+          "response": {
+            "type": "Result<CheckEnrollmentResType>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": {
+                "IsEnrolled": "bool",
+                "Enrollment": "EnrollmentType?"
+              },
+              "Code": "int"
+            }
+          },
+          "flow": "Kiểm tra xem user đã đăng ký khóa học chưa."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/enrollments/update-progress/{courseId}",
+          "payload": {
+            "type": "UpdateProgressRequest",
+            "properties": {
+              "LessonId": "int",
+              "Completed": "bool",
+              "TimeSpent": "int?"
+            }
+          },
+          "response": {
+            "type": "Result<UpdateProgressResType>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": {
+                "ProgressPercentage": "double",
+                "CompletedLessons": "int",
+                "TotalLessons": "int"
+              },
+              "Code": "int"
+            }
+          },
+          "flow": "Cập nhật tiến độ học tập cho khóa học."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/enrollments/continue",
+          "payload": null,
+          "response": {
+            "type": "Result<List<UserEnrollmentType>>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "List<UserEnrollmentType>",
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy danh sách khóa học đang tiếp tục học."
+        }
+      ]
+    },
+    {
+      "controller": "SectionsController",
+      "endpoints": [
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/sections",
+          "payload": {
+            "type": "GetSectionsWithPaginationQuery",
+            "properties": {
+              "LessonId": "int?",
+              "Keyword": "string?",
+              "PageNumber": "int",
+              "PageSize": "int"
+            }
+          },
+          "response": {
+            "type": "Result<PaginatedResult<SectionType>>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": {
+                "Data": "List<SectionType>",
+                "TotalPages": "int",
+                "TotalCount": "int",
+                "PageSize": "int"
+              },
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy danh sách sections với phân trang."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/sections/{id}",
+          "payload": null,
+          "response": {
+            "type": "Result<SectionType>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": {
+                "Id": "int",
+                "Title": "string",
+                "Content": "string",
+                "Order": "int",
+                "LessonId": "int",
+                "CreatedAt": "DateTime",
+                "UpdatedAt": "DateTime"
+              },
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy chi tiết section theo ID."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/sections/create",
+          "payload": {
+            "type": "CreateSectionRequest",
+            "properties": {
+              "Title": "string",
+              "Content": "string",
+              "Order": "int",
+              "LessonId": "int"
+            }
+          },
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Tạo section mới, trả về ID."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/sections/update/{id}",
+          "payload": {
+            "type": "UpdateSectionRequest",
+            "properties": {
+              "Title": "string?",
+              "Content": "string?",
+              "Order": "int?",
+              "LessonId": "int?"
+            }
+          },
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Cập nhật section theo ID."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/sections/delete/{id}",
+          "payload": null,
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Xóa section theo ID."
+        }
+      ]
+    },
+    {
+      "controller": "CoursesController",
+      "endpoints": [
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/courses",
+          "payload": {
+            "type": "GetCoursesWithPaginationQuery",
+            "properties": {
+              "PageNumber": "int",
+              "PageSize": "int",
+              "Search": "string?",
+              "Category": "string?",
+              "Level": "int?",
+              "PriceMin": "decimal?",
+              "PriceMax": "decimal?",
+              "Rating": "double?",
+              "Tags": "List<string>?",
+              "SortBy": "string?",
+              "SortOrder": "string?"
+            }
+          },
+          "response": {
+            "type": "PaginatedResult<CourseType>",
+            "properties": {
+              "Data": "List<CourseType>",
+              "TotalPages": "int",
+              "TotalCount": "int",
+              "PageSize": "int"
+            }
+          },
+          "flow": "Lấy danh sách courses với phân trang và bộ lọc."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/courses/{id}",
+          "payload": null,
+          "response": {
+            "type": "Result<CourseType>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "CourseType",
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy chi tiết course theo ID."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/courses/{id}/detail",
+          "payload": null,
+          "response": {
+            "type": "Result<CourseDetailType>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": {
+                "Course": "CourseType",
+                "Modules": "List<ModuleWithLessonsType>",
+                "Materials": "List<MaterialType>",
+                "Instructor": "InstructorDetailType",
+                "Reviews": "List<CourseReviewType>",
+                "Faqs": "List<CourseFaqType>?"
+              },
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy chi tiết đầy đủ của course."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/courses/create",
+          "payload": {
+            "type": "CreateCourseRequest",
+            "properties": {
+              "Title": "string",
+              "Description": "string",
+              "Instructor": "string",
+              "Duration": "int",
+              "Level": "int",
+              "Price": "decimal",
+              "CategoryId": "int",
+              "Tags": "List<string>",
+              "ThumbnailUrl": "string?",
+              "VideoUrl": "string?"
+            }
+          },
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Tạo course mới, trả về ID."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/courses/update/{id}",
+          "payload": {
+            "type": "UpdateCourseRequest",
+            "properties": {
+              "Title": "string?",
+              "Description": "string?",
+              "Instructor": "string?",
+              "Duration": "int?",
+              "Level": "int?",
+              "Price": "decimal?",
+              "CategoryId": "int?",
+              "Tags": "List<string>?",
+              "ThumbnailUrl": "string?",
+              "VideoUrl": "string?"
+            }
+          },
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Cập nhật course theo ID."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/courses/delete/{id}",
+          "payload": null,
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Xóa course theo ID."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/courses/categories",
+          "payload": null,
+          "response": {
+            "type": "Result<List<CourseCategoryType>>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "List<CourseCategoryType>",
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy danh sách categories của courses."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/courses/category/{categorySlug}",
+          "payload": {
+            "type": "GetCoursesWithPaginationQuery",
+            "properties": {
+              "PageNumber": "int",
+              "PageSize": "int",
+              "Search": "string?",
+              "Category": "string?",
+              "Level": "int?",
+              "PriceMin": "decimal?",
+              "PriceMax": "decimal?",
+              "Rating": "double?",
+              "Tags": "List<string>?",
+              "SortBy": "string?",
+              "SortOrder": "string?"
+            }
+          },
+          "response": {
+            "type": "PaginatedResult<CourseType>",
+            "properties": {
+              "Data": "List<CourseType>",
+              "TotalPages": "int",
+              "TotalCount": "int",
+              "PageSize": "int"
+            }
+          },
+          "flow": "Lấy courses theo category."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/courses/recent",
+          "payload": null,
+          "response": {
+            "type": "PaginatedResult<CourseType>",
+            "properties": {
+              "Data": "List<CourseType>",
+              "TotalPages": "int",
+              "TotalCount": "int",
+              "PageSize": "int"
+            }
+          },
+          "flow": "Lấy courses gần đây."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/courses/search",
+          "payload": {
+            "type": "GetCoursesWithPaginationQuery",
+            "properties": {
+              "PageNumber": "int",
+              "PageSize": "int",
+              "Search": "string?",
+              "Category": "string?",
+              "Level": "int?",
+              "PriceMin": "decimal?",
+              "PriceMax": "decimal?",
+              "Rating": "double?",
+              "Tags": "List<string>?",
+              "SortBy": "string?",
+              "SortOrder": "string?"
+            }
+          },
+          "response": {
+            "type": "PaginatedResult<CourseType>",
+            "properties": {
+              "Data": "List<CourseType>",
+              "TotalPages": "int",
+              "TotalCount": "int",
+              "PageSize": "int"
+            }
+          },
+          "flow": "Tìm kiếm courses."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/courses/{courseId}/modules",
+          "payload": null,
+          "response": {
+            "type": "Result<List<ModuleWithLessonsType>>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "List<ModuleWithLessonsType>",
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy modules của course."
+        }
+      ]
+    },
+    {
+      "controller": "LessonsController",
+      "endpoints": [
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/lessons",
+          "payload": {
+            "type": "GetLessonsWithPaginationQuery",
+            "properties": {
+              "CourseId": "int?",
+              "ModuleId": "int?",
+              "Keyword": "string?",
+              "MinDuration": "int?",
+              "MaxDuration": "int?",
+              "PageNumber": "int",
+              "PageSize": "int"
+            }
+          },
+          "response": {
+            "type": "Result<PaginatedResult<LessonType>>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": {
+                "Data": "List<LessonType>",
+                "TotalPages": "int",
+                "TotalCount": "int",
+                "PageSize": "int"
+              },
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy danh sách lessons với phân trang."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/lessons/{id}",
+          "payload": null,
+          "response": {
+            "type": "Result<LessonType>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": {
+                "Id": "int",
+                "Title": "string",
+                "Description": "string?",
+                "Content": "string?",
+                "Duration": "int",
+                "Order": "int",
+                "IsPublished": "bool",
+                "IsCompleted": "bool",
+                "ModuleId": "int",
+                "CreatedAt": "DateTime",
+                "UpdatedAt": "DateTime"
+              },
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy chi tiết lesson theo ID."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/lessons/create",
+          "payload": {
+            "type": "CreateLessonRequest",
+            "properties": {
+              "Title": "string",
+              "Description": "string?",
+              "Content": "string?",
+              "Duration": "int",
+              "Order": "int",
+              "ModuleId": "int",
+              "IsPublished": "bool"
+            }
+          },
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Tạo lesson mới, trả về ID."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/lessons/update/{id}",
+          "payload": {
+            "type": "UpdateLessonRequest",
+            "properties": {
+              "Title": "string?",
+              "Description": "string?",
+              "Content": "string?",
+              "Duration": "int?",
+              "Order": "int?",
+              "ModuleId": "int?",
+              "IsPublished": "bool?"
+            }
+          },
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Cập nhật lesson theo ID."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/lessons/delete/{id}",
+          "payload": null,
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Xóa lesson theo ID."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/lessons/complete/{id}",
+          "payload": null,
+          "response": {
+            "type": "Result<LessonType>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "LessonType",
+              "Code": "int"
+            }
+          },
+          "flow": "Đánh dấu lesson đã hoàn thành."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/lessons/{lessonId}/sections",
+          "payload": null,
+          "response": {
+            "type": "Result<List<SectionType>>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "List<SectionType>",
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy sections của lesson."
+        }
+      ]
+    },
+    {
+      "controller": "MaterialsController",
+      "endpoints": [
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/lessons/{lessonId}/materials",
+          "payload": {
+            "type": "GetMaterialsWithPaginationQuery",
+            "properties": {
+              "LessonId": "int?",
+              "Type": "string?",
+              "Keyword": "string?",
+              "FileType": "string?",
+              "MinSize": "long?",
+              "MaxSize": "long?",
+              "PageNumber": "int",
+              "PageSize": "int"
+            }
+          },
+          "response": {
+            "type": "Result<List<MaterialType>>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "List<MaterialType>",
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy materials của lesson."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/materials/{id}",
+          "payload": null,
+          "response": {
+            "type": "Result<MaterialType>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": {
+                "Id": "int",
+                "Title": "string",
+                "FileName": "string",
+                "FileUrl": "string",
+                "FileType": "string",
+                "Size": "long",
+                "LessonId": "int",
+                "CreatedAt": "DateTime",
+                "UpdatedAt": "DateTime"
+              },
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy chi tiết material theo ID."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/materials/create",
+          "payload": {
+            "type": "CreateMaterialRequest",
+            "properties": {
+              "Title": "string",
+              "FileName": "string",
+              "FileUrl": "string",
+              "FileType": "string",
+              "Size": "long",
+              "LessonId": "int"
+            }
+          },
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Tạo material mới, trả về ID."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/materials/update/{id}",
+          "payload": {
+            "type": "UpdateMaterialRequest",
+            "properties": {
+              "Title": "string?",
+              "FileName": "string?",
+              "FileUrl": "string?",
+              "FileType": "string?",
+              "Size": "long?",
+              "LessonId": "int?"
+            }
+          },
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Cập nhật material theo ID."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/materials/delete/{id}",
+          "payload": null,
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Xóa material theo ID."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/materials/{id}/download",
+          "payload": null,
+          "response": {
+            "type": "File",
+            "properties": {
+              "Content": "byte[]",
+              "ContentType": "string",
+              "FileDownloadName": "string"
+            }
+          },
+          "flow": "Tải xuống material."
+        }
+      ]
+    },
+    {
+      "controller": "ClassesController",
+      "endpoints": [
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/classes/create",
+          "payload": {
+            "type": "CreateClassRequest",
+            "properties": {
+              "CourseId": "int",
+              "Name": "string",
+              "StartDate": "DateTime",
+              "EndDate": "DateTime",
+              "Schedule": "string",
+              "Location": "string",
+              "MaxStudents": "int",
+              "TeacherName": "string",
+              "Status": "string"
+            }
+          },
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Tạo class mới, trả về ID."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/classes/update/{id}",
+          "payload": {
+            "type": "UpdateClassRequest",
+            "properties": {
+              "Id": "int",
+              "CourseId": "int",
+              "Name": "string",
+              "StartDate": "DateTime",
+              "EndDate": "DateTime",
+              "Schedule": "string",
+              "Location": "string",
+              "MaxStudents": "int",
+              "TeacherName": "string",
+              "Status": "string"
+            }
+          },
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Cập nhật class theo ID."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/classes/delete/{id}",
+          "payload": null,
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Xóa class theo ID."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/classes/{id}",
+          "payload": null,
+          "response": {
+            "type": "Result<GetClassDto>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": {
+                "Id": "int",
+                "CourseId": "int",
+                "Name": "string",
+                "StartDate": "DateTime",
+                "EndDate": "DateTime",
+                "Schedule": "string",
+                "Location": "string",
+                "MaxStudents": "int",
+                "TeacherName": "string",
+                "Status": "string"
+              },
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy chi tiết class theo ID."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/classes/get-all",
+          "payload": null,
+          "response": {
+            "type": "Result<List<GetAllClassesDto>>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "List<GetAllClassesDto>",
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy danh sách tất cả classes."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/classes/by-course/{courseId}",
+          "payload": null,
+          "response": {
+            "type": "Result<List<GetAllClassesDto>>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "List<GetAllClassesDto>",
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy classes theo course ID."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/classes/get-pagination",
+          "payload": {
+            "type": "GetClassesWithPaginationQuery",
+            "properties": {
+              "PageNumber": "int",
+              "PageSize": "int",
+              "SearchTerm": "string?",
+              "CourseId": "int?",
+              "Status": "string?"
+            }
+          },
+          "response": {
+            "type": "Result<PaginatedResult<GetClassesWithPaginationDto>>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": {
+                "Data": "List<GetClassesWithPaginationDto>",
+                "TotalPages": "int",
+                "TotalCount": "int",
+                "PageSize": "int"
+              },
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy classes với phân trang."
+        }
+      ]
+    },
+    {
+      "controller": "ModulesController",
+      "endpoints": [
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/modules/create",
+          "payload": {
+            "type": "CreateModuleRequest",
+            "properties": {
+              "Title": "string",
+              "Description": "string?",
+              "Order": "int",
+              "CourseId": "int"
+            }
+          },
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Tạo module mới, trả về ID."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/modules/update/{id}",
+          "payload": {
+            "type": "UpdateModuleRequest",
+            "properties": {
+              "Title": "string?",
+              "Description": "string?",
+              "Order": "int?",
+              "CourseId": "int?"
+            }
+          },
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Cập nhật module theo ID."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/modules/delete/{id}",
+          "payload": null,
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Xóa module theo ID."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/modules/{id}",
+          "payload": null,
+          "response": {
+            "type": "Result<ModuleWithLessonsType>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": {
+                "Id": "int",
+                "Title": "string",
+                "Description": "string?",
+                "Order": "int",
+                "CourseId": "int",
+                "CreatedAt": "DateTime",
+                "UpdatedAt": "DateTime",
+                "Lessons": "List<LessonWithMaterialsType>"
+              },
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy chi tiết module theo ID, bao gồm lessons."
+        }
+      ]
+    },
+    {
+      "controller": "CourseTypesController",
+      "endpoints": [
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/coursetypes/create",
+          "payload": {
+            "type": "CreateCourseTypeRequest",
+            "properties": {
+              "Name": "string",
+              "Description": "string"
+            }
+          },
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Tạo course type mới, trả về ID."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/coursetypes/update/{id}",
+          "payload": {
+            "type": "UpdateCourseTypeRequest",
+            "properties": {
+              "Id": "int",
+              "Name": "string",
+              "Description": "string",
+              "IsActive": "bool?"
+            }
+          },
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Cập nhật course type theo ID."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/coursetypes/delete/{id}",
+          "payload": null,
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Xóa course type theo ID."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/coursetypes/{id}",
+          "payload": null,
+          "response": {
+            "type": "Result<GetCourseTypeDto>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": {
+                "Id": "int",
+                "Name": "string",
+                "Description": "string",
+                "IsActive": "bool",
+                "CreatedDate": "DateTime?",
+                "UpdatedDate": "DateTime?"
+              },
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy chi tiết course type theo ID."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/coursetypes/get-all",
+          "payload": null,
+          "response": {
+            "type": "Result<List<GetAllCourseTypesDto>>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "List<GetAllCourseTypesDto>",
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy danh sách tất cả course types."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/coursetypes/get-pagination",
+          "payload": {
+            "type": "GetCourseTypesWithPaginationQuery",
+            "properties": {
+              "PageNumber": "int",
+              "PageSize": "int",
+              "SearchTerm": "string?"
+            }
+          },
+          "response": {
+            "type": "Result<PaginatedResult<GetCourseTypesWithPaginationDto>>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": {
+                "Data": "List<GetCourseTypesWithPaginationDto>",
+                "TotalPages": "int",
+                "TotalCount": "int",
+                "PageSize": "int"
+              },
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy course types với phân trang."
+        }
+      ]
+    },
+    {
+      "controller": "CourseTagsController",
+      "endpoints": [
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/coursetags/create",
+          "payload": {
+            "type": "CreateCourseTagRequest",
+            "properties": {
+              "Name": "string",
+              "Color": "string",
+              "Description": "string",
+              "IsActive": "bool"
+            }
+          },
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Tạo course tag mới, trả về ID."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/coursetags/update/{id}",
+          "payload": {
+            "type": "UpdateCourseTagRequest",
+            "properties": {
+              "Id": "int",
+              "Name": "string",
+              "Color": "string",
+              "Description": "string",
+              "IsActive": "bool"
+            }
+          },
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Cập nhật course tag theo ID."
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/v1/coursetags/delete/{id}",
+          "payload": null,
+          "response": {
+            "type": "Result<int>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "int",
+              "Code": "int"
+            }
+          },
+          "flow": "Xóa course tag theo ID."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/coursetags/{id}",
+          "payload": null,
+          "response": {
+            "type": "Result<GetCourseTagDto>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": {
+                "Id": "int",
+                "Name": "string",
+                "Color": "string",
+                "Description": "string",
+                "IsActive": "bool",
+                "CreatedDate": "DateTime?",
+                "UpdatedDate": "DateTime?"
+              },
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy chi tiết course tag theo ID."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/coursetags/get-all",
+          "payload": null,
+          "response": {
+            "type": "Result<List<GetAllCourseTagsDto>>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": "List<GetAllCourseTagsDto>",
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy danh sách tất cả course tags."
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/v1/coursetags/get-pagination",
+          "payload": {
+            "type": "GetCourseTagsWithPaginationQuery",
+            "properties": {
+              "PageNumber": "int",
+              "PageSize": "int",
+              "SearchTerm": "string?"
+            }
+          },
+          "response": {
+            "type": "Result<PaginatedResult<GetCourseTagsWithPaginationDto>>",
+            "properties": {
+              "Message": "string",
+              "Succeeded": "bool",
+              "Data": {
+                "Data": "List<GetCourseTagsWithPaginationDto>",
+                "TotalPages": "int",
+                "TotalCount": "int",
+                "PageSize": "int"
+              },
+              "Code": "int"
+            }
+          },
+          "flow": "Lấy course tags với phân trang."
+        }
+      ]
+    }
+  ]
+}

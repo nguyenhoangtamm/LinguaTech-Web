@@ -200,3 +200,7 @@ export const useDeleteMaterialMutation = () => {
         },
     });
 };
+
+// Backwards-compatible aliases
+export const useLessonListQuery = useLessonsQuery;
+export const useMaterialListQuery = useMaterialsByLessonQuery;

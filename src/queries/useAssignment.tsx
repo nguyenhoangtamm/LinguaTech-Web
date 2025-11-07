@@ -45,6 +45,27 @@ export const useGetAssignmentsByLessonQuery = (lessonId: number) => {
     });
 };
 
+// Backwards-compatible aliases expected by some pages
+export const useAssignmentsByLesson = useGetAssignmentsByLessonQuery;
+
+// Adapter: useAssignment(id) -> returns query result like pages expect
+export function useAssignment(assignmentId?: string | number) {
+    const id = assignmentId ? Number(assignmentId) : undefined;
+    return useGetAssignmentQuery({ id: id as number, enabled: !!id });
+}
+
+// Re-export submission-related helpers under legacy names so pages importing from useAssignment continue to work
+import { useCurrentUserSubmission, useCreateSubmission } from './useSubmission';
+
+export const useUserSubmission = (assignmentId?: string | number) => {
+    const id = assignmentId ? Number(assignmentId) : undefined;
+    return useCurrentUserSubmission(id as number);
+};
+
+export const useSubmitAssignment = () => {
+    return useCreateSubmission();
+};
+
 export const useCreateAssignmentMutation = () => {
     const queryClient = useQueryClient();
     return useMutation({

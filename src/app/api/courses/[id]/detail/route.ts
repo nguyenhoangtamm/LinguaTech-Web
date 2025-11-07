@@ -203,12 +203,10 @@ const mockCourseDetailWithModules = {
     ],
 };
 
-export async function GET(
-    request: NextRequest,
-    { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, ctx: any) {
     try {
-        const { id } = params;
+        const { params } = ctx;
+        const { id } = params as { id: string };
 
         // Simulate API delay
         await new Promise((resolve) => setTimeout(resolve, 500));
