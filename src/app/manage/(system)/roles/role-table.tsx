@@ -42,7 +42,7 @@ export default function RoleTable({ title, breadcrumb }: PageHeaderProps) {
   });
 
   const listResult: { data: RoleType[]; totalCount: number } =
-    roleListQuery.data?.data ?? {
+    roleListQuery.data ?? {
       data: [],
       totalCount: 0,
     };

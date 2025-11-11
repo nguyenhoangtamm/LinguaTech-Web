@@ -19,21 +19,21 @@ const buildUrlWithParams = (baseUrl: string, params: Record<string, any>) => {
 const userApiRequest = {
     // Create user
     create: (body: CreateUserBodyType) =>
-        http.post<UserOperationResType>("/api/v1/users/create", body),
+        http.post<UserOperationResType>("/users/create", body),
 
     // Update user
     update: (id: number, body: UpdateUserBodyType) =>
-        http.post<UserOperationResType>(`/api/v1/users/update/${id}`, body),
+        http.post<UserOperationResType>(`/users/update/${id}`, body),
 
     // Delete user
     delete: (id: number) =>
-        http.post<UserOperationResType>(`/api/v1/users/delete/${id}`, null),
+        http.post<UserOperationResType>(`/users/delete/${id}`, null),
 
     // Get user by ID
-    getById: (id: number) => http.get<ApiUserResType>(`/api/v1/users/${id}`),
+    getById: (id: number) => http.get<ApiUserResType>(`/users/${id}`),
 
     // Get all users (simple list)
-    getAll: () => http.get<GetAllUsersResType>("/api/v1/users/get-all"),
+    getAll: () => http.get<GetAllUsersResType>("/users/get-all"),
 
     // Get users with pagination and filters
     list: (filters: {
@@ -47,16 +47,16 @@ const userApiRequest = {
             )
         );
         return http.get<ApiUserListResType>(
-            buildUrlWithParams("/api/v1/users/get-pagination", params)
+            buildUrlWithParams("/users/get-pagination", params)
         );
     },
 
     // Get current user info
-    getMe: () => http.get<ApiUserResType>("/api/v1/users/me"),
+    getMe: () => http.get<ApiUserResType>("/users/me"),
 
     // Get user dashboard stats
     getDashboardStats: () =>
-        http.get<UserDashboardStatsResType>("/api/v1/users/dashboard-stats"),
+        http.get<UserDashboardStatsResType>("/users/dashboard-stats"),
 };
 
 export default userApiRequest;

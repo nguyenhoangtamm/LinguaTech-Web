@@ -24,11 +24,11 @@ export const courseManagementKeys = {
 };
 
 // Get course by ID
-export function useCourseManagement(id: number) {
+export function useCourseManagement(id: number, enabled?: boolean) {
     return useQuery({
         queryKey: courseManagementKeys.detail(id),
         queryFn: () => courseManagementApiRequest.getById(id),
-        enabled: !!id,
+        enabled: enabled !== undefined ? enabled : !!id,
     });
 }
 

@@ -53,8 +53,8 @@ export default function RoleSelector({profileCode, userName, roleList}: IRoleSel
         });
     };
 
-    const displayedRoles = selectedRoles.slice(0, 1);
-    const remainingCount = selectedRoles.length - displayedRoles.length;
+    const displayedRoles = selectedRoles?.slice(0, 1);
+    const remainingCount = selectedRoles?.length - displayedRoles?.length;
     const {data: roleData}: { data: RoleType[]; totalCount: number } = getAllRoleQuery.data ?? {
         data: [],
         totalCount: 0,

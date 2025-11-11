@@ -4,23 +4,20 @@ import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PlusCircle, Loader2 } from "lucide-react";
-import { Button, Input, Modal, DatePicker } from "rsuite";
+import { Button, Input, SelectPicker, Modal, DatePicker } from "rsuite";
 import { Label } from "@/components/ui/label";
 import { Form, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { useCreateAssignmentMutation, useUpdateAssignmentMutation, useGetAssignmentQuery } from "@/queries/useAssignment";
 import {
-    useCreateAssignmentMutation,
-    useUpdateAssignmentMutation,
-    useGetAssignmentQuery
-} from "@/queries/useAssignment";
-import {
-    CreateAssignmentBody,
     CreateAssignmentBodyType,
-    UpdateAssignmentBody,
-    UpdateAssignmentBodyType
+    UpdateAssignmentBodyType,
+    CreateAssignmentBodySchema,
+    UpdateAssignmentBodySchema
 } from "@/schemaValidations/assignment.schema";
 import { toast } from "@/hooks/use-toast";
 import { handleErrorApi } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
+import { useLessonsQuery } from "@/queries/useLesson";
 import commonStyles from "../../../shared/common/styles/common.module.css";
 
 export default function AssignmentForm({
@@ -38,41 +35,59 @@ export default function AssignmentForm({
     const [open, setOpen] = useState(false);
     const createAssignmentMutation = useCreateAssignmentMutation();
     const updateAssignmentMutation = useUpdateAssignmentMutation();
+    
+    // Get lessons for select
+    const { data: lessonsData } = useLessonsQuery({
+        pageNumber: 1,
+        pageSize: 100, // Get all lessons
+        sortBy: "title",
+        sortOrder: "asc",
+    });
+    
     const { data, refetch } = useGetAssignmentQuery({
         id: id as number,
         enabled: isEdit,
     });
 
     const form = useForm<CreateAssignmentBodyType | UpdateAssignmentBodyType>({
-        resolver: zodResolver(isEdit ? UpdateAssignmentBody : CreateAssignmentBody),
+        resolver: zodResolver(isEdit ? UpdateAssignmentBodySchema : CreateAssignmentBodySchema),
         defaultValues: {
+            lessonId: 0,
             title: "",
             description: "",
-            lessonId: undefined,
-            maxScore: undefined,
             dueDate: "",
+            maxScore: 10,
         },
     });
 
+    // Lesson options
+    const lessonOptions = useMemo(() => {
+        if (!lessonsData?.data?.data) return [];
+        return lessonsData.data.data.map((lesson: any) => ({
+            label: `${lesson.title} (${lesson.moduleTitle || lesson.courseTitle || ""})`,
+            value: lesson.id,
+        }));
+    }, [lessonsData]);
+
     // Fill form when editing
     useEffect(() => {
-        if (isEdit && data?.data) {
-            const assignment = data.data;
+        if (isEdit && data) {
+            const assignmentData = data.data;
             form.reset({
-                title: assignment.title ?? "",
-                description: assignment.description ?? "",
-                lessonId: assignment.lessonId,
-                maxScore: assignment.maxScore,
-                dueDate: assignment.dueDate ?? "",
+                lessonId: assignmentData.lessonId ?? 0,
+                title: assignmentData.title ?? "",
+                description: assignmentData.description ?? "",
+                dueDate: assignmentData.dueDate ?? "",
+                maxScore: assignmentData.maxScore ?? 10,
             });
         }
         if (!isEdit) {
             form.reset({
+                lessonId: 0,
                 title: "",
                 description: "",
-                lessonId: undefined,
-                maxScore: undefined,
                 dueDate: "",
+                maxScore: 10,
             });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -81,41 +96,61 @@ export default function AssignmentForm({
     // Open modal for edit (always open if id), or for create (button click)
     useEffect(() => {
         if (isEdit && id) setOpen(true);
-    }, [isEdit, id]);
+    }, [id, isEdit]);
 
-    const reset = () => {
-        form.reset();
-        setOpen(false);
-        setId && setId(undefined);
+    const handleOpenChange = (open: boolean) => {
+        setOpen(open);
+        if (!open) {
+            setId?.(undefined);
+            form.reset();
+        }
     };
 
     const onSubmit = async (values: CreateAssignmentBodyType | UpdateAssignmentBodyType) => {
+        if (createAssignmentMutation.isPending || updateAssignmentMutation.isPending) return;
         try {
-            let result;
+            let result: any;
             if (isEdit) {
                 result = await updateAssignmentMutation.mutateAsync({
                     id: id as number,
-                    ...(values as Omit<UpdateAssignmentBodyType, 'id'>),
+                    ...values as UpdateAssignmentBodyType,
                 });
             } else {
-                result = await createAssignmentMutation.mutateAsync(
-                    values as CreateAssignmentBodyType
-                );
+                result = await createAssignmentMutation.mutateAsync(values as CreateAssignmentBodyType);
             }
 
-            if (result?.data?.succeeded) {
-                toast({
-                    description: isEdit
-                        ? "Cập nhật bài tập thành công"
-                        : "Tạo bài tập thành công",
-                });
-                reset();
-                onSubmitSuccess?.();
-            }
-        } catch (error: any) {
+            toast({
+                title: result?.message || (isEdit ? "Cập nhật bài tập thành công" : "Tạo bài tập thành công"),
+                variant: "success",
+                duration: 1000,
+            });
+            handleOpenChange(false);
+            onSubmitSuccess?.();
+        } catch (error) {
             handleErrorApi({
                 error,
                 setError: form.setError,
+            });
+        }
+    };
+
+    const reset = () => {
+        if (isEdit && data) {
+            const assignmentData = data.data;
+            form.reset({
+                lessonId: assignmentData.lessonId ?? 0,
+                title: assignmentData.title ?? "",
+                description: assignmentData.description ?? "",
+                dueDate: assignmentData.dueDate ?? "",
+                maxScore: assignmentData.maxScore ?? 10,
+            });
+        } else {
+            form.reset({
+                lessonId: 0,
+                title: "",
+                description: "",
+                dueDate: "",
+                maxScore: 10,
             });
         }
     };
@@ -124,36 +159,63 @@ export default function AssignmentForm({
         <>
             {triggerButton && (
                 <Button
-                    startIcon={<PlusCircle className="h-4 w-4" />}
+                    className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-md shadow-sm border-0"
                     onClick={() => setOpen(true)}
-                    color="blue"
-                    appearance="primary"
+                    startIcon={<PlusCircle className="w-4 h-4" />}
                 >
                     Thêm bài tập
                 </Button>
             )}
 
-            <Modal open={open} onClose={reset} size="md">
+            <Modal
+                open={open}
+                onClose={() => handleOpenChange(false)}
+                size="md"
+                className={commonStyles.customModalOverlay}
+                backdropClassName={commonStyles.customModalBackdrop}
+            >
                 <Modal.Header>
-                    <Modal.Title>
-                        {isEdit ? "Chỉnh sửa bài tập" : "Thêm bài tập mới"}
+                    <Modal.Title className="text-lg font-semibold text-gray-900">
+                        {isEdit ? "Cập nhật bài tập" : "Thêm mới bài tập"}
                     </Modal.Title>
                 </Modal.Header>
-                <Modal.Body>
+
+                <Modal.Body className="py-4 max-h-[70vh] overflow-y-auto">
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                            <FormField
+                                control={form.control}
+                                name="lessonId"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <Label className="text-sm font-medium text-gray-700">
+                                            Bài học *
+                                        </Label>
+                                        <SelectPicker
+                                            {...field}
+                                            data={lessonOptions}
+                                            placeholder="Chọn bài học"
+                                            className="w-full"
+                                            cleanable={false}
+                                            searchable={true}
+                                        />
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
                             <FormField
                                 control={form.control}
                                 name="title"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <Label htmlFor="title">
-                                            Tiêu đề <span className="text-red-500">*</span>
+                                        <Label className="text-sm font-medium text-gray-700">
+                                            Tiêu đề bài tập *
                                         </Label>
                                         <Input
-                                            id="title"
-                                            placeholder="Nhập tiêu đề bài tập"
                                             {...field}
+                                            placeholder="Nhập tiêu đề bài tập"
+                                            className="w-full"
                                         />
                                         <FormMessage />
                                     </FormItem>
@@ -165,97 +227,95 @@ export default function AssignmentForm({
                                 name="description"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <Label htmlFor="description">
-                                            Mô tả <span className="text-red-500">*</span>
+                                        <Label className="text-sm font-medium text-gray-700">
+                                            Mô tả *
                                         </Label>
                                         <Textarea
-                                            id="description"
-                                            placeholder="Nhập mô tả bài tập"
                                             {...field}
-                                            rows={3}
+                                            placeholder="Nhập mô tả bài tập"
+                                            className="w-full min-h-[100px]"
                                         />
                                         <FormMessage />
                                     </FormItem>
                                 )}
                             />
 
-                            <FormField
-                                control={form.control}
-                                name="lessonId"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <Label htmlFor="lessonId">
-                                            ID Bài học <span className="text-red-500">*</span>
-                                        </Label>
-                                        <Input
-                                            id="lessonId"
-                                            type="number"
-                                            placeholder="Nhập ID bài học"
-                                            value={field.value?.toString() || ""}
-                                            onChange={(value) => field.onChange(Number(value) || undefined)}
-                                        />
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <FormField
+                                    control={form.control}
+                                    name="maxScore"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <Label className="text-sm font-medium text-gray-700">
+                                                Điểm tối đa *
+                                            </Label>
+                                            <Input
+                                                {...field}
+                                                type="number"
+                                                min="0"
+                                                step="0.1"
+                                                placeholder="10"
+                                                className="w-full"
+                                                onChange={(value) => field.onChange(Number(value))}
+                                            />
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
 
-                            <FormField
-                                control={form.control}
-                                name="maxScore"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <Label htmlFor="maxScore">
-                                            Điểm tối đa <span className="text-red-500">*</span>
-                                        </Label>
-                                        <Input
-                                            id="maxScore"
-                                            type="number"
-                                            step="0.1"
-                                            placeholder="Nhập điểm tối đa"
-                                            value={field.value?.toString() || ""}
-                                            onChange={(value) => field.onChange(Number(value) || undefined)}
-                                        />
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            <FormField
-                                control={form.control}
-                                name="dueDate"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <Label htmlFor="dueDate">
-                                            Hạn nộp <span className="text-red-500">*</span>
-                                        </Label>
-                                        <DatePicker
-                                            format="yyyy-MM-dd HH:mm:ss"
-                                            placeholder="Chọn hạn nộp"
-                                            value={field.value ? new Date(field.value) : null}
-                                            onChange={(date) => field.onChange(date?.toISOString() || "")}
-                                        />
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                                <FormField
+                                    control={form.control}
+                                    name="dueDate"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <Label className="text-sm font-medium text-gray-700">
+                                                Hạn nộp *
+                                            </Label>
+                                            <DatePicker
+                                                {...field}
+                                                format="yyyy-MM-dd HH:mm"
+                                                placeholder="Chọn ngày và giờ hạn nộp"
+                                                className="w-full"
+                                                showMeridian
+                                                value={field.value ? new Date(field.value) : null}
+                                                onChange={(date) => {
+                                                    field.onChange(date ? date.toISOString() : "");
+                                                }}
+                                            />
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
                         </form>
                     </Form>
                 </Modal.Body>
+
                 <Modal.Footer>
-                    <Button onClick={reset} appearance="subtle">
+                    <Button
+                        onClick={() => handleOpenChange(false)}
+                        appearance="subtle"
+                        className="mr-2"
+                    >
                         Hủy
                     </Button>
                     <Button
-                        onClick={form.handleSubmit(onSubmit)}
-                        color="blue"
-                        appearance="primary"
-                        loading={createAssignmentMutation.isPending || updateAssignmentMutation.isPending}
-                        startIcon={
-                            (createAssignmentMutation.isPending || updateAssignmentMutation.isPending) ?
-                                <Loader2 className="h-4 w-4 animate-spin" /> : undefined
-                        }
+                        appearance="ghost"
+                        className="mr-2"
+                        onClick={reset}
                     >
-                        {isEdit ? "Cập nhật" : "Tạo mới"}
+                        Đặt lại
+                    </Button>
+                    <Button
+                        onClick={form.handleSubmit(onSubmit)}
+                        appearance="primary"
+                        disabled={createAssignmentMutation.isPending || updateAssignmentMutation.isPending}
+                        className="bg-primary text-white"
+                    >
+                        {createAssignmentMutation.isPending || updateAssignmentMutation.isPending ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : null}
+                        {isEdit ? "Cập nhật" : "Thêm mới"}
                     </Button>
                 </Modal.Footer>
             </Modal>

@@ -24,21 +24,21 @@ const buildUrlWithParams = (baseUrl: string, params: Record<string, any>) => {
 const classApiRequest = {
     // Create class
     create: (body: CreateClassBodyType) =>
-        http.post<ClassOperationResType>("/api/v1/classes/create", body),
+        http.post<ClassOperationResType>("/classes/create", body),
 
     // Update class
     update: (id: number, body: UpdateClassBodyType) =>
-        http.post<ClassOperationResType>(`/api/v1/classes/update/${id}`, body),
+        http.post<ClassOperationResType>(`/classes/update/${id}`, body),
 
     // Delete class
     delete: (id: number) =>
-        http.post<ClassOperationResType>(`/api/v1/classes/delete/${id}`, {}),
+        http.post<ClassOperationResType>(`/classes/delete/${id}`, {}),
 
     // Get class by ID
-    getById: (id: number) => http.get<ClassResType>(`/api/v1/classes/${id}`),
+    getById: (id: number) => http.get<ClassResType>(`/classes/${id}`),
 
     // Get all classes (simple list)
-    getAll: () => http.get<GetAllClassesResType>("/api/v1/classes/get-all"),
+    getAll: () => http.get<GetAllClassesResType>("/classes/get-all"),
 
     // Get classes with pagination and filters
     list: (filters: FilterClassType) => {
@@ -48,13 +48,13 @@ const classApiRequest = {
             )
         );
         return http.get<ClassListResType>(
-            buildUrlWithParams("/api/v1/classes/get-pagination", params)
+            buildUrlWithParams("/classes/get-pagination", params)
         );
     },
 
     // Get classes by course ID
     getByCourse: (courseId: number) =>
-        http.get<GetAllClassesResType>(`/api/v1/classes/by-course/${courseId}`),
+        http.get<GetAllClassesResType>(`/classes/by-course/${courseId}`),
 };
 
 export default classApiRequest;

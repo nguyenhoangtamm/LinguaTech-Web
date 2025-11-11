@@ -28,30 +28,30 @@ const enrollmentApiRequest = {
     // Create enrollment (enroll in a course)
     create: (body: CreateEnrollmentBodyType) =>
         http.post<EnrollmentOperationResType>(
-            "/api/v1/enrollments/create",
+            "/enrollments/create",
             body
         ),
 
     // Get my enrolled courses
     getMyCourses: () =>
-        http.get<UserEnrollmentResType>("/api/v1/enrollments/my-courses"),
+        http.get<UserEnrollmentResType>("/enrollments/my-courses"),
 
     // Check enrollment status for a course
     checkEnrollment: (courseId: number) =>
         http.get<CheckEnrollmentResType>(
-            `/api/v1/enrollments/check/${courseId}`
+            `/enrollments/check/${courseId}`
         ),
 
     // Update progress for a course
     updateProgress: (courseId: number, body: UpdateProgressBodyType) =>
         http.post<UpdateProgressResType>(
-            `/api/v1/enrollments/update-progress/${courseId}`,
+            `/enrollments/update-progress/${courseId}`,
             body
         ),
 
     // Get courses to continue learning
     getContinueCourses: () =>
-        http.get<UserEnrollmentResType>("/api/v1/enrollments/continue"),
+        http.get<UserEnrollmentResType>("/enrollments/continue"),
 
     // Admin functions - Get enrollments with pagination (for management)
     list: (filters: FilterEnrollmentType) => {
@@ -61,25 +61,25 @@ const enrollmentApiRequest = {
             )
         );
         return http.get<EnrollmentListResType>(
-            buildUrlWithParams("/api/v1/enrollments/get-pagination", params)
+            buildUrlWithParams("/enrollments/get-pagination", params)
         );
     },
 
     // Get enrollment by ID (admin function)
     getById: (id: number) =>
-        http.get<EnrollmentResType>(`/api/v1/enrollments/${id}`),
+        http.get<EnrollmentResType>(`/enrollments/${id}`),
 
     // Update enrollment (admin function)
     update: (id: number, body: UpdateEnrollmentBodyType) =>
         http.put<EnrollmentOperationResType>(
-            `/api/v1/enrollments/update/${id}`,
+            `/enrollments/update/${id}`,
             body
         ),
 
     // Delete enrollment (admin function)
     delete: (id: number) =>
         http.delete<EnrollmentOperationResType>(
-            `/api/v1/enrollments/delete/${id}`
+            `/enrollments/delete/${id}`
         ),
 };
 

@@ -21,7 +21,7 @@ export const CourseSchema = z.object({
     description: z.string(),
     instructor: z.string(),
     duration: z.number(),
-    level: z.number(),
+    level: z.number().optional(),
     price: z.number(),
     categoryId: z.number(),
     tags: z.array(z.string()),

@@ -1,66 +1,56 @@
 "use client";
 
+import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { PlusCircle, Loader2 } from "lucide-react";
+import { Button, Input, SelectPicker, Modal, DatePicker } from "rsuite";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
-import { handleErrorApi } from "@/lib/utils";
+import { Form, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { useCreateClassMutation, useUpdateClassMutation, useGetClassQuery } from "@/queries/useClass";
 import {
     CreateClassBodyType,
+    UpdateClassBodyType,
     CreateClassBodySchema,
-    ClassType
+    UpdateClassBodySchema
 } from "@/schemaValidations/class.schema";
-import {
-    useCreateClassMutation,
-    useUpdateClassMutation,
-    useGetClassQuery
-} from "@/queries/useClass";
+import { toast } from "@/hooks/use-toast";
+import { handleErrorApi } from "@/lib/utils";
+import { Textarea } from "@/components/ui/textarea";
 import { useCoursesManagementWithPagination } from "@/queries/useCourseManagement";
-import { useEffect } from "react";
+import commonStyles from "../../../shared/common/styles/common.module.css";
 
-interface ClassFormProps {
-    classId?: number;
-    onSuccess?: () => void;
-    onCancel?: () => void;
-}
-
-const classStatuses = [
-    { value: "draft", label: "Nháp" },
-    { value: "published", label: "Đã xuất bản" },
-    { value: "ongoing", label: "Đang diễn ra" },
-    { value: "completed", label: "Đã hoàn thành" },
-    { value: "cancelled", label: "Đã hủy" },
-];
-
-export default function ClassForm({ classId, onSuccess, onCancel }: ClassFormProps) {
-    const isEdit = !!classId;
-
-    const { data: classData } = useGetClassQuery({
-        id: classId!,
-        enabled: isEdit
-    });
-
-    const { data: coursesData } = useCoursesManagementWithPagination({
-        pageNumber: 1,
-        pageSize: 100,
-    });
-
+export default function ClassForm({
+    id,
+    setId,
+    onSubmitSuccess,
+    triggerButton = true,
+}: {
+    id?: number | undefined;
+    setId?: (id: number | undefined) => void;
+    onSubmitSuccess?: () => void;
+    triggerButton?: boolean;
+}) {
+    const isEdit = typeof id === "number" && id !== undefined;
+    const [open, setOpen] = useState(false);
     const createClassMutation = useCreateClassMutation();
     const updateClassMutation = useUpdateClassMutation();
+    
+    // Get courses for select
+    const { data: coursesData } = useCoursesManagementWithPagination({
+        pageNumber: 1,
+        pageSize: 100, // Get all courses
+        sortBy: "title",
+        sortOrder: "asc",
+    });
+    
+    const { data, refetch } = useGetClassQuery({
+        id: id as number,
+        enabled: isEdit,
+    });
 
-    const form = useForm<CreateClassBodyType>({
-        resolver: zodResolver(CreateClassBodySchema),
+    const form = useForm<CreateClassBodyType | UpdateClassBodyType>({
+        resolver: zodResolver(isEdit ? UpdateClassBodySchema : CreateClassBodySchema),
         defaultValues: {
             courseId: 0,
             name: "",
@@ -70,253 +60,377 @@ export default function ClassForm({ classId, onSuccess, onCancel }: ClassFormPro
             location: "",
             maxStudents: 30,
             teacherName: "",
-            status: "draft",
+            status: "upcoming",
         },
     });
 
-    // Populate form when editing
+    // Course options
+    const courseOptions = useMemo(() => {
+        if (!coursesData?.data?.data) return [];
+        return coursesData.data.data.map((course: any) => ({
+            label: course.title,
+            value: course.id,
+        }));
+    }, [coursesData]);
+
+    // Status options
+    const statusOptions = useMemo(() => [
+        { label: "Chưa bắt đầu", value: "upcoming" },
+        { label: "Đang diễn ra", value: "ongoing" },
+        { label: "Đã kết thúc", value: "completed" },
+        { label: "Đã hủy", value: "cancelled" },
+    ], []);
+
+    // Fill form when editing
     useEffect(() => {
-        if (isEdit && classData?.data) {
-            const classInfo = classData.data;
+        if (isEdit && data) {
+            const classData = data.data;
             form.reset({
-                courseId: classInfo.courseId,
-                name: classInfo.name,
-                startDate: classInfo.startDate.split('T')[0], // Format for date input
-                endDate: classInfo.endDate.split('T')[0],
-                schedule: classInfo.schedule,
-                location: classInfo.location,
-                maxStudents: classInfo.maxStudents,
-                teacherName: classInfo.teacherName,
-                status: classInfo.status,
+                courseId: classData.courseId ?? 0,
+                name: classData.name ?? "",
+                startDate: classData.startDate ?? "",
+                endDate: classData.endDate ?? "",
+                schedule: classData.schedule ?? "",
+                location: classData.location ?? "",
+                maxStudents: classData.maxStudents ?? 30,
+                teacherName: classData.teacherName ?? "",
+                status: classData.status ?? "upcoming",
             });
         }
-    }, [classData, form, isEdit]);
+        if (!isEdit) {
+            form.reset({
+                courseId: 0,
+                name: "",
+                startDate: "",
+                endDate: "",
+                schedule: "",
+                location: "",
+                maxStudents: 30,
+                teacherName: "",
+                status: "upcoming",
+            });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [data, isEdit]);
 
-    const onSubmit = async (data: CreateClassBodyType) => {
-        try {
-            // Format dates to ISO string
-            const submitData = {
-                ...data,
-                startDate: new Date(data.startDate).toISOString(),
-                endDate: new Date(data.endDate).toISOString(),
-            };
+    // Open modal for edit (always open if id), or for create (button click)
+    useEffect(() => {
+        if (isEdit && id) setOpen(true);
+    }, [id, isEdit]);
 
-            if (isEdit) {
-                const result = await updateClassMutation.mutateAsync({
-                    id: classId,
-                    ...submitData
-                });
-                if (result?.data?.succeeded) {
-                    toast({
-                        description: "Cập nhật lớp học thành công",
-                    });
-                }
-            } else {
-                const result = await createClassMutation.mutateAsync(submitData);
-                if (result?.data?.succeeded) {
-                    toast({
-                        description: "Tạo lớp học thành công",
-                    });
-                    form.reset();
-                }
-            }
-            onSuccess?.();
-        } catch (error: any) {
-            handleErrorApi({ error });
+    const handleOpenChange = (open: boolean) => {
+        setOpen(open);
+        if (!open) {
+            setId?.(undefined);
+            form.reset();
         }
     };
 
-    const courses = coursesData?.data?.data || [];
-    const isLoading = createClassMutation.isPending || updateClassMutation.isPending;
+    const onSubmit = async (values: CreateClassBodyType | UpdateClassBodyType) => {
+        if (createClassMutation.isPending || updateClassMutation.isPending) return;
+        try {
+            let result: any;
+            if (isEdit) {
+                result = await updateClassMutation.mutateAsync({
+                    id: id as number,
+                    ...values as UpdateClassBodyType,
+                });
+            } else {
+                result = await createClassMutation.mutateAsync(values as CreateClassBodyType);
+            }
+
+            toast({
+                title: result?.message || (isEdit ? "Cập nhật lớp học thành công" : "Tạo lớp học thành công"),
+                variant: "success",
+                duration: 1000,
+            });
+            handleOpenChange(false);
+            onSubmitSuccess?.();
+        } catch (error) {
+            handleErrorApi({
+                error,
+                setError: form.setError,
+            });
+        }
+    };
+
+    const reset = () => {
+        if (isEdit && data) {
+            const classData = data.data;
+            form.reset({
+                courseId: classData.courseId ?? 0,
+                name: classData.name ?? "",
+                startDate: classData.startDate ?? "",
+                endDate: classData.endDate ?? "",
+                schedule: classData.schedule ?? "",
+                location: classData.location ?? "",
+                maxStudents: classData.maxStudents ?? 30,
+                teacherName: classData.teacherName ?? "",
+                status: classData.status ?? "upcoming",
+            });
+        } else {
+            form.reset({
+                courseId: 0,
+                name: "",
+                startDate: "",
+                endDate: "",
+                schedule: "",
+                location: "",
+                maxStudents: 30,
+                teacherName: "",
+                status: "upcoming",
+            });
+        }
+    };
 
     return (
-        <Card className="w-full max-w-2xl">
-            <CardHeader>
-                <CardTitle>
-                    {isEdit ? "Chỉnh sửa lớp học" : "Tạo lớp học mới"}
-                </CardTitle>
-            </CardHeader>
-            <CardContent>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Course Selection */}
-                        <div className="space-y-2">
-                            <Label htmlFor="courseId">Khóa học *</Label>
-                            <Select
-                                value={form.watch("courseId")?.toString() || ""}
-                                onValueChange={(value) => form.setValue("courseId", parseInt(value))}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Chọn khóa học" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {courses.map((course) => (
-                                        <SelectItem key={course.id} value={course.id.toString()}>
-                                            {course.title}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            {form.formState.errors.courseId && (
-                                <p className="text-sm text-red-500">
-                                    {form.formState.errors.courseId.message}
-                                </p>
-                            )}
-                        </div>
+        <>
+            {triggerButton && (
+                <Button
+                    className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-md shadow-sm border-0"
+                    onClick={() => setOpen(true)}
+                    startIcon={<PlusCircle className="w-4 h-4" />}
+                >
+                    Thêm lớp học
+                </Button>
+            )}
 
-                        {/* Class Name */}
-                        <div className="space-y-2">
-                            <Label htmlFor="name">Tên lớp *</Label>
-                            <Input
-                                id="name"
-                                {...form.register("name")}
-                                placeholder="Nhập tên lớp"
+            <Modal
+                open={open}
+                onClose={() => handleOpenChange(false)}
+                size="lg"
+                className={commonStyles.customModalOverlay}
+                backdropClassName={commonStyles.customModalBackdrop}
+            >
+                <Modal.Header>
+                    <Modal.Title className="text-lg font-semibold text-gray-900">
+                        {isEdit ? "Cập nhật lớp học" : "Thêm mới lớp học"}
+                    </Modal.Title>
+                </Modal.Header>
+
+                <Modal.Body className="py-4 max-h-[70vh] overflow-y-auto">
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <FormField
+                                    control={form.control}
+                                    name="courseId"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <Label className="text-sm font-medium text-gray-700">
+                                                Khóa học *
+                                            </Label>
+                                            <SelectPicker
+                                                {...field}
+                                                data={courseOptions}
+                                                placeholder="Chọn khóa học"
+                                                className="w-full"
+                                                cleanable={false}
+                                                searchable={true}
+                                            />
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                <FormField
+                                    control={form.control}
+                                    name="name"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <Label className="text-sm font-medium text-gray-700">
+                                                Tên lớp học *
+                                            </Label>
+                                            <Input
+                                                {...field}
+                                                placeholder="Nhập tên lớp học"
+                                                className="w-full"
+                                            />
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <FormField
+                                    control={form.control}
+                                    name="teacherName"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <Label className="text-sm font-medium text-gray-700">
+                                                Tên giáo viên *
+                                            </Label>
+                                            <Input
+                                                {...field}
+                                                placeholder="Nhập tên giáo viên"
+                                                className="w-full"
+                                            />
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                <FormField
+                                    control={form.control}
+                                    name="maxStudents"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <Label className="text-sm font-medium text-gray-700">
+                                                Số học viên tối đa *
+                                            </Label>
+                                            <Input
+                                                {...field}
+                                                type="number"
+                                                min="1"
+                                                placeholder="30"
+                                                className="w-full"
+                                                onChange={(value) => field.onChange(Number(value))}
+                                            />
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <FormField
+                                    control={form.control}
+                                    name="startDate"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <Label className="text-sm font-medium text-gray-700">
+                                                Ngày bắt đầu *
+                                            </Label>
+                                            <DatePicker
+                                                {...field}
+                                                format="yyyy-MM-dd"
+                                                placeholder="Chọn ngày bắt đầu"
+                                                className="w-full"
+                                                value={field.value ? new Date(field.value) : null}
+                                                onChange={(date) => {
+                                                    field.onChange(date ? date.toISOString() : "");
+                                                }}
+                                            />
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                <FormField
+                                    control={form.control}
+                                    name="endDate"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <Label className="text-sm font-medium text-gray-700">
+                                                Ngày kết thúc *
+                                            </Label>
+                                            <DatePicker
+                                                {...field}
+                                                format="yyyy-MM-dd"
+                                                placeholder="Chọn ngày kết thúc"
+                                                className="w-full"
+                                                value={field.value ? new Date(field.value) : null}
+                                                onChange={(date) => {
+                                                    field.onChange(date ? date.toISOString() : "");
+                                                }}
+                                            />
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <FormField
+                                    control={form.control}
+                                    name="schedule"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <Label className="text-sm font-medium text-gray-700">
+                                                Lịch học *
+                                            </Label>
+                                            <Input
+                                                {...field}
+                                                placeholder="VD: Thứ 2, 4, 6 - 19:00-21:00"
+                                                className="w-full"
+                                            />
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                <FormField
+                                    control={form.control}
+                                    name="location"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <Label className="text-sm font-medium text-gray-700">
+                                                Địa điểm *
+                                            </Label>
+                                            <Input
+                                                {...field}
+                                                placeholder="Nhập địa điểm học"
+                                                className="w-full"
+                                            />
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+
+                            <FormField
+                                control={form.control}
+                                name="status"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <Label className="text-sm font-medium text-gray-700">
+                                            Trạng thái *
+                                        </Label>
+                                        <SelectPicker
+                                            {...field}
+                                            data={statusOptions}
+                                            placeholder="Chọn trạng thái"
+                                            className="w-full"
+                                            cleanable={false}
+                                            searchable={false}
+                                        />
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
                             />
-                            {form.formState.errors.name && (
-                                <p className="text-sm text-red-500">
-                                    {form.formState.errors.name.message}
-                                </p>
-                            )}
-                        </div>
+                        </form>
+                    </Form>
+                </Modal.Body>
 
-                        {/* Start Date */}
-                        <div className="space-y-2">
-                            <Label htmlFor="startDate">Ngày bắt đầu *</Label>
-                            <Input
-                                id="startDate"
-                                type="date"
-                                {...form.register("startDate")}
-                            />
-                            {form.formState.errors.startDate && (
-                                <p className="text-sm text-red-500">
-                                    {form.formState.errors.startDate.message}
-                                </p>
-                            )}
-                        </div>
-
-                        {/* End Date */}
-                        <div className="space-y-2">
-                            <Label htmlFor="endDate">Ngày kết thúc *</Label>
-                            <Input
-                                id="endDate"
-                                type="date"
-                                {...form.register("endDate")}
-                            />
-                            {form.formState.errors.endDate && (
-                                <p className="text-sm text-red-500">
-                                    {form.formState.errors.endDate.message}
-                                </p>
-                            )}
-                        </div>
-
-                        {/* Teacher Name */}
-                        <div className="space-y-2">
-                            <Label htmlFor="teacherName">Giáo viên *</Label>
-                            <Input
-                                id="teacherName"
-                                {...form.register("teacherName")}
-                                placeholder="Nhập tên giáo viên"
-                            />
-                            {form.formState.errors.teacherName && (
-                                <p className="text-sm text-red-500">
-                                    {form.formState.errors.teacherName.message}
-                                </p>
-                            )}
-                        </div>
-
-                        {/* Location */}
-                        <div className="space-y-2">
-                            <Label htmlFor="location">Địa điểm *</Label>
-                            <Input
-                                id="location"
-                                {...form.register("location")}
-                                placeholder="Nhập địa điểm"
-                            />
-                            {form.formState.errors.location && (
-                                <p className="text-sm text-red-500">
-                                    {form.formState.errors.location.message}
-                                </p>
-                            )}
-                        </div>
-
-                        {/* Max Students */}
-                        <div className="space-y-2">
-                            <Label htmlFor="maxStudents">Số học viên tối đa *</Label>
-                            <Input
-                                id="maxStudents"
-                                type="number"
-                                min="1"
-                                {...form.register("maxStudents", { valueAsNumber: true })}
-                                placeholder="30"
-                            />
-                            {form.formState.errors.maxStudents && (
-                                <p className="text-sm text-red-500">
-                                    {form.formState.errors.maxStudents.message}
-                                </p>
-                            )}
-                        </div>
-
-                        {/* Status */}
-                        <div className="space-y-2">
-                            <Label htmlFor="status">Trạng thái *</Label>
-                            <Select
-                                value={form.watch("status")}
-                                onValueChange={(value) => form.setValue("status", value)}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Chọn trạng thái" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {classStatuses.map((status) => (
-                                        <SelectItem key={status.value} value={status.value}>
-                                            {status.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            {form.formState.errors.status && (
-                                <p className="text-sm text-red-500">
-                                    {form.formState.errors.status.message}
-                                </p>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Schedule */}
-                    <div className="space-y-2">
-                        <Label htmlFor="schedule">Lịch học *</Label>
-                        <Textarea
-                            id="schedule"
-                            {...form.register("schedule")}
-                            placeholder="Nhập lịch học (ví dụ: Thứ 2, 4, 6 - 19:00-21:00)"
-                            rows={3}
-                        />
-                        {form.formState.errors.schedule && (
-                            <p className="text-sm text-red-500">
-                                {form.formState.errors.schedule.message}
-                            </p>
-                        )}
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex gap-4 justify-end">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={onCancel}
-                            disabled={isLoading}
-                        >
-                            Hủy
-                        </Button>
-                        <Button
-                            type="submit"
-                            disabled={isLoading}
-                        >
-                            {isLoading ? "Đang xử lý..." : isEdit ? "Cập nhật" : "Tạo mới"}
-                        </Button>
-                    </div>
-                </form>
-            </CardContent>
-        </Card>
+                <Modal.Footer>
+                    <Button
+                        onClick={() => handleOpenChange(false)}
+                        appearance="subtle"
+                        className="mr-2"
+                    >
+                        Hủy
+                    </Button>
+                    <Button
+                        appearance="ghost"
+                        className="mr-2"
+                        onClick={reset}
+                    >
+                        Đặt lại
+                    </Button>
+                    <Button
+                        onClick={form.handleSubmit(onSubmit)}
+                        appearance="primary"
+                        disabled={createClassMutation.isPending || updateClassMutation.isPending}
+                        className="bg-primary text-white"
+                    >
+                        {createClassMutation.isPending || updateClassMutation.isPending ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : null}
+                        {isEdit ? "Cập nhật" : "Thêm mới"}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        </>
     );
 }

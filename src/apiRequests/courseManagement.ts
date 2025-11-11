@@ -19,37 +19,37 @@ const buildUrlWithParams = (baseUrl: string, params: Record<string, any>) => {
 const courseManagementApiRequest = {
     // Create course
     create: (body: CreateCourseBodyType) =>
-        http.post<CourseOperationResType>("/api/v1/courses/create", body),
+        http.post<CourseOperationResType>("/courses/create", body),
 
     // Update course
     update: (id: number, body: UpdateCourseBodyType) =>
-        http.post<CourseOperationResType>(`/api/v1/courses/update/${id}`, body),
+        http.post<CourseOperationResType>(`/courses/update/${id}`, body),
 
     // Delete course
     delete: (id: number) =>
-        http.post<CourseOperationResType>(`/api/v1/courses/delete/${id}`, {}),
+        http.post<CourseOperationResType>(`/courses/delete/${id}`, {}),
 
     // Get course by ID
-    getById: (id: number) => http.get<CourseResType>(`/api/v1/courses/${id}`),
+    getById: (id: number) => http.get<CourseResType>(`/courses/${id}`),
 
     // Get course detail
     getDetail: (id: number) =>
-        http.get<CourseResType>(`/api/v1/courses/${id}/detail`),
+        http.get<CourseResType>(`/courses/${id}/detail`),
 
     // Get courses with pagination and filters
     getWithPagination: (params: GetCoursesWithPaginationQueryType) => {
-        const url = buildUrlWithParams("/api/v1/courses", params);
+        const url = buildUrlWithParams("/courses", params);
         return http.get<CourseListResType>(url);
     },
 
     // Search courses
     search: (params: GetCoursesWithPaginationQueryType) => {
-        const url = buildUrlWithParams("/api/v1/courses/search", params);
+        const url = buildUrlWithParams("/courses/search", params);
         return http.get<CourseListResType>(url);
     },
 
     // Get recent courses
-    getRecent: () => http.get<CourseListResType>("/api/v1/courses/recent"),
+    getRecent: () => http.get<CourseListResType>("/courses/recent"),
 
     // Get courses by category
     getByCategory: (
@@ -57,7 +57,7 @@ const courseManagementApiRequest = {
         params?: GetCoursesWithPaginationQueryType
     ) => {
         const url = buildUrlWithParams(
-            `/api/v1/courses/category/${categorySlug}`,
+            `/courses/category/${categorySlug}`,
             params || {}
         );
         return http.get<CourseListResType>(url);
@@ -65,11 +65,11 @@ const courseManagementApiRequest = {
 
     // Get course categories
     getCategories: () =>
-        http.get<CourseCategoriesResType>("/api/v1/courses/categories"),
+        http.get<CourseCategoriesResType>("/courses/categories"),
 
     // Get course modules
     getModules: (courseId: number) =>
-        http.get<any>(`/api/v1/courses/${courseId}/modules`),
+        http.get<any>(`/courses/${courseId}/modules`),
 };
 
 export default courseManagementApiRequest;

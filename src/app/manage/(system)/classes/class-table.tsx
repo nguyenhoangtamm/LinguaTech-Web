@@ -1,14 +1,20 @@
 "use client";
-
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { getDisplayedRowCount, handleErrorApi } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { useSearchParams } from "next/navigation";
-import { PencilIcon } from "lucide-react";
-import { ClassType, FilterClassType } from "@/schemaValidations/class.schema";
+import { PencilIcon, Users } from "lucide-react";
+import {
+  ClassType,
+  FilterClassType,
+} from "@/schemaValidations/class.schema";
 import { useClassListQuery, useDeleteClassMutation } from "@/queries/useClass";
 import { Label } from "@/components/ui/label";
-import { IconButton, Input, Button, Badge } from "rsuite";
+import { IconButton, Input, Button, Badge, SelectPicker } from "rsuite";
 import DeletePopover from "@/app/shared/delete-popover";
 import { PageHeaderProps } from "@/types/page-header-props.type";
 import { usePageHeader } from "@/hooks/use-page-header";
@@ -17,296 +23,371 @@ import { Transition } from "@headlessui/react";
 import Table, { TableColumn } from "@/app/shared/common/components/table";
 import BaseLayout from "@/layouts/BaseLayout";
 import FunnelIcon from '@rsuite/icons/Funnel';
+import { useCoursesManagementWithPagination } from "@/queries/useCourseManagement";
 
 const PAGE_SIZE = 10;
 
 export default function ClassTable({ title, breadcrumb }: PageHeaderProps) {
-    usePageHeader({ title, breadcrumb });
-    const searchParam = useSearchParams();
-    const page = searchParam.get("page") ? Number(searchParam.get("page")) : 1;
-    const pageIndex = page - 1;
+  usePageHeader({ title, breadcrumb });
+  const searchParam = useSearchParams();
+  const page = searchParam.get("page") ? Number(searchParam.get("page")) : 1;
+  const pageIndex = page - 1;
 
-    const [classIdEdit, setClassIdEdit] = useState<number | undefined>();
-    const [filter, setFilter] = useState<FilterClassType>({
-        pageNumber: page,
-        pageSize: PAGE_SIZE,
-        searchTerm: "",
-    });
+  const [classIdEdit, setClassIdEdit] = useState<number | undefined>();
+  const [filter, setFilter] = useState<Partial<FilterClassType>>({
+    searchTerm: "",
+    courseId: undefined,
+    status: "",
+  });
 
-    const classListQuery = useClassListQuery({
-        pageNumber: page,
-        pageSize: PAGE_SIZE,
-        searchTerm: filter.searchTerm,
-        courseId: filter.courseId,
-        status: filter.status,
-    });
+  const classListQuery = useClassListQuery({
+    pageNumber: page,
+    pageSize: PAGE_SIZE,
+    searchTerm: filter.searchTerm,
+    courseId: filter.courseId,
+    status: filter.status,
+  });
 
-    const listResult: { data: ClassType[]; totalCount: number } =
-        classListQuery.data?.data?.data ?? {
-            data: [],
-            totalCount: 0,
-        };
-    const data: ClassType[] = listResult.data;
-    const totalCount: number = listResult.totalCount;
+  // Get courses for filter
+  const { data: coursesData } = useCoursesManagementWithPagination({
+    pageNumber: 1,
+    pageSize: 100, // Get all courses for filter
+    sortBy: "title",
+    sortOrder: "asc",
+  });
 
-    const [activeSearch, setActiveSearch] = useState(false);
-
-    useEffect(() => {
-        if (activeSearch) {
-            classListQuery.refetch();
-            setActiveSearch(false);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [activeSearch]);
-
-    const inputSearchRef = useRef<HTMLInputElement>(null);
-    const deleteClassMutation = useDeleteClassMutation();
-
-    const handleDeleteClass = async (classItem: ClassType) => {
-        if (deleteClassMutation.isPending) return;
-
-        try {
-            const result = await deleteClassMutation.mutateAsync(classItem.id);
-            if (result?.data?.succeeded) {
-                toast({
-                    description: `Đã xóa lớp học "${classItem.name}"`,
-                });
-                classListQuery.refetch();
-            }
-        } catch (error: any) {
-            handleErrorApi({
-                error,
-            });
-        }
+  const listResult: { data: ClassType[]; totalCount: number } =
+    classListQuery.data?.data ?? {
+      data: [],
+      totalCount: 0,
     };
+  const data: ClassType[] = listResult.data;
+  const totalCount: number = listResult.totalCount;
 
-    const [filterCollapsed, setFilterCollapsed] = useState(false);
+  const [activeSearch, setActiveSearch] = useState(false);
 
-    const handleResetFilter = () => {
-        setFilter({
-            pageNumber: page,
-            pageSize: PAGE_SIZE,
-            searchTerm: "",
+  useEffect(() => {
+    if (activeSearch) {
+      classListQuery.refetch();
+      setActiveSearch(false);
+    }
+  }, [activeSearch, classListQuery]);
+
+  const handleSearch = () => {
+    let actionChange = false;
+    if (inputSearchRef.current) {
+      const searchValue = inputSearchRef.current?.value ?? "";
+      setFilter({ ...filter, searchTerm: searchValue });
+      actionChange = true;
+    }
+    if (actionChange) {
+      setActiveSearch(true);
+    }
+  };
+
+  const inputSearchRef = useRef<HTMLInputElement>(null);
+  const courseRef = useRef<any>(null);
+  const statusRef = useRef<any>(null);
+  const { mutateAsync } = useDeleteClassMutation();
+
+  const handleDeleteClass = async (value: ClassType | null) => {
+    try {
+      if (value) {
+        const result = await mutateAsync(value.id);
+        toast({
+          title: result?.message,
+          variant: "success",
+          duration: 1000,
         });
-        if (inputSearchRef.current) {
-            inputSearchRef.current.value = "";
-        }
-        setActiveSearch(true);
-    };
+        classListQuery.refetch();
+      }
+    } catch (error) {
+      handleErrorApi({
+        error,
+      });
+    }
+  };
 
-    const handleSearch = () => {
-        const keyword = inputSearchRef.current?.value || "";
-        setFilter((prev) => ({
-            ...prev,
-            searchTerm: keyword,
-        }));
-        setActiveSearch(true);
-    };
+  const [filterCollapsed, setFilterCollapsed] = useState(false);
 
-    const columns: TableColumn<ClassType>[] = [
-        {
-            title: "STT",
-            dataIndex: "id",
-            key: "stt",
-            width: 70,
-            render: (_: any, __: ClassType, index: number) => {
-                return <span>{pageIndex * PAGE_SIZE + index + 1}</span>;
-            },
-        },
-        {
-            title: "Tên lớp",
-            dataIndex: "name",
-            key: "name",
-            render: (name: string) => (
-                <span className="font-medium">{name}</span>
-            ),
-        },
-        {
-            title: "Giáo viên",
-            dataIndex: "teacherName",
-            key: "teacherName",
-        },
-        {
-            title: "Địa điểm",
-            dataIndex: "location",
-            key: "location",
-        },
-        {
-            title: "Lịch học",
-            dataIndex: "schedule",
-            key: "schedule",
-            width: 200,
-            render: (schedule: string) => (
-                <span className="text-sm">{schedule}</span>
-            ),
-        },
-        {
-            title: "Ngày bắt đầu",
-            dataIndex: "startDate",
-            key: "startDate",
-            render: (date: string) => new Date(date).toLocaleDateString("vi-VN"),
-        },
-        {
-            title: "Ngày kết thúc",
-            dataIndex: "endDate",
-            key: "endDate",
-            render: (date: string) => new Date(date).toLocaleDateString("vi-VN"),
-        },
-        {
-            title: "Học viên",
-            dataIndex: "maxStudents",
-            key: "maxStudents",
-            width: 100,
-            render: (maxStudents: number, record: ClassType) => (
-                <span>
-                    {record.currentStudents || 0}/{maxStudents}
-                </span>
-            ),
-        },
-        {
-            title: "Trạng thái",
-            dataIndex: "status",
-            key: "status",
-            width: 120,
-            render: (status: string) => {
-                const statusColors: Record<string, string> = {
-                    draft: "bg-gray-100 text-gray-800",
-                    published: "bg-blue-100 text-blue-800",
-                    ongoing: "bg-green-100 text-green-800",
-                    completed: "bg-purple-100 text-purple-800",
-                    cancelled: "bg-red-100 text-red-800",
-                };
-                const statusLabels: Record<string, string> = {
-                    draft: "Nháp",
-                    published: "Đã xuất bản",
-                    ongoing: "Đang diễn ra",
-                    completed: "Đã hoàn thành",
-                    cancelled: "Đã hủy",
-                };
-                return (
-                    <Badge className={`px-2 py-1 rounded-full text-xs ${statusColors[status] || "bg-gray-100 text-gray-800"}`}>
-                        {statusLabels[status] || status}
-                    </Badge>
-                );
-            },
-        },
-        {
-            title: "Thao tác",
-            key: "actions",
-            width: 120,
-            render: (_: any, record: ClassType) => (
-                <div className="flex gap-2">
-                    <IconButton
-                        size="sm"
-                        appearance="subtle"
-                        color="blue"
-                        icon={<PencilIcon size={16} />}
-                        onClick={() => setClassIdEdit(record.id)}
-                    />
-                    <DeletePopover
-                        title={`Xóa lớp học "${record.name}"`}
-                        description="Bạn có chắc chắn muốn xóa lớp học này không?"
-                        onConfirm={() => handleDeleteClass(record)}
-                    />
-                </div>
-            ),
-        },
-    ];
+  const handleResetFilter = () => {
+    setFilter({
+      searchTerm: "",
+      courseId: undefined,
+      status: "",
+    });
+    if (inputSearchRef.current) inputSearchRef.current.value = "";
+    if (courseRef.current) courseRef.current.clear();
+    if (statusRef.current) statusRef.current.clear();
+    setActiveSearch(true);
+  };
 
-    const hasFilter = filter.searchTerm || filter.courseId || filter.status;
+  // Course options for filter
+  const courseOptions = coursesData?.data?.data?.map((course: any) => ({
+    label: course.title,
+    value: course.id,
+  })) || [];
 
-    return (
-        <BaseLayout>
-            <div className="p-4">
-                {/* Header Actions */}
-                <div className="mb-6 flex justify-between items-center">
-                    <div className="flex gap-3">
-                        <Input
-                            ref={inputSearchRef}
-                            placeholder="Tìm kiếm lớp học..."
-                            style={{ width: 300 }}
-                            onPressEnter={handleSearch}
-                        />
-                        <Button onClick={handleSearch} appearance="primary">
-                            Tìm kiếm
-                        </Button>
-                        <IconButton
-                            icon={<FunnelIcon />}
-                            onClick={() => setFilterCollapsed(!filterCollapsed)}
-                            appearance="subtle"
-                        />
-                    </div>
-                    <Button
-                        onClick={() => setClassIdEdit(0)}
-                        appearance="primary"
-                    >
-                        Thêm lớp học
-                    </Button>
-                </div>
+  // Status options
+  const statusOptions = [
+    { label: "Chưa bắt đầu", value: "upcoming" },
+    { label: "Đang diễn ra", value: "ongoing" },
+    { label: "Đã kết thúc", value: "completed" },
+    { label: "Đã hủy", value: "cancelled" },
+  ];
 
-                {/* Filter Section */}
-                <Transition
-                    show={filterCollapsed}
-                    enter="transition-all duration-300"
-                    enterFrom="opacity-0 max-h-0"
-                    enterTo="opacity-100 max-h-96"
-                    leave="transition-all duration-300"
-                    leaveFrom="opacity-100 max-h-96"
-                    leaveTo="opacity-0 max-h-0"
-                >
-                    <div className="mb-4 p-4 bg-gray-50 rounded-lg overflow-hidden">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <Label>Trạng thái</Label>
-                                <Input
-                                    placeholder="Nhập trạng thái..."
-                                    value={filter.status || ""}
-                                    onChange={(value) =>
-                                        setFilter((prev) => ({ ...prev, status: value }))
-                                    }
-                                />
-                            </div>
-                        </div>
-                        <div className="mt-4 flex gap-2">
-                            <Button onClick={() => setActiveSearch(true)} appearance="primary">
-                                Áp dụng bộ lọc
-                            </Button>
-                            {hasFilter && (
-                                <Button onClick={handleResetFilter} appearance="subtle">
-                                    Xóa bộ lọc
-                                </Button>
-                            )}
-                        </div>
-                    </div>
-                </Transition>
+  const getStatusBadge = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "upcoming":
+        return <Badge color="blue" content="Chưa bắt đầu" />;
+      case "ongoing":
+        return <Badge color="green" content="Đang diễn ra" />;
+      case "completed":
+        return <Badge color="gray" content="Đã kết thúc" />;
+      case "cancelled":
+        return <Badge color="red" content="Đã hủy" />;
+      default:
+        return <Badge color="orange" content={status} />;
+    }
+  };
 
-                {/* Table */}
-                <Table
-                    data={data}
-                    columns={columns}
-                    loading={classListQuery.isLoading}
-                    totalCount={totalCount}
-                    pageSize={PAGE_SIZE}
-                    showPagination
-                    paginationPosition="bottom"
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('vi-VN');
+  };
+
+  const columns: TableColumn[] = [
+    {
+      key: "id",
+      label: "STT",
+      width: 80,
+      align: "center",
+      render: (rowData: ClassType, rowIndex?: number) => {
+        const safeRowIndex = rowIndex ?? 0;
+        const stt = pageIndex * PAGE_SIZE + safeRowIndex + 1;
+        return <Label>{stt}</Label>;
+      },
+    },
+    {
+      key: "name",
+      label: "Tên lớp",
+      flexGrow: 1,
+      render: (rowData: ClassType) => (
+        <div className="font-medium">{rowData.name}</div>
+      ),
+    },
+    {
+      key: "teacherName",
+      label: "Giáo viên",
+      width: 150,
+      render: (rowData: ClassType) => (
+        <div className="capitalize">{rowData.teacherName}</div>
+      ),
+    },
+    {
+      key: "schedule",
+      label: "Lịch học",
+      width: 120,
+      render: (rowData: ClassType) => (
+        <div className="text-sm">{rowData.schedule}</div>
+      ),
+    },
+    {
+      key: "location",
+      label: "Địa điểm",
+      width: 120,
+      render: (rowData: ClassType) => (
+        <div className="text-sm">{rowData.location}</div>
+      ),
+    },
+    {
+      key: "startDate",
+      label: "Ngày bắt đầu",
+      width: 120,
+      align: "center",
+      render: (rowData: ClassType) => (
+        <div className="text-sm">{formatDate(rowData.startDate)}</div>
+      ),
+    },
+    {
+      key: "endDate",
+      label: "Ngày kết thúc",
+      width: 120,
+      align: "center",
+      render: (rowData: ClassType) => (
+        <div className="text-sm">{formatDate(rowData.endDate)}</div>
+      ),
+    },
+    {
+      key: "students",
+      label: "Học viên",
+      width: 120,
+      align: "center",
+      render: (rowData: ClassType) => (
+        <div className="flex items-center justify-center gap-1">
+          <Users className="w-4 h-4 text-gray-500" />
+          <span className="text-sm font-medium">
+            {rowData.currentStudents || 0}/{rowData.maxStudents}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: "status",
+      label: "Trạng thái",
+      width: 120,
+      align: "center",
+      render: (rowData: ClassType) => getStatusBadge(rowData.status),
+    },
+    {
+      key: "actions",
+      label: "Hành động",
+      width: 120,
+      align: "center",
+      isAction: true,
+      render: (rowData: ClassType) => (
+        <div className="flex items-center justify-end gap-2 pe-4">
+          <IconButton
+            appearance="subtle"
+            size="sm"
+            icon={<PencilIcon className="h-4 w-4" />}
+            onClick={() => setClassIdEdit(rowData.id)}
+            title="Sửa"
+          />
+          <DeletePopover
+            title={`Xóa lớp học`}
+            description={`Chắc chắn xóa lớp học "${rowData.name}"`}
+            onDelete={() => handleDeleteClass(rowData)}
+          />
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <BaseLayout>
+      <div className="flex items-center gap-2 justify-end mb-1">
+        <IconButton
+          className="bg-gray-100 border border-gray-200 rounded-md flex items-center justify-center hover:bg-gray-200 p-1 w-7 h-7"
+          size="sm"
+          appearance="subtle"
+          icon={<FunnelIcon />}
+          onClick={() => setFilterCollapsed(!filterCollapsed)}
+        />
+        <ClassForm onSubmitSuccess={classListQuery.refetch} />
+      </div>
+
+      <Transition
+        show={filterCollapsed}
+        enter="transition-all duration-300 ease-out"
+        enterFrom="opacity-0 max-h-0"
+        enterTo="opacity-100 max-h-screen"
+        leave="transition-all duration-200 ease-in"
+        leaveFrom="opacity-100 max-h-screen"
+        leaveTo="opacity-0 max-h-0"
+      >
+        <div className="pb-1 overflow-hidden pt-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-2 bg-white">
+            <div className="grid grid-cols-3 gap-2 mb-2">
+              <div className="col-span-1 flex items-center">
+                <Label className="block text-xs text-gray-500 mb-1">
+                  Tìm kiếm
+                </Label>
+              </div>
+              <div className="col-span-2">
+                <Input
+                  ref={inputSearchRef}
+                  placeholder="Nhập từ khóa tìm kiếm"
+                  className="w-full text-xs md:text-xs"
+                  size="sm"
                 />
-
-                {/* Edit/Create Form Modal */}
-                {classIdEdit !== undefined && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                            <ClassForm
-                                classId={classIdEdit || undefined}
-                                onSuccess={() => {
-                                    setClassIdEdit(undefined);
-                                    classListQuery.refetch();
-                                }}
-                                onCancel={() => setClassIdEdit(undefined)}
-                            />
-                        </div>
-                    </div>
-                )}
+              </div>
             </div>
-        </BaseLayout>
-    );
+            
+            <div className="grid grid-cols-3 gap-2 mb-2">
+              <div className="col-span-1 flex items-center">
+                <Label className="block text-xs text-gray-500 mb-1">
+                  Khóa học
+                </Label>
+              </div>
+              <div className="col-span-2">
+                <SelectPicker
+                  ref={courseRef}
+                  data={courseOptions}
+                  placeholder="Chọn khóa học"
+                  className="w-full"
+                  size="sm"
+                  searchable={false}
+                  onChange={(value) => setFilter({ ...filter, courseId: value })}
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-2 mb-2">
+              <div className="col-span-1 flex items-center">
+                <Label className="block text-xs text-gray-500 mb-1">
+                  Trạng thái
+                </Label>
+              </div>
+              <div className="col-span-2">
+                <SelectPicker
+                  ref={statusRef}
+                  data={statusOptions}
+                  placeholder="Chọn trạng thái"
+                  className="w-full"
+                  size="sm"
+                  searchable={false}
+                  onChange={(value) => setFilter({ ...filter, status: value })}
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-end w-full gap-2 col-span-1">
+              <Button
+                appearance="ghost"
+                className="border-gray-300 text-gray-700 hover:bg-gray-100 h-8 px-4"
+                onClick={() => {
+                  handleResetFilter();
+                }}
+                size="sm"
+              >
+                Đặt lại
+              </Button>
+              <Button
+                appearance="primary"
+                className="bg-primary text-white hover:bg-blue-800 hover:text-white h-8 px-4"
+                onClick={() => {
+                  handleSearch();
+                }}
+                size="sm"
+              >
+                Tìm kiếm
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+
+      <ClassForm
+        id={classIdEdit}
+        setId={setClassIdEdit}
+        onSubmitSuccess={classListQuery.refetch}
+        triggerButton={false}
+      />
+
+      <Table
+        data={data}
+        columns={columns}
+        loading={classListQuery.isLoading}
+        emptyText="Không có dữ liệu"
+        loadingText="Đang tải..."
+        showPagination={true}
+        totalCount={totalCount}
+        pathname="/manage/classes"
+        pageIndex={pageIndex}
+        pageSize={PAGE_SIZE}
+        showRowNumbers={false}
+        paginationPosition="bottom"
+      />
+    </BaseLayout>
+  );
 }

@@ -15,7 +15,7 @@ const userProfileApiRequest = {
     getProfilesByUserName: () => http.get<UserProfilesResType>('userprofiles/get-user-profiles'),
     getPagination: (filters: { pageNumber: number; pageSize: number }) =>
         http.get<ProfileListResType>(
-            buildUrlWithParams("userProfiles/get-user-profile-pagination", filters)
+            buildUrlWithParams("users/get-pagination", filters)
         ),
     getProfileUsers: () => http.get<ProfileListResType>('userProfiles/get-profile-users'),
 }
