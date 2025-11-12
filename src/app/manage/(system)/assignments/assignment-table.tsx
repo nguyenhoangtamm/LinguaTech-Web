@@ -55,7 +55,7 @@ export default function AssignmentTable({ title, breadcrumb }: PageHeaderProps) 
   });
 
   const listResult: { data: AssignmentType[]; totalCount: number } =
-    assignmentListQuery.data?.data ?? {
+    assignmentListQuery.data ?? {
       data: [],
       totalCount: 0,
     };

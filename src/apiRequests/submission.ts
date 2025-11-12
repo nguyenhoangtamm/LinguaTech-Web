@@ -24,58 +24,45 @@ const buildUrlWithParams = (baseUrl: string, params: Record<string, any>) => {
 const submissionApiRequest = {
     // Create submission
     create: (body: CreateSubmissionBodyType) =>
-        http.post<SubmissionOperationResType>(
-            "/api/v1/submissions/create",
-            body
-        ),
+        http.post<SubmissionOperationResType>("/submissions/create", body),
 
     // Update submission
     update: (id: number, body: UpdateSubmissionBodyType) =>
         http.post<SubmissionOperationResType>(
-            `/api/v1/submissions/update/${id}`,
+            `/submissions/update/${id}`,
             body
         ),
 
     // Delete submission
     delete: (id: number) =>
-        http.post<SubmissionOperationResType>(
-            `/api/v1/submissions/delete/${id}`,
-            {}
-        ),
+        http.post<SubmissionOperationResType>(`/submissions/delete/${id}`, {}),
 
     // Get submission by ID
-    getById: (id: number) =>
-        http.get<SubmissionResType>(`/api/v1/submissions/${id}`),
+    getById: (id: number) => http.get<SubmissionResType>(`/submissions/${id}`),
 
     // Get all submissions
-    getAll: () =>
-        http.get<GetAllSubmissionsResType>("/api/v1/submissions/get-all"),
+    getAll: () => http.get<GetAllSubmissionsResType>("/submissions/get-all"),
 
     // Get submissions by assignment ID
     getByAssignment: (assignmentId: number) =>
         http.get<GetAllSubmissionsResType>(
-            `/api/v1/submissions/by-assignment/${assignmentId}`
+            `/submissions/by-assignment/${assignmentId}`
         ),
 
     // Get submissions by user ID
     getByUser: (userId: number) =>
-        http.get<GetAllSubmissionsResType>(
-            `/api/v1/submissions/by-user/${userId}`
-        ),
+        http.get<GetAllSubmissionsResType>(`/submissions/by-user/${userId}`),
 
     // Get submissions with pagination
     getWithPagination: (params: GetSubmissionsWithPaginationQueryType) => {
-        const url = buildUrlWithParams(
-            "/api/v1/submissions/get-pagination",
-            params
-        );
+        const url = buildUrlWithParams("/submissions/get-pagination", params);
         return http.get<SubmissionListResType>(url);
     },
 
     // Get current user submission for assignment
     getCurrentUserSubmission: (assignmentId: number) =>
         http.get<SubmissionResType>(
-            `/api/v1/submissions/current-user-submission/${assignmentId}`
+            `/submissions/current-user-submission/${assignmentId}`
         ),
 };
 

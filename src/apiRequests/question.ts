@@ -24,28 +24,21 @@ const buildUrlWithParams = (baseUrl: string, params: Record<string, any>) => {
 const questionApiRequest = {
     // Create question
     create: (body: CreateQuestionBodyType) =>
-        http.post<QuestionOperationResType>("/api/v1/questions/create", body),
+        http.post<QuestionOperationResType>("/questions/create", body),
 
     // Update question
     update: (id: number, body: UpdateQuestionBodyType) =>
-        http.post<QuestionOperationResType>(
-            `/api/v1/questions/update/${id}`,
-            body
-        ),
+        http.post<QuestionOperationResType>(`/questions/update/${id}`, body),
 
     // Delete question
     delete: (id: number) =>
-        http.post<QuestionOperationResType>(
-            `/api/v1/questions/delete/${id}`,
-            null
-        ),
+        http.post<QuestionOperationResType>(`/questions/delete/${id}`, null),
 
     // Get question by ID
-    getById: (id: number) =>
-        http.get<QuestionResType>(`/api/v1/questions/${id}`),
+    getById: (id: number) => http.get<QuestionResType>(`/questions/${id}`),
 
     // Get all questions (simple list)
-    getAll: () => http.get<GetAllQuestionsResType>("/api/v1/questions/get-all"),
+    getAll: () => http.get<GetAllQuestionsResType>("/questions/get-all"),
 
     // Get questions with pagination and filters
     list: (filters: {
@@ -63,14 +56,14 @@ const questionApiRequest = {
             )
         );
         return http.get<QuestionListResType>(
-            buildUrlWithParams("/api/v1/questions/get-pagination", params)
+            buildUrlWithParams("/questions/get-pagination", params)
         );
     },
 
     // Get questions by assignment ID
     getByAssignment: (assignmentId: number) =>
         http.get<GetAllQuestionsResType>(
-            `/api/v1/questions/assignment/${assignmentId}`
+            `/questions/assignment/${assignmentId}`
         ),
 };
 

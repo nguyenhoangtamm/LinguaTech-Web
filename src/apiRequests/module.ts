@@ -24,18 +24,18 @@ const buildUrlWithParams = (baseUrl: string, params: Record<string, any>) => {
 const moduleApiRequest = {
     // Create module
     create: (body: CreateModuleBodyType) =>
-        http.post<ModuleOperationResType>("/api/v1/modules/create", body),
+        http.post<ModuleOperationResType>("/modules/create", body),
 
     // Update module
     update: (id: number, body: UpdateModuleBodyType) =>
-        http.post<ModuleOperationResType>(`/api/v1/modules/update/${id}`, body),
+        http.post<ModuleOperationResType>(`/modules/update/${id}`, body),
 
     // Delete module
     delete: (id: number) =>
-        http.post<ModuleOperationResType>(`/api/v1/modules/delete/${id}`, {}),
+        http.post<ModuleOperationResType>(`/modules/delete/${id}`, {}),
 
     // Get module by ID (with lessons)
-    getById: (id: number) => http.get<ModuleResType>(`/api/v1/modules/${id}`),
+    getById: (id: number) => http.get<ModuleResType>(`/modules/${id}`),
 
     // Get modules with pagination and filters
     list: (filters: FilterModuleType) => {
@@ -45,7 +45,7 @@ const moduleApiRequest = {
             )
         );
         return http.get<ModuleListResType>(
-            buildUrlWithParams("/api/v1/modules/get-pagination", params)
+            buildUrlWithParams("/modules/get-pagination", params)
         );
     },
 };

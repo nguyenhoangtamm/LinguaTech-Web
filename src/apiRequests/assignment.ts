@@ -25,32 +25,28 @@ const buildUrlWithParams = (baseUrl: string, params: Record<string, any>) => {
 const assignmentApiRequest = {
     // Create assignment
     create: (body: CreateAssignmentBodyType) =>
-        http.post<AssignmentOperationResType>(
-            "/api/v1/assignments/create",
-            body
-        ),
+        http.post<AssignmentOperationResType>("/assignments/create", body),
 
     // Update assignment
     update: (id: number, body: UpdateAssignmentBodyType) =>
         http.post<AssignmentOperationResType>(
-            `/api/v1/assignments/update/${id}`,
+            `/assignments/update/${id}`,
             body
         ),
 
     // Delete assignment
     delete: (id: number) =>
         http.post<AssignmentOperationResType>(
-            `/api/v1/assignments/delete/${id}`,
+            `/assignments/delete/${id}`,
             null
         ),
 
     // Get assignment by ID (with questions)
     getById: (id: number) =>
-        http.get<AssignmentDetailResType>(`/api/v1/assignments/${id}`),
+        http.get<AssignmentDetailResType>(`/assignments/${id}`),
 
     // Get all assignments (simple list)
-    getAll: () =>
-        http.get<GetAllAssignmentsResType>("/api/v1/assignments/get-all"),
+    getAll: () => http.get<GetAllAssignmentsResType>("/assignments/get-all"),
 
     // Get assignments with pagination and filters
     list: (filters: {
@@ -69,15 +65,13 @@ const assignmentApiRequest = {
             )
         );
         return http.get<AssignmentListResType>(
-            buildUrlWithParams("/api/v1/assignments/get-pagination", params)
+            buildUrlWithParams("/assignments/get-pagination", params)
         );
     },
 
     // Get assignments by lesson ID
     getByLesson: (lessonId: number) =>
-        http.get<GetAllAssignmentsResType>(
-            `/api/v1/assignments/lesson/${lessonId}`
-        ),
+        http.get<GetAllAssignmentsResType>(`/assignments/lesson/${lessonId}`),
 };
 
 export default assignmentApiRequest;

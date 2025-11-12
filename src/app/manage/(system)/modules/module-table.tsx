@@ -1,6 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import {
+    useEffect,
+    useRef,
+    useState,
+} from "react";
 import { getDisplayedRowCount, handleErrorApi } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { useSearchParams } from "next/navigation";
@@ -15,6 +19,7 @@ import { IconButton, Input, Button, Badge } from "rsuite";
 import DeletePopover from "@/app/shared/delete-popover";
 import { PageHeaderProps } from "@/types/page-header-props.type";
 import { usePageHeader } from "@/hooks/use-page-header";
+import ModuleForm from "./module-form";
 import { Transition } from "@headlessui/react";
 import Table, { TableColumn } from "@/app/shared/common/components/table";
 import BaseLayout from "@/layouts/BaseLayout";
@@ -29,10 +34,9 @@ export default function ModuleTable({ title, breadcrumb }: PageHeaderProps) {
     const pageIndex = page - 1;
 
     const [moduleIdEdit, setModuleIdEdit] = useState<number | undefined>();
-    const [filter, setFilter] = useState<FilterModuleType>({
-        pageNumber: page,
-        pageSize: PAGE_SIZE,
+    const [filter, setFilter] = useState<Partial<FilterModuleType>>({
         keyword: "",
+        courseId: undefined,
     });
 
     const moduleListQuery = useModuleListQuery({
@@ -43,7 +47,7 @@ export default function ModuleTable({ title, breadcrumb }: PageHeaderProps) {
     });
 
     const listResult: { data: ModuleType[]; totalCount: number } =
-        moduleListQuery.data?.data?.data ?? {
+        moduleListQuery.data ?? {
             data: [],
             totalCount: 0,
         };
@@ -60,21 +64,33 @@ export default function ModuleTable({ title, breadcrumb }: PageHeaderProps) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeSearch]);
 
+    const handleSearch = () => {
+        let actionChange = false;
+        if (inputSearchRef.current) {
+            const searchValue = inputSearchRef.current?.value ?? "";
+            setFilter({ ...filter, keyword: searchValue });
+            actionChange = true;
+        }
+        if (actionChange) {
+            setActiveSearch(true);
+        }
+    };
+
     const inputSearchRef = useRef<HTMLInputElement>(null);
-    const deleteModuleMutation = useDeleteModuleMutation();
+    const { mutateAsync } = useDeleteModuleMutation();
 
-    const handleDeleteModule = async (module: ModuleType) => {
-        if (deleteModuleMutation.isPending) return;
-
+    const handleDeleteModule = async (value: ModuleType | null) => {
         try {
-            const result = await deleteModuleMutation.mutateAsync(module.id);
-            if (result?.data?.succeeded) {
+            if (value) {
+                const result = await mutateAsync(value.id);
                 toast({
-                    description: `Đã xóa module "${module.title}"`,
+                    title: result?.message,
+                    variant: "success",
+                    duration: 1000,
                 });
                 moduleListQuery.refetch();
             }
-        } catch (error: any) {
+        } catch (error) {
             handleErrorApi({
                 error,
             });
@@ -85,134 +101,121 @@ export default function ModuleTable({ title, breadcrumb }: PageHeaderProps) {
 
     const handleResetFilter = () => {
         setFilter({
-            pageNumber: page,
-            pageSize: PAGE_SIZE,
             keyword: "",
+            courseId: undefined,
         });
-        if (inputSearchRef.current) {
-            inputSearchRef.current.value = "";
-        }
+        if (inputSearchRef.current) inputSearchRef.current.value = "";
         setActiveSearch(true);
     };
 
-    const handleSearch = () => {
-        const keyword = inputSearchRef.current?.value || "";
-        setFilter((prev) => ({
-            ...prev,
-            keyword: keyword,
-        }));
-        setActiveSearch(true);
-    };
 
-    const columns: TableColumn<ModuleType>[] = [
+
+    const columns: TableColumn[] = [
         {
-            title: "STT",
-            dataIndex: "id",
-            key: "stt",
-            width: 70,
-            render: (_: any, __: ModuleType, index: number) => {
-                return <span>{pageIndex * PAGE_SIZE + index + 1}</span>;
+            key: "id",
+            label: "STT",
+            width: 80,
+            align: "center",
+            render: (rowData: ModuleType, rowIndex?: number) => {
+                const safeRowIndex = rowIndex ?? 0;
+                const stt = pageIndex * PAGE_SIZE + safeRowIndex + 1;
+                return <Label>{stt}</Label>;
             },
         },
         {
-            title: "Thứ tự",
-            dataIndex: "order",
             key: "order",
+            label: "Thứ tự",
             width: 80,
-            render: (order: number) => (
+            render: (rowData: ModuleType) => (
                 <Badge color="blue" appearance="ghost">
-                    #{order}
+                    #{rowData.order}
                 </Badge>
             ),
         },
         {
-            title: "Tiêu đề",
-            dataIndex: "title",
             key: "title",
-            render: (title: string, record: ModuleType) => (
+            label: "Tiêu đề",
+            flexGrow: 1,
+            render: (rowData: ModuleType) => (
                 <div>
-                    <p className="font-medium line-clamp-2">{title}</p>
-                    {record.description && (
-                        <p className="text-sm text-gray-500 line-clamp-1">{record.description}</p>
+                    <p className="font-medium line-clamp-2">{rowData.title}</p>
+                    {rowData.description && (
+                        <p className="text-sm text-gray-500 line-clamp-1">{rowData.description}</p>
                     )}
                 </div>
             ),
         },
         {
-            title: "Khóa học",
-            dataIndex: "courseTitle",
             key: "courseTitle",
-            render: (courseTitle: string, record: ModuleType) => (
+            label: "Khóa học",
+            flexGrow: 1,
+            render: (rowData: ModuleType) => (
                 <div>
-                    <p className="font-medium">{courseTitle || `Course #${record.courseId}`}</p>
-                    <p className="text-sm text-gray-500">ID: {record.courseId}</p>
+                    <p className="font-medium">{rowData.courseTitle || `Course #${rowData.courseId}`}</p>
+                    <p className="text-sm text-gray-500">ID: {rowData.courseId}</p>
                 </div>
             ),
         },
         {
-            title: "Số bài học",
-            dataIndex: "lessonsCount",
             key: "lessonsCount",
+            label: "Số bài học",
             width: 100,
-            render: (lessonsCount: number) => (
+            render: (rowData: ModuleType) => (
                 <div className="flex items-center gap-1">
                     <BookOpen size={14} className="text-gray-400" />
-                    <span>{lessonsCount || 0}</span>
+                    <span>{rowData.lessonsCount || 0}</span>
                 </div>
             ),
         },
         {
-            title: "Ngày tạo",
-            dataIndex: "createdAt",
             key: "createdAt",
+            label: "Ngày tạo",
             width: 120,
-            render: (date: string) => new Date(date).toLocaleDateString("vi-VN"),
+            render: (rowData: ModuleType) => new Date(rowData.createdAt).toLocaleDateString("vi-VN"),
         },
         {
-            title: "Ngày cập nhật",
-            dataIndex: "updatedAt",
             key: "updatedAt",
+            label: "Ngày cập nhật",
             width: 120,
-            render: (date: string) => new Date(date).toLocaleDateString("vi-VN"),
+            render: (rowData: ModuleType) => new Date(rowData.updatedAt).toLocaleDateString("vi-VN"),
         },
         {
-            title: "Thao tác",
             key: "actions",
+            label: "Thao tác",
             width: 180,
-            render: (_: any, record: ModuleType) => (
-                <div className="flex gap-2">
+            align: "center",
+            isAction: true,
+            render: (rowData: ModuleType) => (
+                <div className="flex items-center justify-end gap-2 pe-4">
                     <IconButton
-                        size="sm"
                         appearance="subtle"
-                        color="blue"
-                        icon={<Eye size={16} />}
-                        title="Xem chi tiết"
+                        size="sm"
+                        icon={<Eye className="h-4 w-4" />}
                         onClick={() => {
                             // Navigate to module detail with lessons
                         }}
+                        title="Xem chi tiết"
                     />
                     <IconButton
-                        size="sm"
                         appearance="subtle"
-                        color="cyan"
-                        icon={<Plus size={16} />}
-                        title="Thêm bài học"
+                        size="sm"
+                        icon={<Plus className="h-4 w-4" />}
                         onClick={() => {
                             // Navigate to create lesson for this module
                         }}
+                        title="Thêm bài học"
                     />
                     <IconButton
-                        size="sm"
                         appearance="subtle"
-                        color="green"
-                        icon={<PencilIcon size={16} />}
-                        onClick={() => setModuleIdEdit(record.id)}
+                        size="sm"
+                        icon={<PencilIcon className="h-4 w-4" />}
+                        onClick={() => setModuleIdEdit(rowData.id)}
                         title="Chỉnh sửa"
                     />
                     <DeletePopover
-                        title={`Xóa module "${record.title}"`}
+                        title={`Xóa module "${rowData.title}"`}
                         description="Bạn có chắc chắn muốn xóa module này không? Tất cả bài học trong module cũng sẽ bị xóa. Hành động này không thể hoàn tác."
-                        onConfirm={() => handleDeleteModule(record)}
+                        onDelete={() => handleDeleteModule(rowData)}
                     />
                 </div>
             ),
@@ -223,123 +226,112 @@ export default function ModuleTable({ title, breadcrumb }: PageHeaderProps) {
 
     return (
         <BaseLayout>
-            <div className="p-4">
-                {/* Header Actions */}
-                <div className="mb-6 flex justify-between items-center">
-                    <div className="flex gap-3">
-                        <Input
-                            ref={inputSearchRef}
-                            placeholder="Tìm kiếm module..."
-                            style={{ width: 300 }}
-                            onPressEnter={handleSearch}
-                        />
-                        <Button onClick={handleSearch} appearance="primary">
-                            Tìm kiếm
-                        </Button>
-                        <IconButton
-                            icon={<FunnelIcon />}
-                            onClick={() => setFilterCollapsed(!filterCollapsed)}
-                            appearance="subtle"
-                        />
-                    </div>
-                    <Button
-                        appearance="primary"
-                        onClick={() => setModuleIdEdit(0)}
-                    >
-                        Thêm module
-                    </Button>
-                </div>
+            <div className="flex items-center gap-2 justify-end mb-1">
+                <IconButton
+                    className="bg-gray-100 border border-gray-200 rounded-md flex items-center justify-center hover:bg-gray-200 p-1 w-7 h-7"
+                    size="sm"
+                    appearance="subtle"
+                    icon={<FunnelIcon />}
+                    onClick={() => setFilterCollapsed(!filterCollapsed)}
+                />
+                <ModuleForm onSubmitSuccess={moduleListQuery.refetch} />
+            </div>
 
-                {/* Filter Section */}
-                <Transition
-                    show={filterCollapsed}
-                    enter="transition-all duration-300"
-                    enterFrom="opacity-0 max-h-0"
-                    enterTo="opacity-100 max-h-96"
-                    leave="transition-all duration-300"
-                    leaveFrom="opacity-100 max-h-96"
-                    leaveTo="opacity-0 max-h-0"
-                >
-                    <div className="mb-4 p-4 bg-gray-50 rounded-lg overflow-hidden">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <Label>Course ID</Label>
+            <Transition
+                show={filterCollapsed}
+                enter="transition-all duration-300 ease-out"
+                enterFrom="opacity-0 max-h-0"
+                enterTo="opacity-100 max-h-screen"
+                leave="transition-all duration-200 ease-in"
+                leaveFrom="opacity-100 max-h-screen"
+                leaveTo="opacity-0 max-h-0"
+            >
+                <div className="pb-1 overflow-hidden pt-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-0 bg-white">
+                        <div className="grid grid-cols-3 gap-2 mb-2">
+                            <div className="col-span-1 flex items-center">
+                                <Label className="block text-xs text-gray-500 mb-1">
+                                    Tìm kiếm
+                                </Label>
+                            </div>
+                            <div className="col-span-2">
+                                <Input
+                                    ref={inputSearchRef}
+                                    placeholder="Nhập từ khóa tìm kiếm"
+                                    className="w-full text-xs md:text-xs"
+                                    size="sm"
+                                />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 mb-2">
+                            <div className="col-span-1 flex items-center">
+                                <Label className="block text-xs text-gray-500 mb-1">
+                                    Course ID
+                                </Label>
+                            </div>
+                            <div className="col-span-2">
                                 <Input
                                     type="number"
-                                    placeholder="Nhập Course ID..."
+                                    placeholder="Nhập Course ID"
+                                    className="w-full text-xs md:text-xs"
+                                    size="sm"
                                     value={filter.courseId?.toString() || ""}
                                     onChange={(value) =>
                                         setFilter((prev) => ({
                                             ...prev,
-                                            courseId: value ? Number(value) : undefined
+                                            courseId: value ? Number(value) : undefined,
                                         }))
                                     }
                                 />
                             </div>
                         </div>
-                        <div className="mt-4 flex gap-2">
-                            <Button onClick={() => setActiveSearch(true)} appearance="primary">
-                                Áp dụng bộ lọc
+                        <div className="flex justify-end w-full gap-2 col-span-1 md:col-span-1 lg:col-span-1 lg:col-start-3">
+                            <Button
+                                appearance="ghost"
+                                className="border-gray-300 text-gray-700 hover:bg-gray-100 h-8 px-4"
+                                onClick={() => {
+                                    handleResetFilter();
+                                }}
+                                size="sm"
+                            >
+                                Đặt lại
                             </Button>
-                            {hasFilter && (
-                                <Button onClick={handleResetFilter} appearance="subtle">
-                                    Xóa bộ lọc
-                                </Button>
-                            )}
+                            <Button
+                                appearance="primary"
+                                className="bg-primary text-white hover:bg-blue-800 hover:text-white h-8 px-4"
+                                onClick={() => {
+                                    handleSearch();
+                                }}
+                                size="sm"
+                            >
+                                Tìm kiếm
+                            </Button>
                         </div>
-                    </div>
-                </Transition>
-
-                {/* Statistics Cards */}
-                <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                        <div className="text-2xl font-bold text-blue-600">
-                            {data.length}
-                        </div>
-                        <div className="text-sm text-gray-600">Tổng số module</div>
-                    </div>
-                    <div className="bg-green-50 p-4 rounded-lg">
-                        <div className="text-2xl font-bold text-green-600">
-                            {data.reduce((sum, m) => sum + (m.lessonsCount || 0), 0)}
-                        </div>
-                        <div className="text-sm text-gray-600">Tổng số bài học</div>
-                    </div>
-                    <div className="bg-purple-50 p-4 rounded-lg">
-                        <div className="text-2xl font-bold text-purple-600">
-                            {Math.round(data.reduce((sum, m) => sum + (m.lessonsCount || 0), 0) / (data.length || 1))}
-                        </div>
-                        <div className="text-sm text-gray-600">Trung bình bài học/module</div>
                     </div>
                 </div>
+            </Transition>
 
-                {/* Table */}
-                <Table
-                    data={data}
-                    columns={columns}
-                    loading={moduleListQuery.isLoading}
-                    totalCount={totalCount}
-                    pageSize={PAGE_SIZE}
-                    showPagination
-                    paginationPosition="bottom"
-                />
+            <ModuleForm
+                id={moduleIdEdit}
+                setId={setModuleIdEdit}
+                onSubmitSuccess={moduleListQuery.refetch}
+                triggerButton={false}
+            />
 
-                {/* Edit/Create Form Modal - Placeholder */}
-                {moduleIdEdit !== undefined && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6">
-                            <h3 className="text-lg font-semibold mb-4">
-                                {moduleIdEdit ? "Chỉnh sửa module" : "Thêm module mới"}
-                            </h3>
-                            {/* Add module form here */}
-                            <div className="flex justify-end">
-                                <Button onClick={() => setModuleIdEdit(undefined)}>
-                                    Đóng
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
+            <Table
+                data={data}
+                columns={columns}
+                loading={moduleListQuery.isLoading}
+                emptyText="Không có dữ liệu"
+                loadingText="Đang tải..."
+                showPagination={true}
+                totalCount={totalCount}
+                pathname="/manage/modules"
+                pageIndex={pageIndex}
+                pageSize={PAGE_SIZE}
+                showRowNumbers={false}
+                paginationPosition="bottom"
+            />
         </BaseLayout>
     );
 }

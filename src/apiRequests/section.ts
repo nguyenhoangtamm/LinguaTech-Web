@@ -24,21 +24,18 @@ const buildUrlWithParams = (baseUrl: string, params: Record<string, any>) => {
 const sectionApiRequest = {
     // Create section
     create: (body: CreateSectionBodyType) =>
-        http.post<SectionOperationResType>("/api/v1/sections/create", body),
+        http.post<SectionOperationResType>("/sections/create", body),
 
     // Update section
     update: (id: number, body: UpdateSectionBodyType) =>
-        http.post<SectionOperationResType>(
-            `/api/v1/sections/update/${id}`,
-            body
-        ),
+        http.post<SectionOperationResType>(`/sections/update/${id}`, body),
 
     // Delete section
     delete: (id: number) =>
-        http.post<SectionOperationResType>(`/api/v1/sections/delete/${id}`, {}),
+        http.post<SectionOperationResType>(`/sections/delete/${id}`, {}),
 
     // Get section by ID
-    getById: (id: number) => http.get<SectionResType>(`/api/v1/sections/${id}`),
+    getById: (id: number) => http.get<SectionResType>(`/sections/${id}`),
 
     // Get sections with pagination and filters
     list: (filters: FilterSectionType) => {
@@ -48,7 +45,7 @@ const sectionApiRequest = {
             )
         );
         return http.get<SectionListResType>(
-            buildUrlWithParams("/api/v1/sections", params)
+            buildUrlWithParams("/sections", params)
         );
     },
 };

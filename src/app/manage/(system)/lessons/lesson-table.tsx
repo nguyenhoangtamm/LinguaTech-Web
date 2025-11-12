@@ -1,6 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import {
+    useEffect,
+    useRef,
+    useState,
+} from "react";
 import { getDisplayedRowCount, handleErrorApi } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { useSearchParams } from "next/navigation";
@@ -18,11 +22,11 @@ import { IconButton, Input, Button, Badge } from "rsuite";
 import DeletePopover from "@/app/shared/delete-popover";
 import { PageHeaderProps } from "@/types/page-header-props.type";
 import { usePageHeader } from "@/hooks/use-page-header";
+import LessonForm from "./lesson-form";
 import { Transition } from "@headlessui/react";
 import Table, { TableColumn } from "@/app/shared/common/components/table";
 import BaseLayout from "@/layouts/BaseLayout";
 import FunnelIcon from '@rsuite/icons/Funnel';
-import Link from "next/link";
 
 const PAGE_SIZE = 10;
 
@@ -51,8 +55,8 @@ export default function LessonTable({ title, breadcrumb }: PageHeaderProps) {
         maxDuration: filter.maxDuration,
     });
 
-    const listResult = lessonListQuery.data?.data || { data: [], totalCount: 0 };
-    const data: LessonType[] = listResult.data || [];
+    const listResult = lessonListQuery.data || { data: [], totalCount: 0 };
+    const data: LessonType[] = listResult || [];
     const totalCount: number = listResult.totalCount || 0;
 
     const [activeSearch, setActiveSearch] = useState(false);
@@ -65,21 +69,33 @@ export default function LessonTable({ title, breadcrumb }: PageHeaderProps) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeSearch]);
 
+    const handleSearch = () => {
+        let actionChange = false;
+        if (inputSearchRef.current) {
+            const searchValue = inputSearchRef.current?.value ?? "";
+            setFilter({ ...filter, keyword: searchValue });
+            actionChange = true;
+        }
+        if (actionChange) {
+            setActiveSearch(true);
+        }
+    };
+
     const inputSearchRef = useRef<HTMLInputElement>(null);
-    const deleteLessonMutation = useDeleteLessonMutation();
+    const { mutateAsync } = useDeleteLessonMutation();
 
-    const handleDeleteLesson = async (lesson: LessonType) => {
-        if (deleteLessonMutation.isPending) return;
-
+    const handleDeleteLesson = async (value: LessonType | null) => {
         try {
-            const result = await deleteLessonMutation.mutateAsync(lesson.id);
-            if (result?.data?.succeeded) {
+            if (value) {
+                const result = await mutateAsync(value.id);
                 toast({
-                    description: `Đã xóa bài học "${lesson.title}"`,
+                    title: result?.message,
+                    variant: "success",
+                    duration: 1000,
                 });
                 lessonListQuery.refetch();
             }
-        } catch (error: any) {
+        } catch (error) {
             handleErrorApi({
                 error,
             });
@@ -96,18 +112,7 @@ export default function LessonTable({ title, breadcrumb }: PageHeaderProps) {
             minDuration: undefined,
             maxDuration: undefined,
         });
-        if (inputSearchRef.current) {
-            inputSearchRef.current.value = "";
-        }
-        setActiveSearch(true);
-    };
-
-    const handleSearch = () => {
-        const keyword = inputSearchRef.current?.value || "";
-        setFilter((prev) => ({
-            ...prev,
-            keyword: keyword,
-        }));
+        if (inputSearchRef.current) inputSearchRef.current.value = "";
         setActiveSearch(true);
     };
 
@@ -120,125 +125,121 @@ export default function LessonTable({ title, breadcrumb }: PageHeaderProps) {
         return `${minutes}m`;
     };
 
-    const columns: TableColumn<LessonType>[] = [
+    const columns: TableColumn[] = [
         {
-            title: "STT",
-            dataIndex: "id",
-            key: "stt",
-            width: 70,
-            render: (_: any, __: LessonType, index: number) => {
-                return <span>{pageIndex * PAGE_SIZE + index + 1}</span>;
+            key: "id",
+            label: "STT",
+            width: 80,
+            align: "center",
+            render: (rowData: LessonType, rowIndex?: number) => {
+                const safeRowIndex = rowIndex ?? 0;
+                const stt = pageIndex * PAGE_SIZE + safeRowIndex + 1;
+                return <Label>{stt}</Label>;
             },
         },
         {
-            title: "Thứ tự",
-            dataIndex: "order",
             key: "order",
+            label: "Thứ tự",
             width: 80,
-            render: (order: number) => (
+            render: (rowData: LessonType) => (
                 <Badge color="blue" appearance="ghost">
-                    #{order}
+                    #{rowData.order}
                 </Badge>
             ),
         },
         {
-            title: "Tiêu đề",
-            dataIndex: "title",
             key: "title",
-            render: (title: string, record: LessonType) => (
+            label: "Tiêu đề",
+            flexGrow: 1,
+            render: (rowData: LessonType) => (
                 <div>
-                    <p className="font-medium line-clamp-2">{title}</p>
-                    {record.description && (
-                        <p className="text-sm text-gray-500 line-clamp-1">{record.description}</p>
+                    <p className="font-medium line-clamp-2">{rowData.title}</p>
+                    {rowData.description && (
+                        <p className="text-sm text-gray-500 line-clamp-1">{rowData.description}</p>
                     )}
                 </div>
             ),
         },
         {
-            title: "Module ID",
-            dataIndex: "moduleId",
             key: "moduleId",
+            label: "Module ID",
             width: 100,
-            render: (moduleId: string) => (
-                <span className="text-sm font-mono">#{moduleId}</span>
+            render: (rowData: LessonType) => (
+                <span className="text-sm font-mono">#{rowData.moduleId}</span>
             ),
         },
         {
-            title: "Thời lượng",
-            dataIndex: "duration",
             key: "duration",
+            label: "Thời lượng",
             width: 100,
-            render: (duration: number) => (
+            render: (rowData: LessonType) => (
                 <div className="flex items-center gap-1">
                     <Play size={14} className="text-gray-400" />
-                    <span>{formatDuration(duration)}</span>
+                    <span>{formatDuration(rowData.duration)}</span>
                 </div>
             ),
         },
         {
-            title: "Trạng thái",
-            dataIndex: "isPublished",
             key: "isPublished",
+            label: "Trạng thái",
             width: 120,
-            render: (isPublished: boolean) => (
+            render: (rowData: LessonType) => (
                 <Badge
-                    color={isPublished ? "green" : "orange"}
+                    color={rowData.isPublished ? "green" : "orange"}
                     appearance="ghost"
                 >
-                    {isPublished ? "Đã xuất bản" : "Nháp"}
+                    {rowData.isPublished ? "Đã xuất bản" : "Nháp"}
                 </Badge>
             ),
         },
         {
-            title: "Hoàn thành",
-            dataIndex: "isCompleted",
             key: "isCompleted",
+            label: "Hoàn thành",
             width: 100,
-            render: (isCompleted: boolean) => (
+            render: (rowData: LessonType) => (
                 <Badge
-                    color={isCompleted ? "green" : "gray"}
+                    color={rowData.isCompleted ? "green" : "gray"}
                     appearance="ghost"
                 >
-                    {isCompleted ? "✓" : "○"}
+                    {rowData.isCompleted ? "✓" : "○"}
                 </Badge>
             ),
         },
         {
-            title: "Ngày tạo",
-            dataIndex: "createdAt",
             key: "createdAt",
+            label: "Ngày tạo",
             width: 120,
-            render: (date: Date) => new Date(date).toLocaleDateString("vi-VN"),
+            render: (rowData: LessonType) => new Date(rowData.createdAt).toLocaleDateString("vi-VN"),
         },
         {
-            title: "Thao tác",
             key: "actions",
+            label: "Thao tác",
             width: 150,
-            render: (_: any, record: LessonType) => (
-                <div className="flex gap-2">
+            align: "center",
+            isAction: true,
+            render: (rowData: LessonType) => (
+                <div className="flex items-center justify-end gap-2 pe-4">
                     <IconButton
-                        size="sm"
                         appearance="subtle"
-                        color="blue"
-                        icon={<BookOpen size={16} />}
-                        title="Xem nội dung"
+                        size="sm"
+                        icon={<BookOpen className="h-4 w-4" />}
                         onClick={() => {
                             // Navigate to lesson content view
                             // This could open a modal or navigate to detail page
                         }}
+                        title="Xem nội dung"
                     />
                     <IconButton
-                        size="sm"
                         appearance="subtle"
-                        color="green"
-                        icon={<PencilIcon size={16} />}
-                        onClick={() => setLessonIdEdit(record.id)}
+                        size="sm"
+                        icon={<PencilIcon className="h-4 w-4" />}
+                        onClick={() => setLessonIdEdit(rowData.id)}
                         title="Chỉnh sửa"
                     />
                     <DeletePopover
-                        title={`Xóa bài học "${record.title}"`}
+                        title={`Xóa bài học "${rowData.title}"`}
                         description="Bạn có chắc chắn muốn xóa bài học này không? Hành động này không thể hoàn tác."
-                        onConfirm={() => handleDeleteLesson(record)}
+                        onDelete={() => handleDeleteLesson(rowData)}
                     />
                 </div>
             ),
@@ -249,165 +250,178 @@ export default function LessonTable({ title, breadcrumb }: PageHeaderProps) {
 
     return (
         <BaseLayout>
-            <div className="p-4">
-                {/* Header Actions */}
-                <div className="mb-6 flex justify-between items-center">
-                    <div className="flex gap-3">
-                        <Input
-                            ref={inputSearchRef}
-                            placeholder="Tìm kiếm bài học..."
-                            style={{ width: 300 }}
-                            onPressEnter={handleSearch}
-                        />
-                        <Button onClick={handleSearch} appearance="primary">
-                            Tìm kiếm
-                        </Button>
-                        <IconButton
-                            icon={<FunnelIcon />}
-                            onClick={() => setFilterCollapsed(!filterCollapsed)}
-                            appearance="subtle"
-                        />
-                    </div>
-                    <Button
-                        appearance="primary"
-                        onClick={() => setLessonIdEdit(0)}
-                    >
-                        Thêm bài học
-                    </Button>
-                </div>
+            <div className="flex items-center gap-2 justify-end mb-1">
+                <IconButton
+                    className="bg-gray-100 border border-gray-200 rounded-md flex items-center justify-center hover:bg-gray-200 p-1 w-7 h-7"
+                    size="sm"
+                    appearance="subtle"
+                    icon={<FunnelIcon />}
+                    onClick={() => setFilterCollapsed(!filterCollapsed)}
+                />
+                <LessonForm onSubmitSuccess={lessonListQuery.refetch} />
+            </div>
 
-                {/* Filter Section */}
-                <Transition
-                    show={filterCollapsed}
-                    enter="transition-all duration-300"
-                    enterFrom="opacity-0 max-h-0"
-                    enterTo="opacity-100 max-h-96"
-                    leave="transition-all duration-300"
-                    leaveFrom="opacity-100 max-h-96"
-                    leaveTo="opacity-0 max-h-0"
-                >
-                    <div className="mb-4 p-4 bg-gray-50 rounded-lg overflow-hidden">
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            <div>
-                                <Label>Course ID</Label>
+            <Transition
+                show={filterCollapsed}
+                enter="transition-all duration-300 ease-out"
+                enterFrom="opacity-0 max-h-0"
+                enterTo="opacity-100 max-h-screen"
+                leave="transition-all duration-200 ease-in"
+                leaveFrom="opacity-100 max-h-screen"
+                leaveTo="opacity-0 max-h-0"
+            >
+                <div className="pb-1 overflow-hidden pt-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-0 bg-white">
+                        <div className="grid grid-cols-3 gap-2 mb-2">
+                            <div className="col-span-1 flex items-center">
+                                <Label className="block text-xs text-gray-500 mb-1">
+                                    Tìm kiếm
+                                </Label>
+                            </div>
+                            <div className="col-span-2">
+                                <Input
+                                    ref={inputSearchRef}
+                                    placeholder="Nhập từ khóa tìm kiếm"
+                                    className="w-full text-xs md:text-xs"
+                                    size="sm"
+                                />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 mb-2">
+                            <div className="col-span-1 flex items-center">
+                                <Label className="block text-xs text-gray-500 mb-1">
+                                    Course ID
+                                </Label>
+                            </div>
+                            <div className="col-span-2">
                                 <Input
                                     type="number"
-                                    placeholder="Nhập Course ID..."
+                                    placeholder="Nhập Course ID"
+                                    className="w-full text-xs md:text-xs"
+                                    size="sm"
                                     value={filter.courseId?.toString() || ""}
                                     onChange={(value) =>
                                         setFilter((prev) => ({
                                             ...prev,
-                                            courseId: value ? Number(value) : undefined
+                                            courseId: value ? Number(value) : undefined,
                                         }))
                                     }
                                 />
                             </div>
-                            <div>
-                                <Label>Module ID</Label>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 mb-2">
+                            <div className="col-span-1 flex items-center">
+                                <Label className="block text-xs text-gray-500 mb-1">
+                                    Module ID
+                                </Label>
+                            </div>
+                            <div className="col-span-2">
                                 <Input
                                     type="number"
-                                    placeholder="Nhập Module ID..."
+                                    placeholder="Nhập Module ID"
+                                    className="w-full text-xs md:text-xs"
+                                    size="sm"
                                     value={filter.moduleId?.toString() || ""}
                                     onChange={(value) =>
                                         setFilter((prev) => ({
                                             ...prev,
-                                            moduleId: value ? Number(value) : undefined
+                                            moduleId: value ? Number(value) : undefined,
                                         }))
                                     }
                                 />
                             </div>
-                            <div>
-                                <Label>Thời lượng tối thiểu (phút)</Label>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 mb-2">
+                            <div className="col-span-1 flex items-center">
+                                <Label className="block text-xs text-gray-500 mb-1">
+                                    Thời lượng từ
+                                </Label>
+                            </div>
+                            <div className="col-span-2">
                                 <Input
                                     type="number"
-                                    placeholder="Từ..."
+                                    placeholder="Từ (phút)"
+                                    className="w-full text-xs md:text-xs"
+                                    size="sm"
                                     value={filter.minDuration?.toString() || ""}
                                     onChange={(value) =>
                                         setFilter((prev) => ({
                                             ...prev,
-                                            minDuration: value ? Number(value) : undefined
+                                            minDuration: value ? Number(value) : undefined,
                                         }))
                                     }
                                 />
                             </div>
-                            <div>
-                                <Label>Thời lượng tối đa (phút)</Label>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 mb-2">
+                            <div className="col-span-1 flex items-center">
+                                <Label className="block text-xs text-gray-500 mb-1">
+                                    Thời lượng đến
+                                </Label>
+                            </div>
+                            <div className="col-span-2">
                                 <Input
                                     type="number"
-                                    placeholder="Đến..."
+                                    placeholder="Đến (phút)"
+                                    className="w-full text-xs md:text-xs"
+                                    size="sm"
                                     value={filter.maxDuration?.toString() || ""}
                                     onChange={(value) =>
                                         setFilter((prev) => ({
                                             ...prev,
-                                            maxDuration: value ? Number(value) : undefined
+                                            maxDuration: value ? Number(value) : undefined,
                                         }))
                                     }
                                 />
                             </div>
                         </div>
-                        <div className="mt-4 flex gap-2">
-                            <Button onClick={() => setActiveSearch(true)} appearance="primary">
-                                Áp dụng bộ lọc
+                        <div className="flex justify-end w-full gap-2 col-span-1 md:col-span-1 lg:col-span-1 lg:col-start-3">
+                            <Button
+                                appearance="ghost"
+                                className="border-gray-300 text-gray-700 hover:bg-gray-100 h-8 px-4"
+                                onClick={() => {
+                                    handleResetFilter();
+                                }}
+                                size="sm"
+                            >
+                                Đặt lại
                             </Button>
-                            {hasFilter && (
-                                <Button onClick={handleResetFilter} appearance="subtle">
-                                    Xóa bộ lọc
-                                </Button>
-                            )}
+                            <Button
+                                appearance="primary"
+                                className="bg-primary text-white hover:bg-blue-800 hover:text-white h-8 px-4"
+                                onClick={() => {
+                                    handleSearch();
+                                }}
+                                size="sm"
+                            >
+                                Tìm kiếm
+                            </Button>
                         </div>
-                    </div>
-                </Transition>
-
-                {/* Statistics Cards */}
-                <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                        <div className="text-2xl font-bold text-blue-600">
-                            {data.filter(l => l.isPublished).length}
-                        </div>
-                        <div className="text-sm text-gray-600">Đã xuất bản</div>
-                    </div>
-                    <div className="bg-orange-50 p-4 rounded-lg">
-                        <div className="text-2xl font-bold text-orange-600">
-                            {data.filter(l => !l.isPublished).length}
-                        </div>
-                        <div className="text-sm text-gray-600">Nháp</div>
-                    </div>
-                    <div className="bg-green-50 p-4 rounded-lg">
-                        <div className="text-2xl font-bold text-green-600">
-                            {data.filter(l => l.isCompleted).length}
-                        </div>
-                        <div className="text-sm text-gray-600">Đã hoàn thành</div>
                     </div>
                 </div>
+            </Transition>
 
-                {/* Table */}
-                <Table
-                    data={data}
-                    columns={columns}
-                    loading={lessonListQuery.isLoading}
-                    totalCount={totalCount}
-                    pageSize={PAGE_SIZE}
-                    showPagination
-                    paginationPosition="bottom"
-                />
+            <LessonForm
+                id={lessonIdEdit}
+                setId={setLessonIdEdit}
+                onSubmitSuccess={lessonListQuery.refetch}
+                triggerButton={false}
+            />
 
-                {/* Edit/Create Form Modal - Placeholder */}
-                {lessonIdEdit !== undefined && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6">
-                            <h3 className="text-lg font-semibold mb-4">
-                                {lessonIdEdit ? "Chỉnh sửa bài học" : "Thêm bài học mới"}
-                            </h3>
-                            {/* Add lesson form here */}
-                            <div className="flex justify-end">
-                                <Button onClick={() => setLessonIdEdit(undefined)}>
-                                    Đóng
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
+            <Table
+                data={data}
+                columns={columns}
+                loading={lessonListQuery.isLoading}
+                emptyText="Không có dữ liệu"
+                loadingText="Đang tải..."
+                showPagination={true}
+                totalCount={totalCount}
+                pathname="/manage/lessons"
+                pageIndex={pageIndex}
+                pageSize={PAGE_SIZE}
+                showRowNumbers={false}
+                paginationPosition="bottom"
+            />
         </BaseLayout>
     );
 }

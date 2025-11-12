@@ -46,7 +46,7 @@ export default function QuestionTable({ title, breadcrumb }: PageHeaderProps) {
     });
 
     const listResult: { data: QuestionType[]; totalCount: number } =
-        questionListQuery.data?.data?.data ?? {
+        questionListQuery.data ?? {
             data: [],
             totalCount: 0,
         };

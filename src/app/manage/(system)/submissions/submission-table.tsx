@@ -54,7 +54,7 @@ export default function SubmissionTable({ title, breadcrumb }: PageHeaderProps) 
     });
 
     const listResult: { data: Submission[]; totalCount: number } =
-        submissionListQuery.data?.data ?? {
+        submissionListQuery.data ?? {
             data: [],
             totalCount: 0,
         };
