@@ -16,7 +16,8 @@ const buildUrlWithParams = (baseUrl: string, params: Record<string, any>) => {
     const queryString = new URLSearchParams(
         Object.fromEntries(
             Object.entries(params).filter(
-                ([_, value]) => value !== undefined && value !== null && value !== ""
+                ([_, value]) =>
+                    value !== undefined && value !== null && value !== ""
             )
         )
     ).toString();
@@ -27,10 +28,7 @@ const buildUrlWithParams = (baseUrl: string, params: Record<string, any>) => {
 const enrollmentApiRequest = {
     // Create enrollment (enroll in a course)
     create: (body: CreateEnrollmentBodyType) =>
-        http.post<EnrollmentOperationResType>(
-            "/enrollments/create",
-            body
-        ),
+        http.post<EnrollmentOperationResType>("/enrollments/create", body),
 
     // Get my enrolled courses
     getMyCourses: () =>
@@ -38,9 +36,7 @@ const enrollmentApiRequest = {
 
     // Check enrollment status for a course
     checkEnrollment: (courseId: number) =>
-        http.get<CheckEnrollmentResType>(
-            `/enrollments/check/${courseId}`
-        ),
+        http.get<CheckEnrollmentResType>(`/enrollments/check/${courseId}`),
 
     // Update progress for a course
     updateProgress: (courseId: number, body: UpdateProgressBodyType) =>
@@ -66,21 +62,15 @@ const enrollmentApiRequest = {
     },
 
     // Get enrollment by ID (admin function)
-    getById: (id: number) =>
-        http.get<EnrollmentResType>(`/enrollments/${id}`),
+    getById: (id: number) => http.get<EnrollmentResType>(`/enrollments/${id}`),
 
     // Update enrollment (admin function)
     update: (id: number, body: UpdateEnrollmentBodyType) =>
-        http.put<EnrollmentOperationResType>(
-            `/enrollments/update/${id}`,
-            body
-        ),
+        http.put<EnrollmentOperationResType>(`/enrollments/update/${id}`, body),
 
     // Delete enrollment (admin function)
     delete: (id: number) =>
-        http.delete<EnrollmentOperationResType>(
-            `/enrollments/delete/${id}`
-        ),
+        http.delete<EnrollmentOperationResType>(`/enrollments/delete/${id}`),
 };
 
 export default enrollmentApiRequest;

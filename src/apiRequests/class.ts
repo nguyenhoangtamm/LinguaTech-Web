@@ -13,7 +13,8 @@ const buildUrlWithParams = (baseUrl: string, params: Record<string, any>) => {
     const queryString = new URLSearchParams(
         Object.fromEntries(
             Object.entries(params).filter(
-                ([_, value]) => value !== undefined && value !== null && value !== ""
+                ([_, value]) =>
+                    value !== undefined && value !== null && value !== ""
             )
         )
     ).toString();
