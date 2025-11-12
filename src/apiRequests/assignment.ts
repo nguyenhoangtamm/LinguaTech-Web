@@ -11,7 +11,13 @@ import {
 } from "@/schemaValidations/assignment.schema";
 
 const buildUrlWithParams = (baseUrl: string, params: Record<string, any>) => {
-    const queryString = new URLSearchParams(params).toString();
+    const filteredParams = Object.fromEntries(
+        Object.entries(params).filter(
+            ([_, value]) =>
+                value !== undefined && value !== null && value !== ""
+        )
+    );
+    const queryString = new URLSearchParams(filteredParams).toString();
     return queryString ? `${baseUrl}?${queryString}` : baseUrl;
 };
 

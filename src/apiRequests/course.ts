@@ -29,7 +29,7 @@ const courseApiRequest = {
         const searchParams = new URLSearchParams();
 
         Object.entries(mergedParams).forEach(([key, value]) => {
-            if (value !== undefined && value !== null) {
+            if (value !== undefined && value !== null && value !== "") {
                 if (Array.isArray(value)) {
                     value.forEach((v) =>
                         searchParams.append(toPascalCase(key), v.toString())
@@ -93,7 +93,7 @@ const courseApiRequest = {
         const searchParams = new URLSearchParams();
 
         Object.entries(mergedParams).forEach(([key, value]) => {
-            if (value !== undefined && value !== null) {
+            if (value !== undefined && value !== null && value !== "") {
                 if (Array.isArray(value)) {
                     value.forEach((v) =>
                         searchParams.append(toPascalCase(key), v.toString())
@@ -170,7 +170,7 @@ const courseApiRequest = {
         const searchParams = new URLSearchParams();
 
         Object.entries(mergedParams).forEach(([key, value]) => {
-            if (value !== undefined && value !== null) {
+            if (value !== undefined && value !== null && value !== "") {
                 if (Array.isArray(value)) {
                     value.forEach((v) =>
                         searchParams.append(toPascalCase(key), v.toString())

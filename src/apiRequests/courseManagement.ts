@@ -11,7 +11,13 @@ import {
 } from "@/schemaValidations/courseManagement.schema";
 
 const buildUrlWithParams = (baseUrl: string, params: Record<string, any>) => {
-    const queryString = new URLSearchParams(params).toString();
+    const filteredParams = Object.fromEntries(
+        Object.entries(params).filter(
+            ([_, value]) =>
+                value !== undefined && value !== null && value !== ""
+        )
+    );
+    const queryString = new URLSearchParams(filteredParams).toString();
     return queryString ? `${baseUrl}?${queryString}` : baseUrl;
 };
 
@@ -33,8 +39,7 @@ const courseManagementApiRequest = {
     getById: (id: number) => http.get<CourseResType>(`/courses/${id}`),
 
     // Get course detail
-    getDetail: (id: number) =>
-        http.get<CourseResType>(`/courses/${id}/detail`),
+    getDetail: (id: number) => http.get<CourseResType>(`/courses/${id}/detail`),
 
     // Get courses with pagination and filters
     getWithPagination: (params: GetCoursesWithPaginationQueryType) => {
