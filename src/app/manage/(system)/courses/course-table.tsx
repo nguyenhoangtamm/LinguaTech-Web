@@ -7,7 +7,7 @@ import {
 import { getDisplayedRowCount, handleErrorApi } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { useSearchParams } from "next/navigation";
-import { PencilIcon, ExternalLink } from "lucide-react";
+import { PencilIcon, ExternalLink, Plus, Eye } from "lucide-react";
 import { CourseType, GetCoursesWithPaginationQueryType } from "@/schemaValidations/courseManagement.schema";
 import {
   useCoursesManagementWithPagination,
@@ -26,6 +26,7 @@ import BaseLayout from "@/layouts/BaseLayout";
 import FunnelIcon from '@rsuite/icons/Funnel';
 import Link from "next/link";
 import Image from "next/image";
+import { routes } from "@/config/routes";
 
 const PAGE_SIZE = 10;
 
@@ -269,7 +270,7 @@ export default function CourseTable({ title, breadcrumb }: PageHeaderProps) {
             size="sm"
             icon={<ExternalLink className="h-4 w-4" />}
             as={Link}
-            href={`/courses/${rowData.id}`}
+            href={`${routes.manage.system.courses}/${rowData.id}`}
             title="Xem chi tiết"
           />
           <IconButton
@@ -299,6 +300,11 @@ export default function CourseTable({ title, breadcrumb }: PageHeaderProps) {
           icon={<FunnelIcon />}
           onClick={() => setFilterCollapsed(!filterCollapsed)}
         />
+        <Link href={routes.manage.system.courses + "/create"} className="inline-block">
+          <Button appearance="primary" size="sm" startIcon={<Plus />}>
+            Tạo khóa học
+          </Button>
+        </Link>
         <CourseForm onSubmitSuccess={courseListQuery.refetch} />
       </div>
 
