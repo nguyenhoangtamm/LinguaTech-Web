@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,63 +28,40 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "@/hooks/use-toast";
 import DeletePopover from "@/app/shared/delete-popover";
+import { useSectionListQuery, useCreateSectionMutation, useUpdateSectionMutation, useDeleteSectionMutation } from "@/queries/useSection";
+import { useModulesByCourseQuery } from "@/queries/useLesson";
+import { CreateSectionBodySchema, CreateSectionBodyType, SectionType } from "@/schemaValidations/section.schema";
 
 interface SectionManagementProps {
     courseId: number;
 }
 
-// Mock section schema
-const CreateSectionSchema = z.object({
-    title: z.string().min(1, "Tiêu đề là bắt buộc"),
-    content: z.string().min(1, "Nội dung là bắt buộc"),
-    order: z.number().min(1, "Thứ tự phải lớn hơn 0"),
-    lessonId: z.number(),
-});
-
-type CreateSectionType = z.infer<typeof CreateSectionSchema>;
-
-// Mock data
-const mockLessons = [
-    { id: 1, title: "Bài 1: Giới thiệu", moduleTitle: "Module 1: Cơ bản" },
-    { id: 2, title: "Bài 2: Thực hành", moduleTitle: "Module 1: Cơ bản" },
-];
-
-const mockSections = [
-    {
-        id: 1,
-        title: "Phần 1: Khái niệm cơ bản",
-        content: "Nội dung về các khái niệm cơ bản...",
-        order: 1,
-        lessonId: 1,
-        lessonTitle: "Bài 1: Giới thiệu",
-        moduleTitle: "Module 1: Cơ bản",
-        createdAt: "2024-01-01T00:00:00Z",
-        updatedAt: "2024-01-01T00:00:00Z",
-    },
-    {
-        id: 2,
-        title: "Phần 2: Ví dụ thực tế",
-        content: "Các ví dụ thực tế áp dụng...",
-        order: 2,
-        lessonId: 1,
-        lessonTitle: "Bài 1: Giới thiệu",
-        moduleTitle: "Module 1: Cơ bản",
-        createdAt: "2024-01-01T00:00:00Z",
-        updatedAt: "2024-01-01T00:00:00Z",
-    },
-];
-
 export default function SectionManagement({ courseId }: SectionManagementProps) {
     const [searchKeyword, setSearchKeyword] = useState("");
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [editingSection, setEditingSection] = useState<any>(null);
+    const [pageNumber, setPageNumber] = useState(1);
+    const pageSize = 10;
     const searchInputRef = useRef<HTMLInputElement>(null);
 
-    const form = useForm<CreateSectionType>({
-        resolver: zodResolver(CreateSectionSchema),
+    // API queries
+    const { data: sectionsData, isLoading: sectionsLoading, refetch: refetchSections } = useSectionListQuery({
+        pageSize,
+        pageNumber,
+        keyword: searchKeyword,
+    });
+
+    const { data: modulesData } = useModulesByCourseQuery(courseId);
+
+    // API mutations
+    const createSectionMutation = useCreateSectionMutation();
+    const updateSectionMutation = useUpdateSectionMutation();
+    const deleteSectionMutation = useDeleteSectionMutation();
+
+    const form = useForm<CreateSectionBodyType>({
+        resolver: zodResolver(CreateSectionBodySchema),
         defaultValues: {
             title: "",
             content: "",
@@ -93,19 +70,32 @@ export default function SectionManagement({ courseId }: SectionManagementProps) 
         },
     });
 
+    // Get all lessons from modules
+    const allLessons = modulesData?.flatMap((module: any) =>
+        (module.lessons || []).map((lesson: any) => ({
+            id: parseInt(lesson.id),
+            title: lesson.title,
+            moduleTitle: module.title
+        }))
+    ) || [];
+
+    const sections = sectionsData?.data?.data || [];
+    const totalCount = sectionsData?.data?.totalCount || 0;
+
     const handleSearch = () => {
         if (searchInputRef.current) {
             setSearchKeyword(searchInputRef.current.value.trim());
+            setPageNumber(1); // Reset to first page when searching
         }
     };
 
     const handleCreateSection = () => {
-        const nextOrder = mockSections.length > 0 ? Math.max(...mockSections.map(s => s.order)) + 1 : 1;
+        const nextOrder = sections.length > 0 ? Math.max(...sections.map((s: any) => s.order)) + 1 : 1;
         form.reset({
             title: "",
             content: "",
             order: nextOrder,
-            lessonId: mockLessons[0]?.id || 0,
+            lessonId: allLessons[0]?.id || 0,
         });
         setEditingSection(null);
         setIsCreateDialogOpen(true);
@@ -123,25 +113,73 @@ export default function SectionManagement({ courseId }: SectionManagementProps) 
     };
 
     const handleDeleteSection = async (section: any) => {
-        toast({
-            title: "Thành công",
-            description: "Phần đã được xóa",
-            variant: "success",
-        });
+        try {
+            await deleteSectionMutation.mutateAsync(section.id);
+            toast({
+                title: "Thành công",
+                description: "Phần đã được xóa",
+            });
+            refetchSections();
+        } catch (error) {
+            toast({
+                title: "Lỗi",
+                description: "Không thể xóa phần. Vui lòng thử lại.",
+                variant: "destructive",
+            });
+        }
     };
 
-    const onSubmit = async (values: CreateSectionType) => {
-        toast({
-            title: "Thành công",
-            description: editingSection ? "Phần đã được cập nhật" : "Phần đã được tạo",
-            variant: "success",
-        });
-        setIsCreateDialogOpen(false);
+    const onSubmit = async (values: CreateSectionBodyType) => {
+        try {
+            if (editingSection) {
+                await updateSectionMutation.mutateAsync({
+                    id: editingSection.id,
+                    ...values
+                });
+                toast({
+                    title: "Thành công",
+                    description: "Phần đã được cập nhật",
+                });
+            } else {
+                await createSectionMutation.mutateAsync(values);
+                toast({
+                    title: "Thành công",
+                    description: "Phần đã được tạo",
+                });
+            }
+            setIsCreateDialogOpen(false);
+            refetchSections();
+        } catch (error) {
+            toast({
+                title: "Lỗi",
+                description: editingSection ? "Không thể cập nhật phần" : "Không thể tạo phần mới",
+                variant: "destructive",
+            });
+        }
     };
 
-    const filteredSections = mockSections.filter(section =>
-        section.title.toLowerCase().includes(searchKeyword.toLowerCase())
-    );
+    // Handle enter key in search
+    useEffect(() => {
+        const handleKeyPress = (e: KeyboardEvent) => {
+            if (e.key === 'Enter' && searchInputRef.current === document.activeElement) {
+                handleSearch();
+            }
+        };
+
+        document.addEventListener('keypress', handleKeyPress);
+        return () => document.removeEventListener('keypress', handleKeyPress);
+    }, []);
+
+    if (sectionsLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-[200px]">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p className="text-gray-500">Đang tải danh sách phần...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
@@ -150,10 +188,13 @@ export default function SectionManagement({ courseId }: SectionManagementProps) 
                 <div>
                     <h3 className="text-lg font-semibold">Quản lý Phần</h3>
                     <p className="text-sm text-gray-600">
-                        Tổng cộng: {filteredSections.length} phần
+                        Tổng cộng: {totalCount} phần
                     </p>
                 </div>
-                <Button onClick={handleCreateSection}>
+                <Button
+                    onClick={handleCreateSection}
+                    disabled={allLessons.length === 0}
+                >
                     <Plus className="w-4 h-4 mr-2" />
                     Thêm Phần
                 </Button>
@@ -173,24 +214,29 @@ export default function SectionManagement({ courseId }: SectionManagementProps) 
 
             {/* Sections List */}
             <div className="space-y-4">
-                {filteredSections.length === 0 ? (
+                {sections.length === 0 ? (
                     <Card>
                         <CardContent className="text-center py-8">
                             <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                             <h3 className="text-lg font-medium text-gray-900 mb-2">
-                                Chưa có phần nào
+                                {allLessons.length === 0 ? "Chưa có bài học nào" : "Chưa có phần nào"}
                             </h3>
                             <p className="text-gray-500 mb-4">
-                                Thêm phần đầu tiên để chia nhỏ nội dung bài học
+                                {allLessons.length === 0
+                                    ? "Vui lòng tạo module và bài học trước khi thêm phần"
+                                    : "Thêm phần đầu tiên để chia nhỏ nội dung bài học"
+                                }
                             </p>
-                            <Button onClick={handleCreateSection}>
-                                <Plus className="w-4 h-4 mr-2" />
-                                Tạo Phần đầu tiên
-                            </Button>
+                            {allLessons.length > 0 && (
+                                <Button onClick={handleCreateSection}>
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    Tạo Phần đầu tiên
+                                </Button>
+                            )}
                         </CardContent>
                     </Card>
                 ) : (
-                    filteredSections.map((section) => (
+                    sections.map((section: SectionType) => (
                         <Card key={section.id}>
                             <CardContent className="p-6">
                                 <div className="flex items-start justify-between">
@@ -274,7 +320,7 @@ export default function SectionManagement({ courseId }: SectionManagementProps) 
                                             <SelectValue placeholder="Chọn bài học" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {mockLessons.map((lesson) => (
+                                            {allLessons.map((lesson: any) => (
                                                 <SelectItem key={lesson.id} value={lesson.id.toString()}>
                                                     {lesson.moduleTitle} → {lesson.title}
                                                 </SelectItem>

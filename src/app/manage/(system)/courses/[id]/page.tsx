@@ -32,23 +32,23 @@ export default function CourseDetailPage() {
 
     const course = courseData?.data;
 
-    const pageHeader = {
-        title: course ? `Chi tiết khóa học: ${course.title}` : 'Chi tiết khóa học',
-        breadcrumb: [
-            {
-                name: 'Trang chủ',
-            },
-            {
-                href: routes.manage.system.courses,
-                name: 'Khóa học',
-            },
-            {
-                name: course?.title || 'Chi tiết',
-            },
-        ],
-    };
+    // const pageHeader = {
+    //     title: course ? `Chi tiết khóa học: ${course.title}` : 'Chi tiết khóa học',
+    //     breadcrumb: [
+    //         {
+    //             name: 'Trang chủ',
+    //         },
+    //         {
+    //             href: routes.manage.system.courses,
+    //             name: 'Khóa học',
+    //         },
+    //         {
+    //             name: course?.title || 'Chi tiết',
+    //         },
+    //     ],
+    // };
 
-    usePageHeader(pageHeader);
+    // usePageHeader(pageHeader);
 
     if (isLoading) {
         return (

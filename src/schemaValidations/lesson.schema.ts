@@ -65,8 +65,8 @@ export const ModuleWithLessonsSchema = ModuleSchema.extend({
 export const LessonQuerySchema = z.object({
     courseId: z.string().optional(),
     moduleId: z.string().optional(),
-    page: z.number().min(1).default(1),
-    limit: z.number().min(1).max(100).default(10),
+    pageNumber: z.number().min(1).default(1),
+    pageSize: z.number().min(1).max(100).default(10),
 });
 
 export const MaterialQuerySchema = z.object({

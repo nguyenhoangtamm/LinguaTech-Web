@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -60,33 +60,44 @@ interface Module {
 }
 
 export default function ModuleManagement({ courseId }: ModuleManagementProps) {
+
     const [searchKeyword, setSearchKeyword] = useState("");
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [editingModule, setEditingModule] = useState<Module | null>(null);
     const searchInputRef = useRef<HTMLInputElement>(null);
+
+    // Memoize query parameters to prevent infinite re-renders
+    const queryParams = useMemo(() => ({
+        pageSize: 100,
+        pageNumber: 1,
+        courseId: courseId,
+        keyword: searchKeyword || undefined,
+    }), [courseId, searchKeyword]);
 
     // Queries and mutations
     const {
         data: modulesData,
         isLoading,
         refetch
-    } = useModuleListQuery({
-        pageSize: 100,
-        pageNumber: 1,
-        courseId: courseId,
-        keyword: searchKeyword || undefined,
-    });
+    } = useModuleListQuery(queryParams);
 
     const createModuleMutation = useCreateModuleMutation();
     const updateModuleMutation = useUpdateModuleMutation();
     const deleteModuleMutation = useDeleteModuleMutation();
 
-    const modules: Module[] = modulesData?.data?.data?.data || [];
-    const totalCount = modulesData?.data?.data?.totalCount || 0;
+    // Memoize modules array to prevent unnecessary re-renders
+    const modules: Module[] = useMemo(() => modulesData?.data || [], [modulesData]);
+    const totalCount = modulesData?.totalCount || 0;
+
+    // Memoize form resolver to prevent unnecessary re-renders
+    const formResolver = useMemo(() =>
+        zodResolver(editingModule ? UpdateModuleBodySchema : CreateModuleBodySchema),
+        [editingModule]
+    );
 
     // Form for create/edit
     const form = useForm<CreateModuleBodyType | UpdateModuleBodyType>({
-        resolver: zodResolver(editingModule ? UpdateModuleBodySchema : CreateModuleBodySchema),
+        resolver: formResolver,
         defaultValues: {
             title: "",
             description: "",
@@ -95,13 +106,13 @@ export default function ModuleManagement({ courseId }: ModuleManagementProps) {
         },
     });
 
-    const handleSearch = () => {
+    const handleSearch = useCallback(() => {
         if (searchInputRef.current) {
             setSearchKeyword(searchInputRef.current.value.trim());
         }
-    };
+    }, [ ]);
 
-    const handleCreateModule = () => {
+    const handleCreateModule = useCallback(() => {
         const nextOrder = modules.length > 0 ? Math.max(...modules.map(m => m.order)) + 1 : 1;
         form.reset({
             title: "",
@@ -111,9 +122,9 @@ export default function ModuleManagement({ courseId }: ModuleManagementProps) {
         });
         setEditingModule(null);
         setIsCreateDialogOpen(true);
-    };
+    }, [modules, courseId, form]);
 
-    const handleEditModule = (module: Module) => {
+    const handleEditModule = useCallback((module: Module) => {
         form.reset({
             title: module.title,
             description: module.description || "",
@@ -122,7 +133,7 @@ export default function ModuleManagement({ courseId }: ModuleManagementProps) {
         });
         setEditingModule(module);
         setIsCreateDialogOpen(true);
-    };
+    }, [form]);
 
     const handleDeleteModule = async (module: Module) => {
         try {
@@ -132,7 +143,7 @@ export default function ModuleManagement({ courseId }: ModuleManagementProps) {
                 description: "Module đã được xóa",
                 variant: "success",
             });
-            refetch();
+            // React Query will handle invalidation automatically
         } catch (error) {
             toast({
                 title: "Lỗi",
@@ -163,7 +174,7 @@ export default function ModuleManagement({ courseId }: ModuleManagementProps) {
                 });
             }
             setIsCreateDialogOpen(false);
-            refetch();
+            // Let React Query handle the invalidation automatically
         } catch (error) {
             handleErrorApi({
                 error,

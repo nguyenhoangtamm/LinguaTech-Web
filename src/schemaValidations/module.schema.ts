@@ -41,16 +41,11 @@ export const FilterModuleSchema = z.object({
 
 // API Response types
 export const ModuleListResSchema = z.object({
-    succeeded: z.boolean(),
-    message: z.string(),
-    code: z.number(),
-    data: z.object({
-        data: z.array(ModuleSchema),
-        totalCount: z.number(),
-        pageNumber: z.number(),
-        pageSize: z.number(),
-        totalPages: z.number(),
-    }),
+    data: z.array(ModuleSchema),
+    totalCount: z.number(),
+    pageNumber: z.number(),
+    pageSize: z.number(),
+    totalPages: z.number(),
 });
 
 export const ModuleResSchema = z.object({
