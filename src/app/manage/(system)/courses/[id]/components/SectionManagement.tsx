@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,17 +15,10 @@ import {
     GripVertical,
     BookOpen
 } from "lucide-react";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
+
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { InputPicker, Modal, Button as RSButton } from "rsuite";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "@/hooks/use-toast";
@@ -42,8 +35,9 @@ export default function SectionManagement({ courseId }: SectionManagementProps) 
     const [searchKeyword, setSearchKeyword] = useState("");
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [editingSection, setEditingSection] = useState<any>(null);
+    const [selectedLessonId, setSelectedLessonId] = useState<number | null>(null);
     const [pageNumber, setPageNumber] = useState(1);
-    const pageSize = 10;
+    const pageSize = 100;
     const searchInputRef = useRef<HTMLInputElement>(null);
 
     // API queries
@@ -71,16 +65,51 @@ export default function SectionManagement({ courseId }: SectionManagementProps) 
     });
 
     // Get all lessons from modules
-    const allLessons = modulesData?.flatMap((module: any) =>
-        (module.lessons || []).map((lesson: any) => ({
-            id: parseInt(lesson.id),
-            title: lesson.title,
-            moduleTitle: module.title
-        }))
-    ) || [];
+    const allLessons = useMemo(() =>
+        (modulesData?.data || modulesData || [])?.flatMap((module: any) =>
+            (module.lessons || []).map((lesson: any) => ({
+                id: parseInt(lesson.id),
+                title: lesson.title,
+                moduleTitle: module.title,
+                moduleId: module.id
+            }))
+        ) || [], [modulesData]
+    );
 
-    const sections = sectionsData?.data?.data || [];
-    const totalCount = sectionsData?.data?.totalCount || 0;
+    const sections = useMemo(() => sectionsData?.data || [], [sectionsData?.data]);
+    const totalCount = (sectionsData as any)?.totalCount || 0;
+
+    // Group sections by lesson
+    const sectionsByLesson = useMemo(() => {
+        const grouped = new Map();
+
+        // Initialize all lessons with empty arrays
+        allLessons.forEach((lesson: any) => {
+            grouped.set(lesson.id, {
+                lesson,
+                sections: []
+            });
+        });
+
+        // Group sections by lesson
+        sections.forEach((section: any) => {
+            const lessonData = grouped.get(section.lessonId);
+            if (lessonData) {
+                lessonData.sections.push(section);
+            }
+        });
+
+        // Filter by search keyword
+        if (searchKeyword) {
+            grouped.forEach((value, key) => {
+                value.sections = value.sections.filter((section: any) =>
+                    section.title.toLowerCase().includes(searchKeyword.toLowerCase())
+                );
+            });
+        }
+
+        return Array.from(grouped.values());
+    }, [allLessons, sections, searchKeyword]);
 
     const handleSearch = () => {
         if (searchInputRef.current) {
@@ -89,15 +118,16 @@ export default function SectionManagement({ courseId }: SectionManagementProps) 
         }
     };
 
-    const handleCreateSection = () => {
+    const handleCreateSection = (lessonId?: number) => {
         const nextOrder = sections.length > 0 ? Math.max(...sections.map((s: any) => s.order)) + 1 : 1;
         form.reset({
             title: "",
             content: "",
             order: nextOrder,
-            lessonId: allLessons[0]?.id || 0,
+            lessonId: lessonId || allLessons[0]?.id || 0,
         });
         setEditingSection(null);
+        setSelectedLessonId(lessonId || null); // Lưu lessonId để khóa InputPicker
         setIsCreateDialogOpen(true);
     };
 
@@ -109,6 +139,7 @@ export default function SectionManagement({ courseId }: SectionManagementProps) 
             lessonId: section.lessonId,
         });
         setEditingSection(section);
+        setSelectedLessonId(null); // Reset khi edit
         setIsCreateDialogOpen(true);
     };
 
@@ -192,7 +223,7 @@ export default function SectionManagement({ courseId }: SectionManagementProps) 
                     </p>
                 </div>
                 <Button
-                    onClick={handleCreateSection}
+                    onClick={() => handleCreateSection()}
                     disabled={allLessons.length === 0}
                 >
                     <Plus className="w-4 h-4 mr-2" />
@@ -212,89 +243,114 @@ export default function SectionManagement({ courseId }: SectionManagementProps) 
                 </Button>
             </div>
 
-            {/* Sections List */}
-            <div className="space-y-4">
-                {sections.length === 0 ? (
+            {/* Sections by Lesson */}
+            <div className="space-y-6">
+                {allLessons.length === 0 ? (
                     <Card>
                         <CardContent className="text-center py-8">
                             <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                             <h3 className="text-lg font-medium text-gray-900 mb-2">
-                                {allLessons.length === 0 ? "Chưa có bài học nào" : "Chưa có phần nào"}
+                                Chưa có bài học nào
                             </h3>
                             <p className="text-gray-500 mb-4">
-                                {allLessons.length === 0
-                                    ? "Vui lòng tạo module và bài học trước khi thêm phần"
-                                    : "Thêm phần đầu tiên để chia nhỏ nội dung bài học"
-                                }
+                                Vui lòng tạo module và bài học trước khi thêm phần
                             </p>
-                            {allLessons.length > 0 && (
-                                <Button onClick={handleCreateSection}>
-                                    <Plus className="w-4 h-4 mr-2" />
-                                    Tạo Phần đầu tiên
-                                </Button>
-                            )}
                         </CardContent>
                     </Card>
                 ) : (
-                    sections.map((section: SectionType) => (
-                        <Card key={section.id}>
-                            <CardContent className="p-6">
-                                <div className="flex items-start justify-between">
-                                    <div className="flex items-start gap-4 flex-1">
-                                        <div className="flex items-center gap-2">
-                                            <GripVertical className="w-4 h-4 text-gray-400" />
-                                            <Badge variant="outline">#{section.order}</Badge>
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <h4 className="font-medium text-gray-900">{section.title}</h4>
-                                            </div>
-                                            <p className="text-sm text-blue-600 mb-1">
-                                                {section.moduleTitle} → {section.lessonTitle}
-                                            </p>
-                                            <p className="text-sm text-gray-600 mb-2 line-clamp-2">
-                                                {section.content}
-                                            </p>
-                                            <div className="text-xs text-gray-500">
-                                                Tạo: {new Date(section.createdAt).toLocaleDateString("vi-VN")}
-                                                {section.updatedAt !== section.createdAt && (
-                                                    <span> • Cập nhật: {new Date(section.updatedAt).toLocaleDateString("vi-VN")}</span>
-                                                )}
-                                            </div>
+                    sectionsByLesson.map(({ lesson, sections: lessonSections }) => (
+                        <Card key={lesson.id}>
+                            <CardHeader className="pb-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <FileText className="w-5 h-5 text-green-600" />
+                                        <div>
+                                            <CardTitle className="text-base">{lesson.title}</CardTitle>
+                                            <CardDescription className="text-sm">
+                                                {lesson.moduleTitle} • {lessonSections.length} phần
+                                            </CardDescription>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <Button variant="ghost" size="sm">
-                                            <Eye className="w-4 h-4" />
-                                        </Button>
-                                        <Button variant="ghost" size="sm" onClick={() => handleEditSection(section)}>
-                                            <Edit className="w-4 h-4" />
-                                        </Button>
-                                        <DeletePopover
-                                            title="Xóa Phần"
-                                            description={`Bạn có chắc chắn muốn xóa phần "${section.title}"? Hành động này không thể hoàn tác.`}
-                                            onDelete={() => handleDeleteSection(section)}
-                                        />
-                                    </div>
+                                    <Button
+                                        size="sm"
+                                        onClick={() => handleCreateSection(lesson.id)}
+                                    >
+                                        <Plus className="w-4 h-4 mr-2" />
+                                        Thêm phần
+                                    </Button>
                                 </div>
+                            </CardHeader>
+                            <CardContent className="pt-0">
+                                {lessonSections.length === 0 ? (
+                                    <div className="text-center py-6 text-gray-500">
+                                        <FileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                                        <p className="text-sm">Chưa có phần nào trong bài học này</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {lessonSections.map((section: any) => (
+                                            <div key={section.id} className="border rounded-lg p-4 bg-gray-50">
+                                                <div className="flex items-start justify-between">
+                                                    <div className="flex items-start gap-4 flex-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <GripVertical className="w-4 h-4 text-gray-400" />
+                                                            <Badge variant="outline">#{section.order}</Badge>
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                                <h4 className="font-medium text-gray-900">{section.title}</h4>
+                                                            </div>
+                                                            <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                                                                {section.content}
+                                                            </p>
+                                                            <div className="text-xs text-gray-500">
+                                                                Tạo: {new Date(section.createdAt).toLocaleDateString("vi-VN")}
+                                                                {section.updatedAt !== section.createdAt && (
+                                                                    <span> • Cập nhật: {new Date(section.updatedAt).toLocaleDateString("vi-VN")}</span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <Button variant="ghost" size="sm">
+                                                            <Eye className="w-4 h-4" />
+                                                        </Button>
+                                                        <Button variant="ghost" size="sm" onClick={() => handleEditSection(section)}>
+                                                            <Edit className="w-4 h-4" />
+                                                        </Button>
+                                                        <DeletePopover
+                                                            title="Xóa Phần"
+                                                            description={`Bạn có chắc chắn muốn xóa phần "${section.title}"? Hành động này không thể hoàn tác.`}
+                                                            onDelete={() => handleDeleteSection(section)}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     ))
                 )}
             </div>
 
-            {/* Create/Edit Dialog */}
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                <DialogContent className="max-w-2xl">
-                    <DialogHeader>
-                        <DialogTitle>
-                            {editingSection ? "Chỉnh sửa Phần" : "Tạo Phần mới"}
-                        </DialogTitle>
-                        <DialogDescription>
+            {/* Create/Edit Modal */}
+            <Modal
+                open={isCreateDialogOpen}
+                onClose={() => setIsCreateDialogOpen(false)}
+                size="lg"
+            >
+                <Modal.Header>
+                    <Modal.Title>
+                        {editingSection ? "Chỉnh sửa Phần" : "Tạo Phần mới"}
+                    </Modal.Title>
+                </Modal.Header>
+                <form onSubmit={form.handleSubmit(onSubmit)}>
+                    <Modal.Body>
+                        <p className="text-gray-600 mb-4">
                             {editingSection ? "Cập nhật thông tin phần" : "Thêm phần mới vào bài học"}
-                        </DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={form.handleSubmit(onSubmit)}>
+                        </p>
                         <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
@@ -312,21 +368,24 @@ export default function SectionManagement({ courseId }: SectionManagementProps) 
                                 </div>
                                 <div>
                                     <Label htmlFor="lessonId">Bài học *</Label>
-                                    <Select
-                                        value={form.watch("lessonId")?.toString()}
-                                        onValueChange={(value) => form.setValue("lessonId", parseInt(value))}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Chọn bài học" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {allLessons.map((lesson: any) => (
-                                                <SelectItem key={lesson.id} value={lesson.id.toString()}>
-                                                    {lesson.moduleTitle} → {lesson.title}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                    <InputPicker
+                                        data={allLessons.map((lesson: any) => ({
+                                            label: `${lesson.moduleTitle} → ${lesson.title}`,
+                                            value: lesson.id
+                                        }))}
+                                        value={form.watch("lessonId")}
+                                        onChange={(value) => form.setValue("lessonId", value)}
+                                        placeholder="Chọn bài học"
+                                        searchable={true}
+                                        style={{ width: '100%' }}
+                                        block
+                                        disabled={selectedLessonId !== null && !editingSection}
+                                    />
+                                    {selectedLessonId && !editingSection && (
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            Bài học đã được chọn sẵn từ danh sách
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                             <div>
@@ -358,21 +417,23 @@ export default function SectionManagement({ courseId }: SectionManagementProps) 
                                 )}
                             </div>
                         </div>
-                        <DialogFooter className="mt-6">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setIsCreateDialogOpen(false)}
-                            >
-                                Hủy
-                            </Button>
-                            <Button type="submit">
-                                {editingSection ? "Cập nhật" : "Tạo Phần"}
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <RSButton
+                            appearance="subtle"
+                            onClick={() => setIsCreateDialogOpen(false)}
+                        >
+                            Hủy
+                        </RSButton>
+                        <RSButton
+                            appearance="primary"
+                            type="submit"
+                        >
+                            {editingSection ? "Cập nhật" : "Tạo Phần"}
+                        </RSButton>
+                    </Modal.Footer>
+                </form>
+            </Modal>
         </div>
     );
 }

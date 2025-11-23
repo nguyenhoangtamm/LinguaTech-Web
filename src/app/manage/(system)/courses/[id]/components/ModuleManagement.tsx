@@ -87,7 +87,7 @@ export default function ModuleManagement({ courseId }: ModuleManagementProps) {
 
     // Memoize modules array to prevent unnecessary re-renders
     const modules: Module[] = useMemo(() => modulesData?.data || [], [modulesData]);
-    const totalCount = modulesData?.totalCount || 0;
+    const totalCount = (modulesData as any)?.totalCount || 0;
 
     // Memoize form resolver to prevent unnecessary re-renders
     const formResolver = useMemo(() =>
