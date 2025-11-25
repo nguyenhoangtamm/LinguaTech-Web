@@ -32,6 +32,7 @@ import {
 import Link from "next/link";
 import { routes } from "@/config/routes";
 import { toast } from "@/hooks/use-toast";
+import Image from "next/image";
 
 interface LessonData {
     id: string;
@@ -192,7 +193,7 @@ export default function CreateCoursePage() {
             return false;
         }
 
-        if (!formData.category) {
+        if (!formData.categoryId) {
             toast({
                 title: "Lỗi",
                 description: "Vui lòng chọn danh mục khóa học",
@@ -259,7 +260,7 @@ export default function CreateCoursePage() {
         }
     };
 
-    const selectedCategory = courseCategories.find(cat => cat.id === formData.category);
+    const selectedCategory = courseCategories.find(cat => cat.id === formData.categoryId);
 
     return (
         <div className="space-y-6 pb-6">
@@ -335,7 +336,7 @@ export default function CreateCoursePage() {
                                 <Label htmlFor="category" className="font-medium">
                                     Danh mục <span className="text-red-500">*</span>
                                 </Label>
-                                <Select value={formData.category} onValueChange={(value) => handleSelectChange("category", value)}>
+                                <Select value={formData.categoryId} onValueChange={(value) => handleSelectChange("categoryId", value)}>
                                     <SelectTrigger id="category" className="h-10">
                                         <SelectValue placeholder="Chọn danh mục" />
                                     </SelectTrigger>
@@ -355,13 +356,13 @@ export default function CreateCoursePage() {
                                 <Label htmlFor="level" className="font-medium">
                                     Mức độ khóa học
                                 </Label>
-                                <Select value={formData.level} onValueChange={(value) => handleSelectChange("level", value)}>
+                                <Select value={formData.level.toString()} onValueChange={(value) => setFormData(prev => ({ ...prev, level: parseInt(value) }))}>
                                     <SelectTrigger id="level" className="h-10">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {courseLevels.map(level => (
-                                            <SelectItem key={level.value} value={level.value}>
+                                            <SelectItem key={level.value} value={level.value.toString()}>
                                                 {level.label}
                                             </SelectItem>
                                         ))}
@@ -447,10 +448,12 @@ export default function CreateCoursePage() {
                     <CardContent className="space-y-6">
                         {/* Thumbnail Preview */}
                         <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden border-2 border-dashed border-gray-300 flex items-center justify-center">
-                            <img
-                                src={formData.thumbnail_preview}
+                            <Image
+                                src={formData.thumbnailPreview}
                                 alt="Thumbnail preview"
-                                className="w-full h-full object-cover"
+                                width={400}
+                                height={225}
+                                className="object-cover"
                             />
                         </div>
 

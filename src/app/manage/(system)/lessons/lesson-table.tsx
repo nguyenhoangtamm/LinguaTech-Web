@@ -37,12 +37,13 @@ export default function LessonTable({ title, breadcrumb }: PageHeaderProps) {
     const pageIndex = page - 1;
 
     const [lessonIdEdit, setLessonIdEdit] = useState<number | undefined>();
+    const [filterCollapsed, setFilterCollapsed] = useState(false);
     const [filter, setFilter] = useState<Partial<LessonQueryParamsType>>({
         keyword: "",
         courseId: undefined,
         moduleId: undefined,
         minDuration: undefined,
-        maxDuration: undefined,
+        maxDuration: undefined
     });
 
     const lessonListQuery = useLessonListQuery({
@@ -102,8 +103,6 @@ export default function LessonTable({ title, breadcrumb }: PageHeaderProps) {
         }
     };
 
-    const [filterCollapsed, setFilterCollapsed] = useState(false);
-
     const handleResetFilter = () => {
         setFilter({
             keyword: "",
@@ -142,7 +141,7 @@ export default function LessonTable({ title, breadcrumb }: PageHeaderProps) {
             label: "Thứ tự",
             width: 80,
             render: (rowData: LessonType) => (
-                <Badge color="blue" appearance="ghost">
+                <Badge color="blue" >
                     #{rowData.order}
                 </Badge>
             ),
@@ -186,7 +185,6 @@ export default function LessonTable({ title, breadcrumb }: PageHeaderProps) {
             render: (rowData: LessonType) => (
                 <Badge
                     color={rowData.isPublished ? "green" : "orange"}
-                    appearance="ghost"
                 >
                     {rowData.isPublished ? "Đã xuất bản" : "Nháp"}
                 </Badge>
@@ -198,8 +196,7 @@ export default function LessonTable({ title, breadcrumb }: PageHeaderProps) {
             width: 100,
             render: (rowData: LessonType) => (
                 <Badge
-                    color={rowData.isCompleted ? "green" : "gray"}
-                    appearance="ghost"
+                    color={rowData.isCompleted ? "green" : "violet"}
                 >
                     {rowData.isCompleted ? "✓" : "○"}
                 </Badge>

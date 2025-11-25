@@ -34,3 +34,8 @@ export enum CourseLevel {
     Intermediate = 2,
     Advanced = 3,
 }
+
+export enum QuestionType {
+    MULTIPLE_CHOICE = 1,
+    ESSAY = 2,
+}

@@ -50,8 +50,6 @@ export default function AssignmentTable({ title, breadcrumb }: PageHeaderProps) 
   const { data: lessonsData } = useLessonsQuery({
     pageNumber: 1,
     pageSize: 100, // Get all lessons for filter
-    sortBy: "title",
-    sortOrder: "asc",
   });
 
   const listResult: { data: AssignmentType[]; totalCount: number } =
@@ -135,7 +133,7 @@ export default function AssignmentTable({ title, breadcrumb }: PageHeaderProps) 
     const dueDate = new Date(dueDateString);
     const now = new Date();
     const diffHours = (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60);
-    
+
     if (diffHours < 0) {
       return <Badge color="red" content="Đã quá hạn" />;
     } else if (diffHours < 24) {
@@ -297,7 +295,7 @@ export default function AssignmentTable({ title, breadcrumb }: PageHeaderProps) 
                 />
               </div>
             </div>
-            
+
             <div className="grid grid-cols-3 gap-2 mb-2">
               <div className="col-span-1 flex items-center">
                 <Label className="block text-xs text-gray-500 mb-1">
@@ -312,11 +310,11 @@ export default function AssignmentTable({ title, breadcrumb }: PageHeaderProps) 
                   className="w-full"
                   size="sm"
                   searchable={true}
-                  onChange={(value) => setFilter({ ...filter, lessonId: value })}
+                  onChange={(value) => setFilter({ ...filter, lessonId: value ? parseInt(value as string) : undefined })}
                 />
               </div>
             </div>
-            
+
             <div className="flex justify-end w-full gap-2 col-span-1">
               <Button
                 appearance="ghost"

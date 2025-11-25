@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // Base lesson schema
 export const LessonSchema = z.object({
-    id: z.string(),
+    id: z.number(),
     title: z.string(),
     description: z.string().optional(),
     content: z.string().optional(),
@@ -10,18 +10,18 @@ export const LessonSchema = z.object({
     order: z.number(),
     isPublished: z.boolean().default(false),
     isCompleted: z.boolean().default(false),
-    moduleId: z.string(),
+    moduleId: z.number(),
     createdAt: z.date(),
     updatedAt: z.date(),
 });
 
 // Module schema
 export const ModuleSchema = z.object({
-    id: z.string(),
+    id: z.number(),
     title: z.string(),
     description: z.string().optional(),
     order: z.number(),
-    courseId: z.string(),
+    courseId: z.number(),
     lessons: z.array(LessonSchema).optional(),
     createdAt: z.date(),
     updatedAt: z.date(),
@@ -29,13 +29,13 @@ export const ModuleSchema = z.object({
 
 // Material schema
 export const MaterialSchema = z.object({
-    id: z.string(),
+    id: z.number(),
     title: z.string(),
     fileName: z.string(),
     fileUrl: z.string(),
     fileType: z.enum(["pdf", "video", "image", "document", "audio"]),
     size: z.number(), // in bytes
-    lessonId: z.string(),
+    lessonId: z.number(),
     createdAt: z.date(),
     updatedAt: z.date(),
 });
@@ -47,11 +47,11 @@ export const LessonWithMaterialsSchema = LessonSchema.extend({
 
 // Section schema
 export const SectionSchema = z.object({
-    id: z.string(),
+    id: z.number(),
     title: z.string(),
     content: z.string(),
     order: z.number(),
-    lessonId: z.string(),
+    lessonId: z.number(),
     createdAt: z.date(),
     updatedAt: z.date(),
 });
@@ -63,14 +63,17 @@ export const ModuleWithLessonsSchema = ModuleSchema.extend({
 
 // Query params
 export const LessonQuerySchema = z.object({
-    courseId: z.string().optional(),
-    moduleId: z.string().optional(),
+    courseId: z.number().optional(),
+    moduleId: z.number().optional(),
     pageNumber: z.number().min(1).default(1),
     pageSize: z.number().min(1).max(100).default(10),
+    keyword: z.string().optional(),
+    minDuration: z.number().optional(),
+    maxDuration: z.number().optional(),
 });
 
 export const MaterialQuerySchema = z.object({
-    lessonId: z.string().optional(),
+    lessonId: z.number().optional(),
     type: z.enum(["pdf", "video", "image", "document", "audio"]).optional(),
 });
 
@@ -81,7 +84,7 @@ export const CreateLessonSchema = z.object({
     content: z.string().optional(),
     duration: z.number().min(1, "Thời lượng phải lớn hơn 0"),
     order: z.number(),
-    moduleId: z.string(),
+    moduleId: z.number(),
     isPublished: z.boolean().default(false),
 });
 
@@ -91,7 +94,7 @@ export const CreateModuleSchema = z.object({
     title: z.string().min(1, "Tiêu đề không được để trống"),
     description: z.string().optional(),
     order: z.number(),
-    courseId: z.string(),
+    courseId: z.number(),
 });
 
 export const UpdateModuleSchema = CreateModuleSchema.partial();
@@ -102,7 +105,7 @@ export const CreateMaterialSchema = z.object({
     fileUrl: z.string(),
     fileType: z.enum(["pdf", "video", "image", "document", "audio"]),
     size: z.number(),
-    lessonId: z.string(),
+    lessonId: z.number(),
 });
 
 export const UpdateMaterialSchema = CreateMaterialSchema.partial();

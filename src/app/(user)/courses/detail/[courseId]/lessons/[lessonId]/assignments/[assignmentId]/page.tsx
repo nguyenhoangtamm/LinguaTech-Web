@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
+import z from "zod";
 import Link from "next/link";
 import {
     Panel,
@@ -32,9 +33,23 @@ import {
     Detail as InfoIcon,
 } from "@rsuite/icons";
 import { routes } from "@/config/routes";
+import { QuestionType } from "@/config/enums";
 import { useAssignment, useUserSubmission, useSubmitAssignment } from "@/queries/useAssignment";
-import { Assignment, Question, SubmissionAnswer, AnswerRequest } from "@/apiRequests/assignment";
+import { AssignmentDetailType, QuestionDetailDto } from "@/schemaValidations/assignment.schema";
+import { SubmissionAnswer } from "@/schemaValidations/submission.schema";
 import AssignmentResults from "@/components/assignments/AssignmentResults";
+
+// ============================================================================
+// Type Definitions
+// ============================================================================
+
+type Question = z.infer<typeof QuestionDetailDto>;
+
+interface AnswerRequest {
+    questionId: string | number;
+    answer: string;
+    selectedOptionId?: string | number;
+}
 
 // ============================================================================
 // Utility Functions
@@ -109,7 +124,7 @@ export default function AssignmentPage() {
 
     // State management
     const [answers, setAnswers] = useState<Record<string, string>>({});
-    const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set());
+    const [expandedQuestions, setExpandedQuestions] = useState<Set<number>>(new Set());
     const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
     // lastSaved removed since auto-save is disabled
     const [submitError, setSubmitError] = useState<string | null>(null);
@@ -172,10 +187,11 @@ export default function AssignmentPage() {
         if (submission?.answers) {
             const initialAnswers: Record<string, string> = {};
             submission.answers.forEach((ans: SubmissionAnswer) => {
+                const qId = String(ans.questionId);
                 if (ans.selectedOptionId) {
-                    initialAnswers[ans.questionId] = ans.selectedOptionId;
+                    initialAnswers[qId] = String(ans.selectedOptionId);
                 } else if (ans.answer) {
-                    initialAnswers[ans.questionId] = ans.answer;
+                    initialAnswers[qId] = ans.answer;
                 }
             });
             setAnswers(initialAnswers);
@@ -185,7 +201,7 @@ export default function AssignmentPage() {
     // Expand all questions by default when assignment data is loaded so options are visible
     useEffect(() => {
         if (assignment?.questions && assignment.questions.length > 0) {
-            const ids = new Set<string>(assignment.questions.map((q: Question) => q.id));
+            const ids = new Set<number>(assignment.questions.map((q: Question) => q.id));
             setExpandedQuestions(ids);
         }
     }, [assignment?.questions]);
@@ -193,11 +209,11 @@ export default function AssignmentPage() {
     // Auto-save draft answers disabled. We only save/submit when the user clicks submit.
 
     const handleAnswerChange = useCallback(
-        (questionId: string, value: string | number | any) => {
+        (questionId: string | number, value: string | number | any) => {
             if (!isSubmitted) {
                 setAnswers((prev) => ({
                     ...prev,
-                    [questionId]: String(value),
+                    [String(questionId)]: String(value),
                 }));
                 setSubmitError(null);
             }
@@ -205,7 +221,7 @@ export default function AssignmentPage() {
         [isSubmitted]
     );
 
-    const toggleQuestion = useCallback((questionId: string) => {
+    const toggleQuestion = useCallback((questionId: number) => {
         setExpandedQuestions((prev) => {
             const newSet = new Set(prev);
             if (newSet.has(questionId)) {
@@ -225,8 +241,9 @@ export default function AssignmentPage() {
 
         try {
             const answersArray: AnswerRequest[] = Object.entries(answers).map(([questionId, answer]) => {
-                const question = assignment?.questions?.find((q: Question) => q.id === questionId);
-                const isMultipleChoice = question?.questionTypeId === "multiple_choice";
+                const qId = Number(questionId);
+                const question = assignment?.questions?.find((q: Question) => q.id === qId);
+                const isMultipleChoice = question?.questionTypeId === QuestionType.MULTIPLE_CHOICE;
 
                 return {
                     questionId,
@@ -236,7 +253,14 @@ export default function AssignmentPage() {
             });
 
             submitMutation.mutate(
-                { assignmentId, data: { answers: answersArray } },
+                {
+                    assignmentId: Number(assignmentId),
+                    userId: 0, // TODO: Get from auth context
+                    fileUrl: "", // TODO: Handle file upload if needed
+                    feedback: "",
+                    status: 1, // SUBMITTED
+                    score: undefined,
+                },
                 {
                     onSuccess: () => {
                         setShowConfirmSubmit(false);
@@ -456,7 +480,7 @@ export default function AssignmentPage() {
                                     {assignment.questions?.map((question: Question, index: number) => {
                                         const isExpanded = expandedQuestions.has(question.id);
                                         const userAnswer = answers[question.id];
-                                        const isEssay = question.questionTypeId === 'essay';
+                                        const isEssay = question.questionTypeId === QuestionType.ESSAY;
                                         const submissionAnswer = submission?.answers?.find((a: SubmissionAnswer) => a.questionId === question.id);
 
                                         return (
@@ -582,7 +606,7 @@ export default function AssignmentPage() {
                                                                 onChange={(value) => handleAnswerChange(question.id, value)}
                                                                 disabled={isSubmitted}
                                                             >
-                                                                {question.options?.map((option, optIndex) => {
+                                                                {question.options?.map((option: any, optIndex: number) => {
                                                                     const isSelected = userAnswer === option.id;
                                                                     const isCorrect = option.isCorrect;
                                                                     const showResult = isSubmitted && submissionAnswer;
@@ -707,14 +731,14 @@ export default function AssignmentPage() {
                                                 Loại bài tập
                                             </p>
                                             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                                                {assignment.questions?.some((q: Question) => q.questionTypeId === 'essay') && (
+                                                {assignment.questions?.some((q: Question) => q.questionTypeId === QuestionType.ESSAY) && (
                                                     <Tag color="orange">
-                                                        Tự luận ({assignment.questions?.filter((q: Question) => q.questionTypeId === 'essay').length})
+                                                        Tự luận ({assignment.questions?.filter((q: Question) => q.questionTypeId === QuestionType.ESSAY).length})
                                                     </Tag>
                                                 )}
-                                                {assignment.questions?.some((q: Question) => q.questionTypeId === 'multiple_choice') && (
+                                                {assignment.questions?.some((q: Question) => q.questionTypeId === QuestionType.MULTIPLE_CHOICE) && (
                                                     <Tag color="cyan">
-                                                        Trắc nghiệm ({assignment.questions?.filter((q: Question) => q.questionTypeId === 'multiple_choice').length})
+                                                        Trắc nghiệm ({assignment.questions?.filter((q: Question) => q.questionTypeId === QuestionType.MULTIPLE_CHOICE).length})
                                                     </Tag>
                                                 )}
                                             </div>

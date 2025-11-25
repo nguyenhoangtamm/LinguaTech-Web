@@ -35,11 +35,11 @@ export default function CoursesByCategoryPage() {
     // API queries
     const { data: categoriesData = [] } = useCategoriesQuery();
     const { data: coursesData, isLoading } = useCoursesQuery({
-        page: 1,
-        limit: 20,
-        sortOrder: "desc" as const,
+        pageNumber: 1,
+        pageSize: 20,
+        sortOrder: "desc",
         category: categorySlug,
-        level: (levelFilter as "beginner" | "intermediate" | "advanced") || undefined,
+        level: levelFilter ? (levelFilter === "beginner" ? 1 : levelFilter === "intermediate" ? 2 : 3) : undefined,
     });
 
     const courses = coursesData?.data?.items || [];
@@ -70,8 +70,8 @@ export default function CoursesByCategoryPage() {
                                         <p className="text-gray-600 text-sm mb-2">Giảng viên: {course.instructor}</p>
                                     </div>
                                     <Badge variant="outline" className="ml-2">
-                                        {course.level === "beginner" ? "Cơ bản" :
-                                            course.level === "intermediate" ? "Trung cấp" : "Nâng cao"}
+                                        {course.level === 1 ? "Cơ bản" :
+                                            course.level === 2 ? "Trung cấp" : "Nâng cao"}
                                     </Badge>
                                 </div>
                                 <p className="text-gray-700 text-sm line-clamp-2 mb-3">{course.description}</p>
@@ -127,8 +127,8 @@ export default function CoursesByCategoryPage() {
                     <div className="p-6">
                         <div className="flex items-start justify-between mb-2">
                             <Badge variant="outline">
-                                {course.level === "beginner" ? "Cơ bản" :
-                                    course.level === "intermediate" ? "Trung cấp" : "Nâng cao"}
+                                {course.level === 1 ? "Cơ bản" :
+                                    course.level === 2 ? "Trung cấp" : "Nâng cao"}
                             </Badge>
                         </div>
                         <h3 className="text-lg font-semibold line-clamp-2 mb-2">{course.title}</h3>

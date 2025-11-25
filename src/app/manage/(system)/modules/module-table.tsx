@@ -127,7 +127,7 @@ export default function ModuleTable({ title, breadcrumb }: PageHeaderProps) {
             label: "Thứ tự",
             width: 80,
             render: (rowData: ModuleType) => (
-                <Badge color="blue" appearance="ghost">
+                <Badge color="blue" >
                     #{rowData.order}
                 </Badge>
             ),

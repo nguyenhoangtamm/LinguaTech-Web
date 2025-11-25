@@ -143,7 +143,7 @@ export default function ClassTable({ title, breadcrumb }: PageHeaderProps) {
       case "ongoing":
         return <Badge color="green" content="Đang diễn ra" />;
       case "completed":
-        return <Badge color="gray" content="Đã kết thúc" />;
+        return <Badge color="green" content="Đã kết thúc" />;
       case "cancelled":
         return <Badge color="red" content="Đã hủy" />;
       default:
@@ -302,7 +302,7 @@ export default function ClassTable({ title, breadcrumb }: PageHeaderProps) {
                 />
               </div>
             </div>
-            
+
             <div className="grid grid-cols-3 gap-2 mb-2">
               <div className="col-span-1 flex items-center">
                 <Label className="block text-xs text-gray-500 mb-1">
@@ -317,11 +317,11 @@ export default function ClassTable({ title, breadcrumb }: PageHeaderProps) {
                   className="w-full"
                   size="sm"
                   searchable={false}
-                  onChange={(value) => setFilter({ ...filter, courseId: value })}
+                  onChange={(value: any) => setFilter({ ...filter, courseId: value })}
                 />
               </div>
             </div>
-            
+
             <div className="grid grid-cols-3 gap-2 mb-2">
               <div className="col-span-1 flex items-center">
                 <Label className="block text-xs text-gray-500 mb-1">
@@ -336,11 +336,11 @@ export default function ClassTable({ title, breadcrumb }: PageHeaderProps) {
                   className="w-full"
                   size="sm"
                   searchable={false}
-                  onChange={(value) => setFilter({ ...filter, status: value })}
+                  onChange={(value: any) => setFilter({ ...filter, status: value })}
                 />
               </div>
             </div>
-            
+
             <div className="flex justify-end w-full gap-2 col-span-1">
               <Button
                 appearance="ghost"

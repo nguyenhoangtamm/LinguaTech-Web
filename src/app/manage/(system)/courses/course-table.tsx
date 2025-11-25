@@ -8,7 +8,8 @@ import { getDisplayedRowCount, handleErrorApi } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { useSearchParams } from "next/navigation";
 import { PencilIcon, ExternalLink, Plus, Eye } from "lucide-react";
-import { CourseType, GetCoursesWithPaginationQueryType } from "@/schemaValidations/courseManagement.schema";
+import { Course, GetCoursesWithPaginationQueryType } from "@/schemaValidations/courseManagement.schema";
+type CourseType = Course;
 import {
   useCoursesManagementWithPagination,
   useDeleteCourseManagement,
@@ -150,7 +151,7 @@ export default function CourseTable({ title, breadcrumb }: PageHeaderProps) {
       case 3:
         return <Badge color="red" content="Nâng cao" />;
       default:
-        return <Badge color="gray" content="Không xác định" />;
+        return <Badge color="violet" content="Không xác định" />;
     }
   };
 
@@ -349,7 +350,7 @@ export default function CourseTable({ title, breadcrumb }: PageHeaderProps) {
                   className="w-full"
                   size="sm"
                   searchable={false}
-                  onChange={(value) => setFilter({ ...filter, category: value })}
+                  onChange={(value) => setFilter({ ...filter, category: (value as string | undefined) || undefined })}
                 />
               </div>
             </div>
@@ -369,7 +370,7 @@ export default function CourseTable({ title, breadcrumb }: PageHeaderProps) {
                   size="sm"
                   searchable={false}
                   cleanable={false}
-                  onChange={(value) => setFilter({ ...filter, level: value })}
+                  onChange={(value) => setFilter({ ...filter, level: (value as number | undefined) })}
                 />
               </div>
             </div>

@@ -11,8 +11,8 @@ import { useCreateAssignmentMutation, useUpdateAssignmentMutation, useGetAssignm
 import {
     CreateAssignmentBodyType,
     UpdateAssignmentBodyType,
-    CreateAssignmentBodySchema,
-    UpdateAssignmentBodySchema
+    CreateAssignmentBody,
+    UpdateAssignmentBody
 } from "@/schemaValidations/assignment.schema";
 import { toast } from "@/hooks/use-toast";
 import { handleErrorApi } from "@/lib/utils";
@@ -35,22 +35,21 @@ export default function AssignmentForm({
     const [open, setOpen] = useState(false);
     const createAssignmentMutation = useCreateAssignmentMutation();
     const updateAssignmentMutation = useUpdateAssignmentMutation();
-    
+
     // Get lessons for select
     const { data: lessonsData } = useLessonsQuery({
         pageNumber: 1,
         pageSize: 100, // Get all lessons
-        sortBy: "title",
-        sortOrder: "asc",
+
     });
-    
+
     const { data, refetch } = useGetAssignmentQuery({
         id: id as number,
         enabled: isEdit,
     });
 
     const form = useForm<CreateAssignmentBodyType | UpdateAssignmentBodyType>({
-        resolver: zodResolver(isEdit ? UpdateAssignmentBodySchema : CreateAssignmentBodySchema),
+        resolver: zodResolver(isEdit ? UpdateAssignmentBody : CreateAssignmentBody),
         defaultValues: {
             lessonId: 0,
             title: "",
@@ -112,8 +111,8 @@ export default function AssignmentForm({
             let result: any;
             if (isEdit) {
                 result = await updateAssignmentMutation.mutateAsync({
-                    id: id as number,
                     ...values as UpdateAssignmentBodyType,
+                    id: id as number,
                 });
             } else {
                 result = await createAssignmentMutation.mutateAsync(values as CreateAssignmentBodyType);

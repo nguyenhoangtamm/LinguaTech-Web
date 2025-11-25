@@ -35,7 +35,7 @@ export default function ClassForm({
     const [open, setOpen] = useState(false);
     const createClassMutation = useCreateClassMutation();
     const updateClassMutation = useUpdateClassMutation();
-    
+
     // Get courses for select
     const { data: coursesData } = useCoursesManagementWithPagination({
         pageNumber: 1,
@@ -43,7 +43,7 @@ export default function ClassForm({
         sortBy: "title",
         sortOrder: "asc",
     });
-    
+
     const { data, refetch } = useGetClassQuery({
         id: id as number,
         enabled: isEdit,
@@ -132,8 +132,8 @@ export default function ClassForm({
             let result: any;
             if (isEdit) {
                 result = await updateClassMutation.mutateAsync({
-                    id: id as number,
                     ...values as UpdateClassBodyType,
+                    id: id as number,
                 });
             } else {
                 result = await createClassMutation.mutateAsync(values as CreateClassBodyType);

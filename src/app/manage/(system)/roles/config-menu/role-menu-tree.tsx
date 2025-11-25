@@ -65,7 +65,7 @@ export default function RoleMenuTree() {
     }, [menuData]);
 
     useEffect(() => {
-        setSelectedItems(dataMenuConfigs?.map(x => x.toString()) ?? [])
+        setSelectedItems(dataMenuConfigs?.map((x: any) => x.toString()) ?? [])
     }, [dataMenuConfigs]);
 
     useEffect(() => {

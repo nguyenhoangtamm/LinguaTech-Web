@@ -95,11 +95,11 @@ export default function UserTable({ title, breadcrumb }: PageHeaderProps) {
             case "Active":
                 return "green";
             case "Inactive":
-                return "gray";
+                return "orange";
             case "Suspended":
                 return "red";
             default:
-                return "gray";
+                return "violet";
         }
     };
 

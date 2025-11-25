@@ -33,6 +33,13 @@ export const CreateSubmissionBodySchema = z.object({
     status: z.number(),
 });
 
+// Answer schema for assignment submissions
+export const SubmissionAnswerSchema = z.object({
+    questionId: z.string().or(z.number()),
+    answer: z.string().optional(),
+    selectedOptionId: z.string().or(z.number()).optional(),
+});
+
 // Update submission request schema
 export const UpdateSubmissionBodySchema = z.object({
     id: z.number(),
@@ -91,6 +98,7 @@ export const SubmissionOperationResSchema = z.object({
 
 // Type exports
 export type Submission = z.infer<typeof SubmissionSchema>;
+export type SubmissionAnswer = z.infer<typeof SubmissionAnswerSchema>;
 export type CreateSubmissionBodyType = z.infer<
     typeof CreateSubmissionBodySchema
 >;

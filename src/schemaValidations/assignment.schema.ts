@@ -27,6 +27,16 @@ export const QuestionDetailDto = z.object({
     content: z.string(),
     score: z.number(),
     questionTypeName: z.string().optional(),
+    instructions: z.string().optional(),
+    options: z
+        .array(
+            z.object({
+                id: z.string().or(z.number()),
+                content: z.string(),
+                isCorrect: z.boolean().optional(),
+            })
+        )
+        .optional(),
 });
 
 // Assignment Detail Schema (with questions)

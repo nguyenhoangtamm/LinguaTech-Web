@@ -112,7 +112,7 @@ const request = async <Response>(
     }
 
     try {
-        const response: AxiosResponse<Response> = await axiosInstance({
+        const response = await axiosInstance({
             method,
             url: fullUrl,
             data: options?.data,

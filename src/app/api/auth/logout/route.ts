@@ -3,11 +3,11 @@ import { cookies } from 'next/headers'
 
 export async function POST(request: Request) {
     const cookieStore = cookies()
-    const accessToken = cookieStore.get('accessToken')
-    const refreshToken = cookieStore.get('refreshToken')
+    const accessToken = (await cookieStore).get('accessToken')
+    const refreshToken = (await cookieStore).get('refreshToken')
     if (!accessToken || !refreshToken) {
-        cookieStore.delete('accessToken')
-        cookieStore.delete('refreshToken')
+        (await cookieStore).delete('accessToken');
+        (await cookieStore).delete('refreshToken');
         return Response.json(
             {
                 message: 'Không nhận được access token hoặc refresh token, buộc phải xóa cookie'
@@ -21,13 +21,13 @@ export async function POST(request: Request) {
         const result = await authApiRequest.logoutFromNextServerToServer({
             accessToken: accessToken?.value,
             refreshToken: refreshToken?.value
-        })
-        cookieStore.delete('accessToken')
-        cookieStore.delete('refreshToken')
+        });
+        (await cookieStore).delete('accessToken');
+        (await cookieStore).delete('refreshToken');
         return Response.json(result)
     } catch (error) {
-        cookieStore.delete('accessToken')
-        cookieStore.delete('refreshToken')
+        (await cookieStore).delete('accessToken');
+        (await cookieStore).delete('refreshToken');
         return Response.json(
             {
                 message: 'Lỗi khi gọi API đến server backend, buộc phải xóa cookie'

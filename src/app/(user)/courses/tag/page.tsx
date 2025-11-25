@@ -30,7 +30,7 @@ const mockCourses: Course[] = [
         description: "Học các pattern nâng cao trong React và tối ưu hóa hiệu suất ứng dụng. Khóa học bao gồm Context API, Custom Hooks, Memoization và nhiều kỹ thuật khác.",
         instructor: "Nguyễn Văn A",
         duration: 40,
-        level: "advanced",
+        level: 3,
         price: 1500000,
         rating: 4.8,
         studentsCount: 234,
@@ -47,7 +47,7 @@ const mockCourses: Course[] = [
         description: "Xây dựng API RESTful và GraphQL với Node.js, Express, và MongoDB. Học cách deploy production-ready applications.",
         instructor: "Trần Thị B",
         duration: 35,
-        level: "intermediate",
+        level: 2,
         price: 1200000,
         rating: 4.6,
         studentsCount: 189,
@@ -64,7 +64,7 @@ const mockCourses: Course[] = [
         description: "Nắm vững JavaScript hiện đại với ES6+, async/await, modules và các tính năng mới nhất của JavaScript.",
         instructor: "Nguyễn Thị K",
         duration: 28,
-        level: "intermediate",
+        level: 2,
         price: 1100000,
         rating: 4.7,
         studentsCount: 298,
@@ -81,7 +81,7 @@ const mockCourses: Course[] = [
         description: "Xây dựng ứng dụng Full Stack với TypeScript từ frontend đến backend. Học type safety và advanced types.",
         instructor: "Đặng Văn L",
         duration: 42,
-        level: "advanced",
+        level: 3,
         price: 1700000,
         rating: 4.9,
         studentsCount: 167,
@@ -112,8 +112,8 @@ export default function CoursesByTagPage() {
 
     // Use API to get courses with tag filter
     const [filterParams, setFilterParams] = useState<CourseFilterParamsType>({
-        page: 1,
-        limit: 12,
+        pageNumber: 1,
+        pageSize: 12,
         search: "",
         category: "",
         level: undefined,
@@ -134,10 +134,29 @@ export default function CoursesByTagPage() {
         }));
     }, [selectedTag]);
 
+    const levelToNumber = (level: "beginner" | "intermediate" | "advanced"): number => {
+        switch (level) {
+            case "beginner": return 1;
+            case "intermediate": return 2;
+            case "advanced": return 3;
+            default: return 1;
+        }
+    };
+
+    const getLevelDisplayName = (level: number): string => {
+        switch (level) {
+            case 1: return "Cơ bản";
+            case 2: return "Trung cấp";
+            case 3: return "Nâng cao";
+            default: return "Cơ bản";
+        }
+    };
+
     const handleLevelFilter = (level: "beginner" | "intermediate" | "advanced") => {
+        const levelNumber = levelToNumber(level);
         setFilterParams(prev => ({
             ...prev,
-            level: prev.level === level ? undefined : level
+            level: prev.level === levelNumber ? undefined : levelNumber
         }));
     };
 
@@ -175,8 +194,7 @@ export default function CoursesByTagPage() {
                                         <p className="text-gray-600 text-sm mb-2">Giảng viên: {course.instructor}</p>
                                     </div>
                                     <Badge variant="outline" className="ml-2">
-                                        {course.level === "beginner" ? "Cơ bản" :
-                                            course.level === "intermediate" ? "Trung cấp" : "Nâng cao"}
+                                        {getLevelDisplayName(course.level)}
                                     </Badge>
                                 </div>
                                 <p className="text-gray-700 text-sm line-clamp-2 mb-3">{course.description}</p>
@@ -231,8 +249,7 @@ export default function CoursesByTagPage() {
                     <div className="p-6">
                         <div className="flex items-start justify-between mb-2">
                             <Badge variant="outline">
-                                {course.level === "beginner" ? "Cơ bản" :
-                                    course.level === "intermediate" ? "Trung cấp" : "Nâng cao"}
+                                {getLevelDisplayName(course.level)}
                             </Badge>
                             <Badge variant="secondary">{course.category.name}</Badge>
                         </div>
@@ -336,13 +353,13 @@ export default function CoursesByTagPage() {
                         Lọc theo cấp độ:
                     </span>
                     {[
-                        { value: "beginner", label: "Cơ bản" },
-                        { value: "intermediate", label: "Trung cấp" },
-                        { value: "advanced", label: "Nâng cao" }
+                        { value: "beginner", label: "Cơ bản", number: 1 },
+                        { value: "intermediate", label: "Trung cấp", number: 2 },
+                        { value: "advanced", label: "Nâng cao", number: 3 }
                     ].map(level => (
                         <Button
                             key={level.value}
-                            variant={filterParams.level === level.value ? "default" : "outline"}
+                            variant={filterParams.level === level.number ? "default" : "outline"}
                             size="sm"
                             onClick={() => handleLevelFilter(level.value as "beginner" | "intermediate" | "advanced")}
                         >
@@ -385,7 +402,7 @@ export default function CoursesByTagPage() {
                         <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có khóa học</h3>
                         <p className="text-gray-600 mb-4">
                             {filterParams.level
-                                ? `Chưa có khóa học ${filterParams.level === "beginner" ? "cơ bản" : filterParams.level === "intermediate" ? "trung cấp" : "nâng cao"} với tag "${selectedTag}".`
+                                ? `Chưa có khóa học ${getLevelDisplayName(filterParams.level).toLowerCase()} với tag "${selectedTag}".`
                                 : `Chưa có khóa học nào với tag "${selectedTag}".`
                             }
                         </p>

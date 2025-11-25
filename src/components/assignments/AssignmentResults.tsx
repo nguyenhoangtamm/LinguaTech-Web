@@ -11,7 +11,8 @@ import {
     FlexboxGrid,
     Placeholder,
 } from 'rsuite';
-import { CheckRound, CloseRound, Award } from '@rsuite/icons';
+import { CheckRound } from '@rsuite/icons';
+import { X as CloseRound, Trophy as Award } from 'lucide-react';
 import { Assignment, UserSubmission, Question, SubmissionAnswer } from '@/apiRequests/assignment';
 
 interface AssignmentResultsProps {

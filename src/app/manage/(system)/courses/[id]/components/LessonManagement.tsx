@@ -53,7 +53,7 @@ export default function LessonManagement({ courseId }: LessonManagementProps) {
     // API queries
     const { data: modulesData } = useModulesByCourseQuery(courseId);
     const { data: lessonsData, isLoading: lessonsLoading, refetch: refetchLessons } = useLessonsQuery({
-        courseId: courseId.toString(),
+        courseId: courseId,
         pageNumber,
         pageSize
     });
@@ -77,7 +77,7 @@ export default function LessonManagement({ courseId }: LessonManagementProps) {
             description: "",
             duration: 30,
             order: 1,
-            moduleId: "",
+            moduleId: undefined,
             isPublished: false,
         },
     });
@@ -122,7 +122,7 @@ export default function LessonManagement({ courseId }: LessonManagementProps) {
         try {
             if (editingLesson) {
                 await updateLessonMutation.mutateAsync({
-                    id: parseInt(editingLesson.id),
+                    id: editingLesson.id,
                     data: values
                 });
                 toast({
@@ -199,7 +199,7 @@ export default function LessonManagement({ courseId }: LessonManagementProps) {
 
     const handleDeleteLesson = async (lesson: LessonType) => {
         try {
-            await deleteLessonMutation.mutateAsync(parseInt(lesson.id));
+            await deleteLessonMutation.mutateAsync(lesson.id);
             toast({
                 title: "Thành công",
                 description: "Bài học đã được xóa",

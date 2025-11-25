@@ -114,7 +114,7 @@ export default function EnrollmentTable({ title, breadcrumb }: PageHeaderProps) 
             dropped: "red",
             suspended: "orange",
         };
-        return colors[status] || "gray";
+        return colors[status] || "violet";
     };
 
     const getStatusLabel = (status: string) => {
@@ -127,52 +127,53 @@ export default function EnrollmentTable({ title, breadcrumb }: PageHeaderProps) 
         return labels[status] || status;
     };
 
-    const columns: TableColumn<EnrollmentType>[] = [
+    const columns: TableColumn[] = [
         {
-            title: "STT",
-            dataIndex: "id",
-            key: "stt",
-            width: 70,
-            render: (_: any, __: EnrollmentType, index: number) => {
-                return <span>{pageIndex * PAGE_SIZE + index + 1}</span>;
+            key: "id",
+            label: "STT",
+            width: 80,
+            align: "center",
+            render: (rowData: EnrollmentType, rowIndex?: number) => {
+                const safeRowIndex = rowIndex ?? 0;
+                const stt = pageIndex * PAGE_SIZE + safeRowIndex + 1;
+                return <Label>{stt}</Label>;
             },
         },
         {
-            title: "Học viên",
-            dataIndex: "userName",
             key: "userName",
-            render: (userName: string, record: EnrollmentType) => (
+            label: "Học viên",
+            flexGrow: 1,
+            render: (rowData: EnrollmentType) => (
                 <div>
-                    <p className="font-medium">{userName}</p>
-                    <p className="text-sm text-gray-500">{record.userEmail}</p>
+                    <p className="font-medium">{rowData.userName}</p>
+                    <p className="text-sm text-gray-500">{rowData.userEmail}</p>
                 </div>
             ),
         },
         {
-            title: "Khóa học",
-            dataIndex: "courseTitle",
             key: "courseTitle",
-            render: (courseTitle: string, record: EnrollmentType) => (
+            label: "Khóa học",
+            flexGrow: 1,
+            render: (rowData: EnrollmentType) => (
                 <div>
-                    <p className="font-medium line-clamp-2">{courseTitle}</p>
-                    <p className="text-sm text-gray-500">{record.courseInstructor}</p>
+                    <p className="font-medium line-clamp-2">{rowData.courseTitle}</p>
+                    <p className="text-sm text-gray-500">{rowData.courseInstructor}</p>
                 </div>
             ),
         },
         {
-            title: "Tiến độ",
-            dataIndex: "progress",
             key: "progress",
+            label: "Tiến độ",
             width: 150,
-            render: (progress: number, record: EnrollmentType) => (
+            render: (rowData: EnrollmentType) => (
                 <div>
                     <div className="flex justify-between text-sm mb-1">
-                        <span>{progress}%</span>
-                        <span>{record.completedLessons}/{record.totalLessons} bài</span>
+                        <span>{rowData.progress}%</span>
+                        <span>{rowData.completedLessons}/{rowData.totalLessons} bài</span>
                     </div>
                     <Progress.Line
-                        percent={progress}
-                        strokeColor={progress === 100 ? "#52c41a" : "#1890ff"}
+                        percent={rowData.progress}
+                        strokeColor={rowData.progress === 100 ? "#52c41a" : "#1890ff"}
                         showInfo={false}
                         strokeWidth={6}
                     />
@@ -180,58 +181,60 @@ export default function EnrollmentTable({ title, breadcrumb }: PageHeaderProps) 
             ),
         },
         {
-            title: "Ngày đăng ký",
-            dataIndex: "enrolledDate",
             key: "enrolledDate",
+            label: "Ngày đăng ký",
             width: 120,
-            render: (date: string) => new Date(date).toLocaleDateString("vi-VN"),
+            align: "center",
+            render: (rowData: EnrollmentType) => (
+                <div className="text-sm">{new Date(rowData.enrolledDate).toLocaleDateString("vi-VN")}</div>
+            ),
         },
         {
-            title: "Trạng thái",
-            dataIndex: "status",
             key: "status",
+            label: "Trạng thái",
             width: 120,
-            render: (status: string) => (
-                <Badge color={getStatusColor(status)} appearance="ghost">
-                    {getStatusLabel(status)}
+            align: "center",
+            render: (rowData: EnrollmentType) => (
+                <Badge color={getStatusColor(rowData.status) as any}>
+                    {getStatusLabel(rowData.status)}
                 </Badge>
             ),
         },
         {
-            title: "Ngày hoàn thành",
-            dataIndex: "completedDate",
             key: "completedDate",
+            label: "Ngày hoàn thành",
             width: 120,
-            render: (date?: string) => date ? new Date(date).toLocaleDateString("vi-VN") : "-",
+            align: "center",
+            render: (rowData: EnrollmentType) => (
+                <div className="text-sm">{rowData.completedDate ? new Date(rowData.completedDate).toLocaleDateString("vi-VN") : "-"}</div>
+            ),
         },
         {
-            title: "Thao tác",
             key: "actions",
+            label: "Thao tác",
             width: 150,
-            render: (_: any, record: EnrollmentType) => (
-                <div className="flex gap-2">
+            align: "center",
+            isAction: true,
+            render: (rowData: EnrollmentType) => (
+                <div className="flex items-center justify-end gap-2 pe-4">
                     <IconButton
-                        size="sm"
                         appearance="subtle"
-                        color="blue"
-                        icon={<Eye size={16} />}
-                        onClick={() => setEnrollmentIdEdit(record.id)}
+                        size="sm"
+                        icon={<Eye className="h-4 w-4" />}
+                        onClick={() => setEnrollmentIdEdit(rowData.id)}
                         title="Xem chi tiết"
                     />
                     <IconButton
-                        size="sm"
                         appearance="subtle"
-                        color="cyan"
-                        icon={<ExternalLink size={16} />}
-                        as={Link}
-                        href={`/courses/${record.courseId}`}
-                        target="_blank"
+                        size="sm"
+                        icon={<ExternalLink className="h-4 w-4" />}
                         title="Xem khóa học"
+                        onClick={() => window.open(`/courses/${rowData.courseId}`, "_blank")}
                     />
                     <DeletePopover
-                        title={`Hủy đăng ký của "${record.userName}"`}
+                        title={`Hủy đăng ký của "${rowData.userName}"`}
                         description="Bạn có chắc chắn muốn hủy đăng ký này không? Hành động này không thể hoàn tác."
-                        onConfirm={() => handleDeleteEnrollment(record)}
+                        onDelete={() => handleDeleteEnrollment(rowData)}
                     />
                 </div>
             ),

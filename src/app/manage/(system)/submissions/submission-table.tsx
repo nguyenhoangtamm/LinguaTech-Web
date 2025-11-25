@@ -116,7 +116,7 @@ export default function SubmissionTable({ title, breadcrumb }: PageHeaderProps) 
     const getStatusBadge = (status: number) => {
         switch (status) {
             case SubmissionStatus.DRAFT:
-                return <Badge color="gray" content="Draft" />;
+                return <Badge color="violet" content="Draft" />;
             case SubmissionStatus.SUBMITTED:
                 return <Badge color="blue" content="Submitted" />;
             case SubmissionStatus.GRADED:
@@ -124,7 +124,7 @@ export default function SubmissionTable({ title, breadcrumb }: PageHeaderProps) 
             case SubmissionStatus.RETURNED:
                 return <Badge color="orange" content="Returned" />;
             default:
-                return <Badge color="gray" content="Unknown" />;
+                return <Badge color="violet" content="Unknown" />;
         }
     };
 

@@ -4,9 +4,10 @@ import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PlusCircle, Loader2 } from "lucide-react";
-import { Button, Input, SelectPicker, Modal, Checkbox } from "rsuite";
+import { Button, Input, SelectPicker, Modal } from "rsuite";
 import { Label } from "@/components/ui/label";
 import { Form, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useCreateLessonMutation, useUpdateLessonMutation, useLessonQuery } from "@/queries/useLesson";
 import { CreateLessonBodyType, UpdateLessonBodyType, CreateLessonSchema, UpdateLessonSchema } from "@/schemaValidations/lesson.schema";
 import { toast } from "@/hooks/use-toast";
@@ -41,7 +42,7 @@ export default function LessonForm({
             content: "",
             duration: 0,
             order: 0,
-            moduleId: "",
+            moduleId: undefined,
             isPublished: false,
         },
     });
@@ -76,7 +77,7 @@ export default function LessonForm({
                 content: "",
                 duration: 0,
                 order: 0,
-                moduleId: "",
+                moduleId: undefined,
                 isPublished: false,
             });
         }
@@ -144,7 +145,7 @@ export default function LessonForm({
                 content: "",
                 duration: 0,
                 order: 0,
-                moduleId: "",
+                moduleId: undefined,
                 isPublished: false,
             });
         }
@@ -287,9 +288,8 @@ export default function LessonForm({
                                     <FormItem>
                                         <div className="flex items-center space-x-2">
                                             <Checkbox
-                                                {...field}
-                                                checked={field.value}
-                                                onChange={(value) => field.onChange(value)}
+                                                checked={field.value ?? false}
+                                                onCheckedChange={(checked) => field.onChange(checked)}
                                             />
                                             <Label className="text-sm font-medium text-gray-700">
                                                 Xuất bản

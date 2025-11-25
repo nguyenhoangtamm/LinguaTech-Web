@@ -128,7 +128,7 @@ export default function CourseForm({
             if (isEdit) {
                 result = await updateCourseMutation.mutateAsync({
                     id: id as number,
-                    ...values as UpdateCourseBodyType,
+                    body: values as UpdateCourseBodyType,
                 });
             } else {
                 result = await createCourseMutation.mutateAsync(values as CreateCourseBodyType);
@@ -183,8 +183,8 @@ export default function CourseForm({
     // Tag input handlers
     const [tagInput, setTagInput] = useState("");
     const addTag = () => {
-        if (tagInput.trim() && !form.getValues("tags").includes(tagInput.trim())) {
-            const currentTags = form.getValues("tags");
+        if (tagInput.trim() && !form.getValues("tags")?.includes(tagInput.trim())) {
+            const currentTags = form.getValues("tags") ?? [];
             form.setValue("tags", [...currentTags, tagInput.trim()]);
             setTagInput("");
         }
@@ -192,7 +192,7 @@ export default function CourseForm({
 
     const removeTag = (tagToRemove: string) => {
         const currentTags = form.getValues("tags");
-        form.setValue("tags", currentTags.filter(tag => tag !== tagToRemove));
+        form.setValue("tags", currentTags?.filter(tag => tag !== tagToRemove));
     };
 
     return (

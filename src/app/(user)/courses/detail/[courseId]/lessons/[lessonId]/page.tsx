@@ -146,8 +146,8 @@ const ContentSection = ({ section, isLoading }: { section: SectionType, isLoadin
 };
 
 // Assignment section component  
-const AssignmentsSection = ({ lessonId, courseId }: { lessonId: string | number, courseId: string | number }) => {
-    const { data: assignmentsResponse, isLoading, error } = useAssignmentsByLesson(String(lessonId));
+const AssignmentsSection = ({ lessonId, courseId }: { lessonId: number, courseId: number }) => {
+    const { data: assignmentsResponse, isLoading, error } = useAssignmentsByLesson(lessonId);
 
     if (isLoading) {
         return (
@@ -363,8 +363,8 @@ const ReadingNotesSection = ({ lesson, isLoading }: { lesson: any, isLoading: bo
 
 export default function LessonDetailPage() {
     const params = useParams();
-    const courseIdParam = params.courseId as string | undefined;
-    const lessonIdParam = params.lessonId as string | undefined;
+    const courseIdParam = params.courseId;
+    const lessonIdParam = params.lessonId;
     const courseId = courseIdParam ? Number(courseIdParam) : undefined;
     const lessonId = lessonIdParam ? Number(lessonIdParam) : undefined;
     const { data: lesson, isLoading: lessonLoading } = useLessonQuery(lessonId);
@@ -375,7 +375,7 @@ export default function LessonDetailPage() {
 
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [rightPanelOpen, setRightPanelOpen] = useState(true);
-    const [selectedSectionId, setSelectedSectionId] = useState<string>("s1");
+    const [selectedSectionId, setSelectedSectionId] = useState<number>(1);
 
     // derive loading states from hooks
     const loadingStates = {
@@ -552,8 +552,8 @@ export default function LessonDetailPage() {
                                         <Card>
                                             <CardContent className="p-4">
                                                 <AssignmentsSection
-                                                    lessonId={lessonId ?? ''}
-                                                    courseId={courseId ?? ''}
+                                                    lessonId={lessonId ?? 0}
+                                                    courseId={courseId ?? 0}
                                                 />
                                             </CardContent>
                                         </Card>

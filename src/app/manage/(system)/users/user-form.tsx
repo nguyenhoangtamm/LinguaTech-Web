@@ -40,10 +40,11 @@ export default function UserForm({
         resolver: zodResolver(isEdit ? UpdateUserBody : CreateUserBody),
         defaultValues: {
             username: "",
-            fullname: "",
+            firstName: "",
+            lastName: "",
             email: "",
             password: "",
-            role: "",
+            roleId: undefined,
         },
     });
 
@@ -59,22 +60,24 @@ export default function UserForm({
     // Fill form when editing
     useEffect(() => {
         if (isEdit && data) {
-            const { username, fullname, email, role } = data.data;
+            const { username, firstName, lastName, email, roleId, } = data.data;
             form.reset({
                 username: username ?? "",
-                fullname: fullname ?? "",
+                firstName: firstName ?? "",
+                lastName: lastName ?? "",
                 email: email ?? "",
-                role: role ?? "",
+                roleId: roleId ?? undefined,
                 // Don't set password for edit mode
             });
         }
         if (!isEdit) {
             form.reset({
                 username: "",
-                fullname: "",
+                firstName: "",
+                lastName: "",
                 email: "",
                 password: "",
-                role: "",
+                roleId: undefined,
             });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -98,10 +101,13 @@ export default function UserForm({
         try {
             let result: any;
             if (isEdit) {
-                const updateData = { ...values } as UpdateUserBodyType;
+                // Avoid shadowing the outer 'id' variable and TDZ: use values as UpdateUserBodyType
+                const updateData = values as UpdateUserBodyType;
+                // Omit any 'id' from updateData to avoid duplicate keys in the object literal
+                const { id: _omitId, ...updatePayload } = updateData as any;
                 result = await updateUserMutation.mutateAsync({
                     id: id as number,
-                    ...updateData,
+                    ...updatePayload,
                 });
             } else {
                 result = await createUserMutation.mutateAsync(values as CreateUserBodyType);
@@ -124,20 +130,22 @@ export default function UserForm({
 
     const reset = () => {
         if (isEdit && data) {
-            const { username, fullname, email, role } = data.data;
+            const { username, firstName, lastName, email, roleId } = data.data;
             form.reset({
                 username: username ?? "",
-                fullname: fullname ?? "",
+                firstName: firstName ?? "",
+                lastName: lastName ?? "",
                 email: email ?? "",
-                role: role ?? "",
+                roleId: roleId ?? undefined,
             });
         } else {
             form.reset({
                 username: "",
-                fullname: "",
+                firstName: "",
+                lastName: "",
                 email: "",
                 password: "",
-                role: "",
+                roleId: undefined,
             });
         }
     };
@@ -192,15 +200,32 @@ export default function UserForm({
 
                                 <FormField
                                     control={form.control}
-                                    name="fullname"
+                                    name="firstName"
                                     render={({ field }) => (
                                         <FormItem>
                                             <Label className="text-sm font-medium text-gray-700">
-                                                Họ và tên *
+                                                Họ *
                                             </Label>
                                             <Input
                                                 {...field}
-                                                placeholder="Nhập họ và tên"
+                                                placeholder="Nhập họ"
+                                                className="w-full"
+                                            />
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="lastName"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <Label className="text-sm font-medium text-gray-700">
+                                                Tên *
+                                            </Label>
+                                            <Input
+                                                {...field}
+                                                placeholder="Nhập tên"
                                                 className="w-full"
                                             />
                                             <FormMessage />
@@ -231,7 +256,7 @@ export default function UserForm({
 
                                 <FormField
                                     control={form.control}
-                                    name="role"
+                                    name="roleId"
                                     render={({ field }) => (
                                         <FormItem>
                                             <Label className="text-sm font-medium text-gray-700">

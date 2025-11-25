@@ -296,11 +296,11 @@ export default function MenuCRUDPanel({ id, setId, onSubmitSuccess }: { id: numb
                                                 <TamSelect
                                                     value={
                                                         parentMenuId.data?.data
-                                                            .map((item) => ({
+                                                            .map((item: any) => ({
                                                                 label: item.name,
                                                                 value: item.id.toString(),
                                                             }))
-                                                            .find((option) => option.value === (field.value !== undefined ? String(field.value) : undefined)) || null
+                                                            .find((option: any) => option.value === (field.value !== undefined ? String(field.value) : undefined)) || null
                                                     }
                                                     onChange={(selected) => {
                                                         // selected can be null or an Option
@@ -312,7 +312,7 @@ export default function MenuCRUDPanel({ id, setId, onSubmitSuccess }: { id: numb
                                                     }}
                                                     isClearable
                                                     options={
-                                                        parentMenuId.data?.data.map((item) => ({
+                                                        parentMenuId.data?.data.map((item: any) => ({
                                                             label: item.name,
                                                             value: item.id.toString(),
                                                         })) || []
@@ -367,7 +367,7 @@ export default function MenuCRUDPanel({ id, setId, onSubmitSuccess }: { id: numb
                 </div>
             </div>
             {/* Modal xác nhận xóa */}
-            <Modal isOpen={isDeleteModalOpen} onClose={() => setDeleteModalOpen(false)}>
+            <Modal open={isDeleteModalOpen} onClose={() => setDeleteModalOpen(false)}>
                 <div className="p-4">
                     <h3 className="text-lg font-semibold mb-2">Xác nhận xóa</h3>
                     <p>Bạn có chắc chắn muốn xóa menu này không?</p>

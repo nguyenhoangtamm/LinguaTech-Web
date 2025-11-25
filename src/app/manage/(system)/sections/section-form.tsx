@@ -7,15 +7,15 @@ import { PlusCircle, Loader2 } from "lucide-react";
 import { Button, Input, SelectPicker, Modal } from "rsuite";
 import { Label } from "@/components/ui/label";
 import { Form, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { useCreateModuleMutation, useUpdateModuleMutation, useGetModuleQuery } from "@/queries/useModule";
-import { CreateModuleBodyType, UpdateModuleBodyType, CreateModuleBodySchema, UpdateModuleBodySchema } from "@/schemaValidations/module.schema";
+import { useCreateSectionMutation, useUpdateSectionMutation, useGetSectionQuery } from "@/queries/useSection";
+import { CreateSectionBodyType, UpdateSectionBodyType, CreateSectionBodySchema, UpdateSectionBodySchema } from "@/schemaValidations/section.schema";
 import { toast } from "@/hooks/use-toast";
 import { handleErrorApi } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
-import { useCoursesQuery } from "@/queries/useCourse";
+import { useLessonsQuery } from "@/queries/useLesson";
 import commonStyles from "../../../shared/common/styles/common.module.css";
 
-export default function ModuleForm({
+export default function SectionForm({
     id,
     setId,
     onSubmitSuccess,
@@ -28,51 +28,51 @@ export default function ModuleForm({
 }) {
     const isEdit = typeof id === "number" && id !== undefined;
     const [open, setOpen] = useState(false);
-    const createModuleMutation = useCreateModuleMutation();
-    const updateModuleMutation = useUpdateModuleMutation();
-    const { data: moduleData } = useGetModuleQuery({ id: id as number, enabled: isEdit });
-    const { data: coursesData } = useCoursesQuery({ pageNumber: 1, pageSize: 100 }); // Get all courses for selection
+    const createSectionMutation = useCreateSectionMutation();
+    const updateSectionMutation = useUpdateSectionMutation();
+    const { data: sectionData } = useGetSectionQuery({ id: id as number, enabled: isEdit });
+    const { data: lessonsData } = useLessonsQuery({ pageNumber: 1, pageSize: 100 }); // Get all lessons for selection
 
-    const form = useForm<CreateModuleBodyType | UpdateModuleBodyType>({
-        resolver: zodResolver(isEdit ? UpdateModuleBodySchema : CreateModuleBodySchema),
+    const form = useForm<CreateSectionBodyType | UpdateSectionBodyType>({
+        resolver: zodResolver(isEdit ? UpdateSectionBodySchema : CreateSectionBodySchema),
         defaultValues: {
             title: "",
-            description: "",
+            content: "",
             order: 0,
-            courseId: 0,
+            lessonId: 0,
         },
     });
 
-    // Course options
-    const courseOptions = useMemo(() => {
-        if (!coursesData?.data?.data) return [];
-        return coursesData.data.data.map((course: any) => ({
-            label: course.title,
-            value: course.id,
+    // Lesson options
+    const lessonOptions = useMemo(() => {
+        if (!lessonsData?.data) return [];
+        return lessonsData.data.map((lesson: any) => ({
+            label: lesson.title,
+            value: lesson.id,
         }));
-    }, [coursesData]);
+    }, [lessonsData]);
 
     // Fill form when editing
     useEffect(() => {
-        if (isEdit && moduleData) {
-            const moduleItem = moduleData.data;
+        if (isEdit && sectionData) {
+            const sectionItem = sectionData.data;
             form.reset({
-                title: moduleItem.title ?? "",
-                description: moduleItem.description ?? "",
-                order: moduleItem.order ?? 0,
-                courseId: moduleItem.courseId ?? 0,
+                title: sectionItem.title ?? "",
+                content: sectionItem.content ?? "",
+                order: sectionItem.order ?? 0,
+                lessonId: sectionItem.lessonId ?? 0,
             });
         }
         if (!isEdit) {
             form.reset({
                 title: "",
-                description: "",
+                content: "",
                 order: 0,
-                courseId: 0,
+                lessonId: 0,
             });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [moduleData, isEdit]);
+    }, [sectionData, isEdit]);
 
     // Open modal for edit (always open if id), or for create (button click)
     useEffect(() => {
@@ -87,22 +87,22 @@ export default function ModuleForm({
         }
     };
 
-    const onSubmit = async (values: CreateModuleBodyType | UpdateModuleBodyType) => {
-        if (createModuleMutation.isPending || updateModuleMutation.isPending) return;
+    const onSubmit = async (values: CreateSectionBodyType | UpdateSectionBodyType) => {
+        if (createSectionMutation.isPending || updateSectionMutation.isPending) return;
         try {
             let result: any;
             if (isEdit) {
-                const { id: _omitId, ...updateData } = values as UpdateModuleBodyType;
-                result = await updateModuleMutation.mutateAsync({
+                const { id: _omitId, ...updateData } = values as UpdateSectionBodyType;
+                result = await updateSectionMutation.mutateAsync({
                     id: id as number,
                     ...updateData,
                 });
             } else {
-                result = await createModuleMutation.mutateAsync(values as CreateModuleBodyType);
+                result = await createSectionMutation.mutateAsync(values as CreateSectionBodyType);
             }
 
             toast({
-                title: result?.message || (isEdit ? "Cập nhật module thành công" : "Tạo module thành công"),
+                title: result?.message || (isEdit ? "Cập nhật phần học thành công" : "Tạo phần học thành công"),
                 variant: "success",
                 duration: 1000,
             });
@@ -117,20 +117,20 @@ export default function ModuleForm({
     };
 
     const reset = () => {
-        if (isEdit && moduleData) {
-            const moduleItem = moduleData.data;
+        if (isEdit && sectionData) {
+            const sectionItem = sectionData.data;
             form.reset({
-                title: moduleItem.title ?? "",
-                description: moduleItem.description ?? "",
-                order: moduleItem.order ?? 0,
-                courseId: moduleItem.courseId ?? 0,
+                title: sectionItem.title ?? "",
+                content: sectionItem.content ?? "",
+                order: sectionItem.order ?? 0,
+                lessonId: sectionItem.lessonId ?? 0,
             });
         } else {
             form.reset({
                 title: "",
-                description: "",
+                content: "",
                 order: 0,
-                courseId: 0,
+                lessonId: 0,
             });
         }
     };
@@ -143,7 +143,7 @@ export default function ModuleForm({
                     onClick={() => setOpen(true)}
                     startIcon={<PlusCircle className="w-4 h-4" />}
                 >
-                    Thêm module
+                    Thêm phần học
                 </Button>
             )}
 
@@ -156,7 +156,7 @@ export default function ModuleForm({
             >
                 <Modal.Header>
                     <Modal.Title className="text-lg font-semibold text-gray-900">
-                        {isEdit ? "Cập nhật module" : "Thêm mới module"}
+                        {isEdit ? "Cập nhật phần học" : "Thêm mới phần học"}
                     </Modal.Title>
                 </Modal.Header>
 
@@ -173,7 +173,7 @@ export default function ModuleForm({
                                         </Label>
                                         <Input
                                             {...field}
-                                            placeholder="Nhập tiêu đề module"
+                                            placeholder="Nhập tiêu đề phần học"
                                             className="w-full"
                                         />
                                         <FormMessage />
@@ -183,17 +183,17 @@ export default function ModuleForm({
 
                             <FormField
                                 control={form.control}
-                                name="description"
+                                name="content"
                                 render={({ field }) => (
                                     <FormItem>
                                         <Label className="text-sm font-medium text-gray-700">
-                                            Mô tả
+                                            Nội dung *
                                         </Label>
                                         <Textarea
                                             {...field}
-                                            placeholder="Nhập mô tả module"
+                                            placeholder="Nhập nội dung phần học"
                                             className="w-full"
-                                            rows={3}
+                                            rows={5}
                                         />
                                         <FormMessage />
                                     </FormItem>
@@ -224,16 +224,16 @@ export default function ModuleForm({
 
                                 <FormField
                                     control={form.control}
-                                    name="courseId"
+                                    name="lessonId"
                                     render={({ field }) => (
                                         <FormItem>
                                             <Label className="text-sm font-medium text-gray-700">
-                                                Khóa học *
+                                                Bài học *
                                             </Label>
                                             <SelectPicker
                                                 {...field}
-                                                data={courseOptions}
-                                                placeholder="Chọn khóa học"
+                                                data={lessonOptions}
+                                                placeholder="Chọn bài học"
                                                 className="w-full"
                                                 cleanable={false}
                                                 searchable
@@ -267,10 +267,10 @@ export default function ModuleForm({
                     <Button
                         onClick={form.handleSubmit(onSubmit)}
                         appearance="primary"
-                        disabled={createModuleMutation.isPending || updateModuleMutation.isPending}
+                        disabled={createSectionMutation.isPending || updateSectionMutation.isPending}
                         className="bg-primary text-white"
                     >
-                        {createModuleMutation.isPending || updateModuleMutation.isPending ? (
+                        {createSectionMutation.isPending || updateSectionMutation.isPending ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         ) : null}
                         {isEdit ? "Cập nhật" : "Thêm mới"}
