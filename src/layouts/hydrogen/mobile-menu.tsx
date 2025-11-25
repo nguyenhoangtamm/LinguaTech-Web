@@ -40,10 +40,10 @@ export default function MobileMenu({ className }: { className?: string }) {
     return (
         <div className={cn("w-full bg-white border-t border-gray-200", className)}>
             <div className="px-4 py-2 max-h-96 overflow-y-auto">
-                {menuItems.map((item, index) => {
+                {menuItems.map((item: any, index: number) => {
                     const isActive = pathname === (item?.url as string);
                     const pathnameExistInDropdowns: any = item?.children?.filter(
-                        (dropdownItem) => dropdownItem.href === pathname
+                        (dropdownItem: any) => dropdownItem.href === pathname
                     );
                     const isDropdownOpen = Boolean(pathnameExistInDropdowns?.length);
                     const isMenuOpen = openMenus[item.name] ?? isDropdownOpen;

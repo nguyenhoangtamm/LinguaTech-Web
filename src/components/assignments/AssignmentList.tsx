@@ -12,23 +12,25 @@ import {
     Loader,
     Message,
 } from 'rsuite';
-import {
-    Eye,
-    Edit,
-    Time,
-    CheckRound,
-    CloseRound,
-    FileText,
-    Award,
-    Calendar
-} from '@rsuite/icons';
+import { Visible } from '@rsuite/icons';
 import Link from 'next/link';
-import { Assignment, UserSubmission } from '@/apiRequests/assignment';
+import { AssignmentDetailType } from '@/schemaValidations/assignment.schema';
+import { FileText, Eye } from 'lucide-react';
+
+interface UserSubmission {
+    id: string;
+    assignmentId: number;
+    userId: string;
+    score: number;
+    status: 'draft' | 'submitted' | 'graded' | 'overdue';
+    submittedAt?: string;
+    gradedAt?: string;
+}
 
 const { Column, HeaderCell, Cell } = Table;
 
 interface AssignmentListProps {
-    assignments: Assignment[];
+    assignments: AssignmentDetailType[];
     submissions: Record<string, UserSubmission>;
     loading?: boolean;
     courseId: string;
@@ -44,7 +46,7 @@ const AssignmentList: React.FC<AssignmentListProps> = ({
     lessonId,
     onViewAssignment,
 }) => {
-    const getAssignmentStatus = (assignment: Assignment, submission?: UserSubmission) => {
+    const getAssignmentStatus = (assignment: AssignmentDetailType, submission?: UserSubmission) => {
         if (!submission) {
             const dueDate = new Date(assignment.dueDate);
             const now = new Date();
@@ -53,13 +55,13 @@ const AssignmentList: React.FC<AssignmentListProps> = ({
         return submission.status;
     };
 
-    const getStatusColor = (status: string) => {
+    const getStatusColor = (status: string): any => {
         switch (status) {
             case 'graded': return 'green';
             case 'submitted': return 'blue';
             case 'draft': return 'yellow';
             case 'overdue': return 'red';
-            case 'not_started': return 'gray';
+            case 'not_started': return 'blue';
             default: return 'gray';
         }
     };
@@ -92,9 +94,9 @@ const AssignmentList: React.FC<AssignmentListProps> = ({
         }
     };
 
-    const getQuestionTypeStats = (assignment: Assignment) => {
-        const essayCount = assignment.questions.filter(q => q.questionTypeId === 'essay').length;
-        const mcCount = assignment.questions.filter(q => q.questionTypeId === 'multiple_choice').length;
+    const getQuestionTypeStats = (assignment: AssignmentDetailType) => {
+        const essayCount = assignment.questions?.filter((q: any) => q.questionTypeId === 2).length || 0;
+        const mcCount = assignment.questions?.filter((q: any) => q.questionTypeId === 1).length || 0;
         return { essayCount, mcCount, total: assignment.questions.length };
     };
 
@@ -134,13 +136,13 @@ const AssignmentList: React.FC<AssignmentListProps> = ({
                     </FlexboxGrid.Item>
                     <FlexboxGrid.Item style={{ textAlign: 'center' }}>
                         <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#22c55e' }}>
-                            {Object.values(submissions).filter(s => s.status === 'graded' || s.status === 'submitted').length}
+                            {Object.values(submissions).filter((s: any) => s.status === 'graded' || s.status === 'submitted').length}
                         </div>
                         <div style={{ fontSize: '14px', color: '#666' }}>Đã hoàn thành</div>
                     </FlexboxGrid.Item>
                     <FlexboxGrid.Item style={{ textAlign: 'center' }}>
                         <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b' }}>
-                            {Object.values(submissions).filter(s => s.status === 'draft').length}
+                            {Object.values(submissions).filter((s: any) => s.status === 'draft').length}
                         </div>
                         <div style={{ fontSize: '14px', color: '#666' }}>Đang làm</div>
                     </FlexboxGrid.Item>
@@ -175,7 +177,7 @@ const AssignmentList: React.FC<AssignmentListProps> = ({
                     <Column width={300} resizable>
                         <HeaderCell>Bài tập</HeaderCell>
                         <Cell>
-                            {(rowData: Assignment) => (
+                            {(rowData: AssignmentDetailType) => (
                                 <div style={{ padding: '8px 0' }}>
                                     <h4 style={{
                                         margin: '0 0 8px 0',
@@ -221,10 +223,10 @@ const AssignmentList: React.FC<AssignmentListProps> = ({
                     <Column width={120} align="center">
                         <HeaderCell>Điểm số</HeaderCell>
                         <Cell>
-                            {(rowData: Assignment) => (
+                            {(rowData: AssignmentDetailType) => (
                                 <div style={{ textAlign: 'center' }}>
                                     <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#3b82f6' }}>
-                                        {rowData.totalScore}
+                                        {rowData.maxScore}
                                     </div>
                                     <div style={{ fontSize: '12px', color: '#666' }}>điểm</div>
                                 </div>
@@ -235,7 +237,7 @@ const AssignmentList: React.FC<AssignmentListProps> = ({
                     <Column width={150} align="center">
                         <HeaderCell>Hạn nộp</HeaderCell>
                         <Cell>
-                            {(rowData: Assignment) => {
+                            {(rowData: AssignmentDetailType) => {
                                 const dueDate = new Date(rowData.dueDate);
                                 const isOverdue = dueDate < new Date();
                                 return (
@@ -259,7 +261,7 @@ const AssignmentList: React.FC<AssignmentListProps> = ({
                     <Column width={120} align="center">
                         <HeaderCell>Trạng thái</HeaderCell>
                         <Cell>
-                            {(rowData: Assignment) => {
+                            {(rowData: AssignmentDetailType) => {
                                 const submission = submissions[rowData.id];
                                 const status = getAssignmentStatus(rowData, submission);
                                 return (
@@ -275,17 +277,17 @@ const AssignmentList: React.FC<AssignmentListProps> = ({
                     <Column width={150} align="center">
                         <HeaderCell>Kết quả</HeaderCell>
                         <Cell>
-                            {(rowData: Assignment) => {
+                            {(rowData: AssignmentDetailType) => {
                                 const submission = submissions[rowData.id];
                                 if (!submission || !submission.score) {
                                     return <span style={{ color: '#999', fontSize: '14px' }}>Chưa có</span>;
                                 }
 
-                                const percentage = (submission.score / rowData.totalScore) * 100;
+                                const percentage = (submission.score / rowData.maxScore) * 100;
                                 return (
                                     <div style={{ textAlign: 'center' }}>
                                         <div style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '4px' }}>
-                                            {submission.score}/{rowData.totalScore}
+                                            {submission.score}/{rowData.maxScore}
                                         </div>
                                         <Progress.Line
                                             percent={percentage}
@@ -305,7 +307,7 @@ const AssignmentList: React.FC<AssignmentListProps> = ({
                     <Column width={100} align="center" fixed="right">
                         <HeaderCell>Thao tác</HeaderCell>
                         <Cell>
-                            {(rowData: Assignment) => (
+                            {(rowData: AssignmentDetailType) => (
                                 <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
                                     <IconButton
                                         icon={<Eye />}

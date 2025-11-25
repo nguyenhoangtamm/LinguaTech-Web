@@ -3,7 +3,7 @@ import type { RoleType } from "@/types/jwt.types";
 
 /**
  * Ánh xạ RoleId từ token sang Role string
- * RoleId: 1 = Admin, 2 = User
+ * RoleId: 1 = Admin, 2 = User, 3 = Teacher
  */
 export const ROLE_ID_MAP: Record<number, RoleType> = {
     1: Role.Admin,
@@ -29,6 +29,7 @@ export function convertRoleToRoleId(role: RoleType): number {
     const roleIdMap: Record<RoleType, number> = {
         [Role.Admin]: 1,
         [Role.User]: 2,
+        [Role.Teacher]: 3,
     };
     return roleIdMap[role] ?? 2;
 }

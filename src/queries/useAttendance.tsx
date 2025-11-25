@@ -1,7 +1,6 @@
 import {useQuery} from "@tanstack/react-query";
 import attendanceApiRequest from "@/apiRequests/attendance";
 import {FilterAttendanceHistoryType, FilterExportAttendanceHistoryType} from "@/schemaValidations/attendace.schema";
-import {FilterDeviceType} from "@/schemaValidations/device.schema";
 import {buildUrlWithParams} from "@/lib/utils";
 import envConfig from "@/config";
 

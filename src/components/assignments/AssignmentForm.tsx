@@ -18,18 +18,25 @@ import {
     Modal,
 } from 'rsuite';
 import { Plus, Trash, Edit, Save, Close } from '@rsuite/icons';
-import { Assignment, Question, QuestionOption } from '@/apiRequests/assignment';
+import { AssignmentDetailType, QuestionDetailDto } from '@/schemaValidations/assignment.schema';
 
 interface AssignmentFormProps {
-    assignment?: Assignment;
-    onSave: (assignment: Partial<Assignment>) => void;
+    assignment?: AssignmentDetailType;
+    onSave: (assignment: Partial<AssignmentDetailType>) => void;
     onCancel: () => void;
     loading?: boolean;
 }
 
-interface QuestionFormData extends Omit<Question, 'id' | 'createdAt' | 'updatedAt' | 'assignmentId'> {
+interface QuestionFormData {
     tempId: string;
-    options?: (Omit<QuestionOption, 'id' | 'questionId'> & { tempId: string })[];
+    id?: number;
+    assignmentId?: number;
+    questionTypeId: number;
+    content: string;
+    score: number;
+    instructions?: string;
+    questionTypeName?: string;
+    options?: (Omit<any, 'id' | 'questionId'> & { tempId: string })[];
 }
 
 interface AssignmentFormData {
@@ -56,10 +63,10 @@ const AssignmentForm: React.FC<AssignmentFormProps> = ({
         title: assignment?.title || '',
         description: assignment?.description || '',
         dueDate: assignment?.dueDate ? new Date(assignment.dueDate) : null,
-        questions: assignment?.questions?.map(q => ({
+        questions: assignment?.questions?.map((q: any) => ({
             ...q,
             tempId: q.id,
-            options: q.options?.map(opt => ({ ...opt, tempId: opt.id })),
+            options: q.options?.map((opt: any) => ({ ...opt, tempId: opt.id })),
         })) || [],
     });
 
@@ -72,8 +79,7 @@ const AssignmentForm: React.FC<AssignmentFormProps> = ({
             tempId: `temp_${Date.now()}`,
             content: '',
             score: 10,
-            isDeleted: false,
-            questionTypeId: 'multiple_choice',
+            questionTypeId: 1,
             instructions: '',
             options: [
                 { tempId: `opt_${Date.now()}_1`, content: '', isCorrect: false },
@@ -133,7 +139,7 @@ const AssignmentForm: React.FC<AssignmentFormProps> = ({
             newOptions[optionIndex] = { ...newOptions[optionIndex], [field]: value };
 
             // If this option is set as correct and it's multiple choice, uncheck others
-            if (field === 'isCorrect' && value && prev.questionTypeId === 'multiple_choice') {
+            if (field === 'isCorrect' && value && prev.questionTypeId === 1) {
                 newOptions.forEach((opt, idx) => {
                     if (idx !== optionIndex) {
                         opt.isCorrect = false;
@@ -178,24 +184,20 @@ const AssignmentForm: React.FC<AssignmentFormProps> = ({
     };
 
     const handleSubmit = () => {
-        const totalScore = formData.questions.reduce((sum, q) => sum + q.score, 0);
+        const totalScore = formData.questions.reduce((sum: number, q: any) => sum + q.score, 0);
 
-        const assignmentData: Partial<Assignment> = {
+        const assignmentData: Partial<AssignmentDetailType> = {
             ...assignment,
             title: formData.title,
             description: formData.description,
             dueDate: formData.dueDate?.toISOString() || '',
-            totalScore,
-            questions: formData.questions.map(q => ({
+            questions: formData.questions.map((q: any) => ({
                 ...q,
-                id: q.tempId.startsWith('temp_') ? '' : q.tempId,
-                assignmentId: assignment?.id || '',
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-                options: q.options?.map(opt => ({
+                id: q.tempId.startsWith('temp_') ? 0 : Number(q.tempId),
+                assignmentId: assignment?.id || 0,
+                options: q.options?.map((opt: any) => ({
                     ...opt,
                     id: opt.tempId.startsWith('opt_') ? '' : opt.tempId,
-                    questionId: q.tempId.startsWith('temp_') ? '' : q.tempId,
                 })),
             })),
         };
@@ -303,12 +305,12 @@ const AssignmentForm: React.FC<AssignmentFormProps> = ({
                                             <span style={{
                                                 marginLeft: '8px',
                                                 padding: '2px 8px',
-                                                backgroundColor: question.questionTypeId === 'essay' ? '#f59e0b' : '#06b6d4',
+                                                backgroundColor: question.questionTypeId === 2 ? '#f59e0b' : '#06b6d4',
                                                 color: 'white',
                                                 borderRadius: '4px',
                                                 fontSize: '12px'
                                             }}>
-                                                {questionTypes.find(t => t.value === question.questionTypeId)?.label}
+                                                {questionTypes.find(t => t.value === question.questionTypeId.toString())?.label}
                                             </span>
                                         </FlexboxGrid.Item>
                                         <FlexboxGrid.Item>
@@ -404,7 +406,7 @@ const AssignmentForm: React.FC<AssignmentFormProps> = ({
                             <Form.Group>
                                 <Form.ControlLabel>Loại câu hỏi *</Form.ControlLabel>
                                 <SelectPicker
-                                    data={questionTypes}
+                                    data={questionTypes.map(t => ({ ...t, value: parseInt(t.value) }))}
                                     value={currentQuestion.questionTypeId}
                                     onChange={(value) => setCurrentQuestion(prev =>
                                         prev ? { ...prev, questionTypeId: value as any } : null
@@ -444,7 +446,7 @@ const AssignmentForm: React.FC<AssignmentFormProps> = ({
                                 <InputNumber
                                     value={currentQuestion.score}
                                     onChange={(value) => setCurrentQuestion(prev =>
-                                        prev ? { ...prev, score: value || 0 } : null
+                                        prev ? { ...prev, score: Number(value) || 0 } : null
                                     )}
                                     min={1}
                                     max={100}
@@ -453,7 +455,7 @@ const AssignmentForm: React.FC<AssignmentFormProps> = ({
                             </Form.Group>
 
                             {/* Options for multiple choice */}
-                            {currentQuestion.questionTypeId === 'multiple_choice' && (
+                            {currentQuestion.questionTypeId === 1 && (
                                 <Form.Group>
                                     <Form.ControlLabel>
                                         Lựa chọn *

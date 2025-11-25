@@ -9,7 +9,7 @@ export const useDepartmentListQuery = () => {
             const departmentListQuery = await commonApiRequest.departments()
             const dataDepartments = departmentListQuery?.data;
             const tempData: SelectOption[] = []
-            dataDepartments?.map((item, index) => {
+            dataDepartments?.map((item:any, index:number) => {
                 tempData.push({value: item.code, label: item.name});
             })
             return tempData
@@ -26,7 +26,7 @@ export const useUsersDepartmentListQuery = ({departmentId}: {departmentId: strin
             const dataListQuery = await commonApiRequest.getUsersByDepartmentId(departmentId)
             const data = dataListQuery?.data;
             const tempData: SelectOption[] = []
-            data?.map((item, index) => {
+            data?.map((item:any, index:number) => {
                 tempData.push({value: item.userName, label: item.fullName});
             })
             return tempData

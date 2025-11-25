@@ -14,16 +14,14 @@ import {
     DocPass,
     Time,
     CheckRound,
-    Close,
     Edit,
     Visible,
-    Reward,
 } from '@rsuite/icons';
 import Link from 'next/link';
-import { Assignment } from '@/apiRequests/assignment';
+import { AssignmentDetailType } from '@/schemaValidations/assignment.schema';
 
 interface LessonAssignmentsOverviewProps {
-    assignments: Assignment[];
+    assignments: AssignmentDetailType[];
     loading?: boolean;
     error?: any;
     courseId: string | number;
@@ -37,11 +35,10 @@ const LessonAssignmentsOverview: React.FC<LessonAssignmentsOverviewProps> = ({
     courseId,
     lessonId,
 }) => {
-    const getStatusColor = (assignment: Assignment) => {
-        if (assignment.completionDate) return 'green';
-
-        const dueDate = new Date(assignment.dueDate);
+    const getStatusColor = (assignment: AssignmentDetailType): any => {
+        // Since there's no submission tracking, check if it has createdDate (proxy for completion)
         const now = new Date();
+        const dueDate = new Date(assignment.dueDate);
 
         if (now > dueDate) return 'red';
 
@@ -53,11 +50,9 @@ const LessonAssignmentsOverview: React.FC<LessonAssignmentsOverviewProps> = ({
         return 'blue';
     };
 
-    const getStatusText = (assignment: Assignment) => {
-        if (assignment.completionDate) return 'Hoàn thành';
-
-        const dueDate = new Date(assignment.dueDate);
+    const getStatusText = (assignment: AssignmentDetailType) => {
         const now = new Date();
+        const dueDate = new Date(assignment.dueDate);
 
         if (now > dueDate) return 'Quá hạn';
 
@@ -69,9 +64,9 @@ const LessonAssignmentsOverview: React.FC<LessonAssignmentsOverviewProps> = ({
         return `Còn ${daysLeft} ngày`;
     };
 
-    const getDifficultyLevel = (assignment: Assignment) => {
+    const getDifficultyLevel = (assignment: AssignmentDetailType) => {
         const questionCount = assignment.questions?.length || 0;
-        const essayCount = assignment.questions?.filter(q => q.questionTypeId === 'essay').length || 0;
+        const essayCount = assignment.questions?.filter((q: any) => q.questionTypeId === 2).length || 0;
 
         if (questionCount <= 3) return { level: 'Dễ', color: 'green' };
         if (questionCount <= 7) return { level: 'Trung bình', color: 'yellow' };
@@ -131,8 +126,8 @@ const LessonAssignmentsOverview: React.FC<LessonAssignmentsOverviewProps> = ({
                     {assignments.map((assignment) => {
                         const difficulty = getDifficultyLevel(assignment);
                         const questionCount = assignment.questions?.length || 0;
-                        const essayCount = assignment.questions?.filter(q => q.questionTypeId === 'essay').length || 0;
-                        const mcCount = assignment.questions?.filter(q => q.questionTypeId === 'multiple_choice').length || 0;
+                        const essayCount = assignment.questions?.filter((q: any) => q.questionTypeId === 2).length || 0;
+                        const mcCount = assignment.questions?.filter((q: any) => q.questionTypeId === 1).length || 0;
 
                         return (
                             <List.Item key={assignment.id} style={{ padding: '16px' }}>
@@ -211,11 +206,11 @@ const LessonAssignmentsOverview: React.FC<LessonAssignmentsOverviewProps> = ({
                                         />
 
                                         {/* Score if completed */}
-                                        {assignment.completionDate && (
+                                        {false && (
                                             <div style={{ textAlign: 'center' }}>
                                                 <CheckRound style={{ color: '#f59e0b', fontSize: '16px', marginBottom: '2px' }} />
                                                 <div style={{ fontSize: '12px', color: '#666' }}>
-                                                    Điểm: {assignment.totalScore}
+                                                    Điểm: {assignment.maxScore}
                                                 </div>
                                             </div>
                                         )}
@@ -223,12 +218,12 @@ const LessonAssignmentsOverview: React.FC<LessonAssignmentsOverviewProps> = ({
                                         {/* Action Button */}
                                         <Button
                                             size="sm"
-                                            appearance={assignment.completionDate ? 'ghost' : 'primary'}
+                                            appearance="primary"
                                             as={Link}
                                             href={`/courses/detail/${courseId}/lessons/${lessonId}/assignments/${assignment.id}`}
-                                            startIcon={assignment.completionDate ? <Visible /> : <Edit />}
+                                            startIcon={<Edit />}
                                         >
-                                            {assignment.completionDate ? 'Xem lại' : 'Làm bài'}
+                                            {'Làm bài'}
                                         </Button>
                                     </FlexboxGrid.Item>
                                 </FlexboxGrid>

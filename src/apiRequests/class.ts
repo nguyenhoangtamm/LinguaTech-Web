@@ -28,8 +28,10 @@ const classApiRequest = {
         http.post<ClassOperationResType>("/classes/create", body),
 
     // Update class
-    update: (id: number, body: UpdateClassBodyType) =>
-        http.post<ClassOperationResType>(`/classes/update/${id}`, body),
+    update: (body: UpdateClassBodyType) => {
+        const { id, ...rest } = body;
+        return http.post<ClassOperationResType>(`/classes/update/${id}`, rest);
+    },
 
     // Delete class
     delete: (id: number) =>

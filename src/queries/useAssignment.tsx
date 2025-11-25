@@ -81,8 +81,8 @@ export const useCreateAssignmentMutation = () => {
 export const useUpdateAssignmentMutation = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ id, ...body }: UpdateAssignmentBodyType & { id: number }) =>
-            assignmentApiRequest.update(id, body),
+        mutationFn: (body: UpdateAssignmentBodyType) =>
+            assignmentApiRequest.update(body),
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: ['assignments']

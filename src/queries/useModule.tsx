@@ -49,8 +49,8 @@ export const useUpdateModuleMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ id, ...data }: UpdateModuleBodyType & { id: number }) =>
-            moduleApiRequest.update(id, data),
+        mutationFn: (data: UpdateModuleBodyType) =>
+            moduleApiRequest.update(data),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: moduleKeys.all });
             queryClient.invalidateQueries({ queryKey: moduleKeys.detail(variables.id) });

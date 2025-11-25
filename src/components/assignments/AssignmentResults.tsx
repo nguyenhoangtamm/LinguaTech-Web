@@ -13,21 +13,40 @@ import {
 } from 'rsuite';
 import { CheckRound } from '@rsuite/icons';
 import { X as CloseRound, Trophy as Award } from 'lucide-react';
-import { Assignment, UserSubmission, Question, SubmissionAnswer } from '@/apiRequests/assignment';
+import { AssignmentDetailType, QuestionDetailDto } from '@/schemaValidations/assignment.schema';
+
+interface UserSubmission {
+    id: string;
+    assignmentId: number;
+    userId: string;
+    score: number;
+    status: 'draft' | 'submitted' | 'graded' | 'overdue';
+    submittedAt?: string;
+    gradedAt?: string;
+    feedback?: string;
+    answers?: Array<{
+        questionId: number;
+        selectedOptionId?: string;
+        content?: string;
+        isCorrect: boolean;
+        score: number;
+        feedback?: string;
+    }>;
+}
 
 interface AssignmentResultsProps {
-    assignment: Assignment;
+    assignment: AssignmentDetailType;
     submission: UserSubmission;
 }
 
 const AssignmentResults: React.FC<AssignmentResultsProps> = ({ assignment, submission }) => {
-    const totalScore = assignment.questions.reduce((sum, q) => sum + q.score, 0);
+    const totalScore = assignment.questions.reduce((sum: number, q: any) => sum + q.score, 0);
     const userScore = submission.score || 0;
     const completionPercentage = (userScore / totalScore) * 100;
 
     // Categorize questions by type and result
-    const questionResults = assignment.questions.map(question => {
-        const answer = submission.answers?.find(a => a.questionId === question.id);
+    const questionResults = assignment.questions.map((question: any) => {
+        const answer = submission.answers?.find((a: any) => a.questionId === question.id);
         return {
             question,
             answer,
@@ -36,7 +55,7 @@ const AssignmentResults: React.FC<AssignmentResultsProps> = ({ assignment, submi
         };
     });
 
-    const correctAnswers = questionResults.filter(r => r.isCorrect).length;
+    const correctAnswers = questionResults.filter((r: any) => r.isCorrect).length;
     const totalQuestions = assignment.questions.length;
 
     const getPerformanceColor = (percentage: number) => {
@@ -109,7 +128,6 @@ const AssignmentResults: React.FC<AssignmentResultsProps> = ({ assignment, submi
                         readOnly
                         value={getGradeRating(completionPercentage)}
                         size="lg"
-                        color={getPerformanceColor(completionPercentage) === 'green' ? '#22c55e' : undefined}
                         style={{ marginBottom: '12px' }}
                     />
 
@@ -151,7 +169,7 @@ const AssignmentResults: React.FC<AssignmentResultsProps> = ({ assignment, submi
                 style={{ backgroundColor: 'white' }}
             >
                 <Timeline style={{ marginTop: '16px' }}>
-                    {questionResults.map((result, index) => (
+                    {questionResults.map((result: any, index: any) => (
                         <Timeline.Item
                             key={result.question.id}
                             dot={
@@ -205,7 +223,7 @@ const AssignmentResults: React.FC<AssignmentResultsProps> = ({ assignment, submi
                                         <div style={{ fontSize: '14px', color: '#333' }}>
                                             {result.question.questionTypeId === 'essay' ?
                                                 result.answer.answer :
-                                                result.question.options?.find(opt => opt.id === result.answer?.selectedOptionId)?.content
+                                                result.question.options?.find((opt: any) => opt.id === result.answer?.selectedOptionId)?.content
                                             }
                                         </div>
                                     </div>
@@ -224,7 +242,7 @@ const AssignmentResults: React.FC<AssignmentResultsProps> = ({ assignment, submi
                                             Đáp án đúng:
                                         </div>
                                         <div style={{ fontSize: '14px', color: '#166534' }}>
-                                            {result.question.options?.find(opt => opt.isCorrect)?.content}
+                                            {result.question.options?.find((opt: any) => opt.isCorrect)?.content}
                                         </div>
                                     </div>
                                 )}

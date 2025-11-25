@@ -100,5 +100,5 @@ export function RoleBasedRender({ children, fallback }: RoleBasedRenderProps) {
         return fallback || <div>Loading...</div>
     }
 
-    return <>{children(userRole)}</>
+    return <>{children(userRole??undefined)}</>
 }

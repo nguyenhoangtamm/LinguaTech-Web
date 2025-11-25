@@ -262,7 +262,7 @@ export default function CourseLearnPage() {
                                                         </div>
                                                         <div className="flex items-center gap-4">
                                                             <span className="text-sm text-gray-600">{lesson.duration} phút</span>
-                                                            {isEnrolled ? (
+                                                            {/* {isEnrolled ? (
                                                                 <Link href={`/courses/detail/${courseId}/lessons/${lesson.id}`}>
                                                                     <Button size="sm" variant={lesson.isCompleted ? "outline" : "default"}>
                                                                         {lesson.isCompleted ? "Xem lại" : "Học ngay"}
@@ -272,7 +272,12 @@ export default function CourseLearnPage() {
                                                                 <Button size="sm" disabled>
                                                                     Đăng ký để học
                                                                 </Button>
-                                                            )}
+                                                            )} */}
+                                                            <Link href={`/courses/detail/${courseId}/lessons/${lesson.id}`}>
+                                                                    <Button size="sm" variant={lesson.isCompleted ? "outline" : "default"}>
+                                                                        {lesson.isCompleted ? "Xem lại" : "Học ngay"}
+                                                                    </Button>
+                                                                </Link>
                                                             {lesson.isCompleted && (
                                                                 <CheckCircle className="w-5 h-5 text-green-500" />
                                                             )}

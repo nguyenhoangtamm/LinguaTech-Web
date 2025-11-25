@@ -28,11 +28,13 @@ const assignmentApiRequest = {
         http.post<AssignmentOperationResType>("/assignments/create", body),
 
     // Update assignment
-    update: (id: number, body: UpdateAssignmentBodyType) =>
-        http.post<AssignmentOperationResType>(
+    update: (body: UpdateAssignmentBodyType) => {
+        const { id, ...rest } = body;
+        return http.post<AssignmentOperationResType>(
             `/assignments/update/${id}`,
-            body
-        ),
+            rest
+        );
+    },
 
     // Delete assignment
     delete: (id: number) =>

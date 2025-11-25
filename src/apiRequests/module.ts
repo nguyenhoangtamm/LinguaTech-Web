@@ -27,8 +27,10 @@ const moduleApiRequest = {
         http.post<ModuleOperationResType>("/modules/create", body),
 
     // Update module
-    update: (id: number, body: UpdateModuleBodyType) =>
-        http.post<ModuleOperationResType>(`/modules/update/${id}`, body),
+    update: (body: UpdateModuleBodyType) => {
+        const { id, ...rest } = body;
+        return http.post<ModuleOperationResType>(`/modules/update/${id}`, rest);
+    },
 
     // Delete module
     delete: (id: number) =>

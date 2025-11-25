@@ -52,7 +52,8 @@ export default function CourseDetailPage() {
 
     // API queries
     const { data: course, isLoading: courseLoading, error: courseError } = useCourseQuery(courseId);
-    const { data: modules = [], isLoading: modulesLoading } = useModulesByCourseQuery(courseId);
+    const { data: modulesResponse, isLoading: modulesLoading } = useModulesByCourseQuery(courseId);
+    const modules = modulesResponse?.data || [];
 
     useEffect(() => {
         // Mock check if user is enrolled

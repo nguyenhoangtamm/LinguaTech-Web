@@ -177,7 +177,7 @@ export const useEnrollCourseMutation = () => {
         mutationFn: (body: EnrollmentCreateBodyType) => courseApiRequest.enrollCourse(body),
         onSuccess: (data, variables) => {
             queryClient.invalidateQueries({ queryKey: COURSE_QUERY_KEYS.userEnrollments() });
-            queryClient.invalidateQueries({ queryKey: COURSE_QUERY_KEYS.checkEnrollment(variables.courseId) });
+            queryClient.invalidateQueries({ queryKey: COURSE_QUERY_KEYS.checkEnrollment(Number(variables.courseId)) });
             queryClient.invalidateQueries({ queryKey: COURSE_QUERY_KEYS.dashboardStats() });
         },
     });

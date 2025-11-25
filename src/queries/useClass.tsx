@@ -67,8 +67,8 @@ export const useUpdateClassMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ id, ...data }: UpdateClassBodyType & { id: number }) =>
-            classApiRequest.update(id, data),
+        mutationFn: (data: UpdateClassBodyType) =>
+            classApiRequest.update(data),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: classKeys.all });
             queryClient.invalidateQueries({ queryKey: classKeys.detail(variables.id) });
