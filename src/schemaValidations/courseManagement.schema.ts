@@ -32,6 +32,9 @@ export const CourseSchema = z.object({
     isPublished: z.boolean().optional(),
     createdAt: z.string(),
     updatedAt: z.string(),
+    lessonsCount: z.number().optional(),
+    detailedDescription: z.string().optional(),
+    modulesCount: z.number().optional(),
 });
 
 // Create course request schema

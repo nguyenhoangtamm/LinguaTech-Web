@@ -22,6 +22,8 @@ interface Course {
     tags: string[];
     createdAt?: string;
     updatedAt?: string;
+    lessonsCount?: number;
+    modulesCount?: number;
 }
 
 interface CourseOverviewProps {
@@ -38,8 +40,8 @@ export default function CourseOverview({ course }: CourseOverviewProps) {
     const levelInfo = courseLevels.find(l => l.value === course.level);
 
     const stats = [
-        { label: "Số module", value: "0", icon: BookOpen, color: "text-blue-600" },
-        { label: "Số bài học", value: "0", icon: FileText, color: "text-green-600" },
+        { label: "Số module", value: course.modulesCount, icon: BookOpen, color: "text-blue-600" },
+        { label: "Số bài học", value: course.lessonsCount, icon: FileText, color: "text-green-600" },
         { label: "Tổng thời lượng", value: `${course.duration}h`, icon: Clock, color: "text-purple-600" },
         { label: "Học viên", value: "0", icon: Users, color: "text-orange-600" },
     ];

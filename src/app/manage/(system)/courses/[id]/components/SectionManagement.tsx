@@ -24,6 +24,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "@/hooks/use-toast";
 import DeletePopover from "@/app/shared/delete-popover";
 import { DetailModal, DetailField, DetailSection } from "@/components/ui/detail-modal";
+import RichTextEditor from "@/components/ui/rich-text-editor";
 import { useSectionListQuery, useCreateSectionMutation, useUpdateSectionMutation, useDeleteSectionMutation } from "@/queries/useSection";
 import { useModulesByCourseQuery } from "@/queries/useLesson";
 import { CreateSectionBodySchema, CreateSectionBodyType, SectionType } from "@/schemaValidations/section.schema";
@@ -398,11 +399,11 @@ export default function SectionManagement({ courseId }: SectionManagementProps) 
                             </div>
                             <div>
                                 <Label htmlFor="content">Nội dung *</Label>
-                                <Textarea
-                                    id="content"
+                                <RichTextEditor
+                                    value={form.watch("content") || ""}
+                                    onChange={(value) => form.setValue("content", value)}
                                     placeholder="Nội dung chi tiết của phần..."
-                                    {...form.register("content")}
-                                    rows={8}
+                                    className="min-h-[200px]"
                                 />
                                 {form.formState.errors.content && (
                                     <p className="text-sm text-red-500 mt-1">
@@ -455,32 +456,32 @@ export default function SectionManagement({ courseId }: SectionManagementProps) 
                         <DetailSection title="Thông tin cơ bản">
                             <DetailField label="Tiêu đề" value={detailSection.title} />
                             <DetailField label="Thứ tự" value={detailSection.order} />
-                            <DetailField 
-                                label="Bài học" 
-                                value={allLessons.find((l:any) => l.id === detailSection.lessonId)?.title || "Không xác định"} 
+                            <DetailField
+                                label="Bài học"
+                                value={allLessons.find((l: any) => l.id === detailSection.lessonId)?.title || "Không xác định"}
                             />
-                            <DetailField 
-                                label="Module" 
-                                value={allLessons.find((l:any) => l.id === detailSection.lessonId)?.moduleTitle || "Không xác định"} 
+                            <DetailField
+                                label="Module"
+                                value={allLessons.find((l: any) => l.id === detailSection.lessonId)?.moduleTitle || "Không xác định"}
                             />
                         </DetailSection>
-                        
+
                         <DetailSection title="Nội dung">
-                            <DetailField 
-                                label="Nội dung" 
-                                value={detailSection.content || "Chưa có nội dung"} 
+                            <DetailField
+                                label="Nội dung"
+                                value={detailSection.content || "Chưa có nội dung"}
                                 fullWidth
                             />
                         </DetailSection>
-                        
+
                         <DetailSection title="Thông tin thời gian">
-                            <DetailField 
-                                label="Ngày tạo" 
-                                value={new Date(detailSection.createdAt).toLocaleString("vi-VN")} 
+                            <DetailField
+                                label="Ngày tạo"
+                                value={new Date(detailSection.createdAt).toLocaleString("vi-VN")}
                             />
-                            <DetailField 
-                                label="Ngày cập nhật" 
-                                value={new Date(detailSection.updatedAt).toLocaleString("vi-VN")} 
+                            <DetailField
+                                label="Ngày cập nhật"
+                                value={new Date(detailSection.updatedAt).toLocaleString("vi-VN")}
                             />
                         </DetailSection>
                     </div>
