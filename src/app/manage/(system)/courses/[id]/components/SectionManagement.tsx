@@ -23,6 +23,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "@/hooks/use-toast";
 import DeletePopover from "@/app/shared/delete-popover";
+import { DetailModal, DetailField, DetailSection } from "@/components/ui/detail-modal";
 import { useSectionListQuery, useCreateSectionMutation, useUpdateSectionMutation, useDeleteSectionMutation } from "@/queries/useSection";
 import { useModulesByCourseQuery } from "@/queries/useLesson";
 import { CreateSectionBodySchema, CreateSectionBodyType, SectionType } from "@/schemaValidations/section.schema";
@@ -35,6 +36,8 @@ export default function SectionManagement({ courseId }: SectionManagementProps) 
     const [searchKeyword, setSearchKeyword] = useState("");
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [editingSection, setEditingSection] = useState<any>(null);
+    const [detailSection, setDetailSection] = useState<any>(null);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [selectedLessonId, setSelectedLessonId] = useState<number | null>(null);
     const [pageNumber, setPageNumber] = useState(1);
     const pageSize = 100;
@@ -158,6 +161,11 @@ export default function SectionManagement({ courseId }: SectionManagementProps) 
                 variant: "destructive",
             });
         }
+    };
+
+    const handleViewDetail = (section: any) => {
+        setDetailSection(section);
+        setIsDetailModalOpen(true);
     };
 
     const onSubmit = async (values: CreateSectionBodyType) => {
@@ -312,7 +320,7 @@ export default function SectionManagement({ courseId }: SectionManagementProps) 
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center gap-2">
-                                                        <Button variant="ghost" size="sm">
+                                                        <Button variant="ghost" size="sm" onClick={() => handleViewDetail(section)}>
                                                             <Eye className="w-4 h-4" />
                                                         </Button>
                                                         <Button variant="ghost" size="sm" onClick={() => handleEditSection(section)}>
@@ -434,6 +442,50 @@ export default function SectionManagement({ courseId }: SectionManagementProps) 
                     </Modal.Footer>
                 </form>
             </Modal>
+
+            {/* Detail Modal */}
+            <DetailModal
+                open={isDetailModalOpen}
+                onClose={() => setIsDetailModalOpen(false)}
+                title={`Chi tiết Phần: ${detailSection?.title || ''}`}
+                size="lg"
+            >
+                {detailSection && (
+                    <div className="space-y-6">
+                        <DetailSection title="Thông tin cơ bản">
+                            <DetailField label="Tiêu đề" value={detailSection.title} />
+                            <DetailField label="Thứ tự" value={detailSection.order} />
+                            <DetailField 
+                                label="Bài học" 
+                                value={allLessons.find((l:any) => l.id === detailSection.lessonId)?.title || "Không xác định"} 
+                            />
+                            <DetailField 
+                                label="Module" 
+                                value={allLessons.find((l:any) => l.id === detailSection.lessonId)?.moduleTitle || "Không xác định"} 
+                            />
+                        </DetailSection>
+                        
+                        <DetailSection title="Nội dung">
+                            <DetailField 
+                                label="Nội dung" 
+                                value={detailSection.content || "Chưa có nội dung"} 
+                                fullWidth
+                            />
+                        </DetailSection>
+                        
+                        <DetailSection title="Thông tin thời gian">
+                            <DetailField 
+                                label="Ngày tạo" 
+                                value={new Date(detailSection.createdAt).toLocaleString("vi-VN")} 
+                            />
+                            <DetailField 
+                                label="Ngày cập nhật" 
+                                value={new Date(detailSection.updatedAt).toLocaleString("vi-VN")} 
+                            />
+                        </DetailSection>
+                    </div>
+                )}
+            </DetailModal>
         </div>
     );
 }

@@ -21,14 +21,7 @@ import {
     useUpdateModuleMutation,
     useDeleteModuleMutation
 } from "@/queries/useModule";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
+import { Modal, Button as RSButton, Input as RSInput } from "rsuite";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
@@ -40,8 +33,8 @@ import {
     UpdateModuleBodySchema
 } from "@/schemaValidations/module.schema";
 import { toast } from "@/hooks/use-toast";
-import { handleErrorApi } from "@/lib/utils";
 import DeletePopover from "@/app/shared/delete-popover";
+import { DetailModal, DetailField, DetailSection } from "@/components/ui/detail-modal";
 
 interface ModuleManagementProps {
     courseId: number;
@@ -64,6 +57,8 @@ export default function ModuleManagement({ courseId }: ModuleManagementProps) {
     const [searchKeyword, setSearchKeyword] = useState("");
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [editingModule, setEditingModule] = useState<Module | null>(null);
+    const [detailModule, setDetailModule] = useState<Module | null>(null);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const searchInputRef = useRef<HTMLInputElement>(null);
 
     // Memoize query parameters to prevent infinite re-renders
@@ -89,15 +84,9 @@ export default function ModuleManagement({ courseId }: ModuleManagementProps) {
     const modules: Module[] = useMemo(() => modulesData?.data || [], [modulesData]);
     const totalCount = (modulesData as any)?.totalCount || 0;
 
-    // Memoize form resolver to prevent unnecessary re-renders
-    const formResolver = useMemo(() =>
-        zodResolver(editingModule ? UpdateModuleBodySchema : CreateModuleBodySchema),
-        [editingModule]
-    );
-
-    // Form for create/edit
-    const form = useForm<CreateModuleBodyType | UpdateModuleBodyType>({
-        resolver: formResolver,
+    // Form for create/edit - using single type like LessonManagement
+    const form = useForm<CreateModuleBodyType>({
+        resolver: zodResolver(CreateModuleBodySchema),
         defaultValues: {
             title: "",
             description: "",
@@ -110,7 +99,7 @@ export default function ModuleManagement({ courseId }: ModuleManagementProps) {
         if (searchInputRef.current) {
             setSearchKeyword(searchInputRef.current.value.trim());
         }
-    }, [ ]);
+    }, []);
 
     const handleCreateModule = useCallback(() => {
         const nextOrder = modules.length > 0 ? Math.max(...modules.map(m => m.order)) + 1 : 1;
@@ -153,32 +142,36 @@ export default function ModuleManagement({ courseId }: ModuleManagementProps) {
         }
     };
 
-    const onSubmit = async (values: CreateModuleBodyType | UpdateModuleBodyType) => {
+    const handleViewDetail = (module: Module) => {
+        setDetailModule(module);
+        setIsDetailModalOpen(true);
+    };
+
+    const onSubmit = async (values: CreateModuleBodyType) => {
         try {
             if (editingModule) {
                 await updateModuleMutation.mutateAsync({
-                    id: editingModule.id,
                     ...values,
+                    id: editingModule.id,
                 } as UpdateModuleBodyType);
                 toast({
                     title: "Thành công",
                     description: "Module đã được cập nhật",
-                    variant: "success",
                 });
             } else {
-                await createModuleMutation.mutateAsync(values as CreateModuleBodyType);
+                await createModuleMutation.mutateAsync(values);
                 toast({
                     title: "Thành công",
                     description: "Module đã được tạo",
-                    variant: "success",
                 });
             }
             setIsCreateDialogOpen(false);
-            // Let React Query handle the invalidation automatically
+            refetch();
         } catch (error) {
-            handleErrorApi({
-                error,
-                setError: form.setError,
+            toast({
+                title: "Lỗi",
+                description: editingModule ? "Không thể cập nhật module" : "Không thể tạo module mới",
+                variant: "destructive",
             });
         }
     };
@@ -267,7 +260,7 @@ export default function ModuleManagement({ courseId }: ModuleManagementProps) {
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <Button variant="ghost" size="sm">
+                                        <Button variant="ghost" size="sm" onClick={() => handleViewDetail(module)}>
                                             <Eye className="w-4 h-4" />
                                         </Button>
                                         <Button variant="ghost" size="sm" onClick={() => handleEditModule(module)}>
@@ -286,18 +279,19 @@ export default function ModuleManagement({ courseId }: ModuleManagementProps) {
                 )}
             </div>
 
-            {/* Create/Edit Dialog */}
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>
+            {/* Create/Edit Modal */}
+            <Modal
+                open={isCreateDialogOpen}
+                onClose={() => setIsCreateDialogOpen(false)}
+                size="md"
+            >
+                <form onSubmit={form.handleSubmit(onSubmit)}>
+                    <Modal.Header>
+                        <Modal.Title>
                             {editingModule ? "Chỉnh sửa Module" : "Tạo Module mới"}
-                        </DialogTitle>
-                        <DialogDescription>
-                            {editingModule ? "Cập nhật thông tin module" : "Thêm module mới vào khóa học"}
-                        </DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={form.handleSubmit(onSubmit)}>
+                        </Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
                         <div className="space-y-4">
                             <div>
                                 <Label htmlFor="title">Tiêu đề Module *</Label>
@@ -336,24 +330,56 @@ export default function ModuleManagement({ courseId }: ModuleManagementProps) {
                                 )}
                             </div>
                         </div>
-                        <DialogFooter className="mt-6">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setIsCreateDialogOpen(false)}
-                            >
-                                Hủy
-                            </Button>
-                            <Button
-                                type="submit"
-                                disabled={createModuleMutation.isPending || updateModuleMutation.isPending}
-                            >
-                                {editingModule ? "Cập nhật" : "Tạo Module"}
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <RSButton
+                            onClick={() => setIsCreateDialogOpen(false)}
+                            appearance="subtle"
+                        >
+                            Hủy
+                        </RSButton>
+                        <RSButton
+                            appearance="primary"
+                            type="submit"
+                            disabled={createModuleMutation.isPending || updateModuleMutation.isPending}
+                        >
+                            {editingModule ? "Cập nhật" : "Tạo Module"}
+                        </RSButton>
+                    </Modal.Footer>
+                </form>
+            </Modal>
+
+            {/* Detail Modal */}
+            <DetailModal
+                open={isDetailModalOpen}
+                onClose={() => setIsDetailModalOpen(false)}
+                title={`Chi tiết Module: ${detailModule?.title || ''}`}
+                size="md"
+            >
+                {detailModule && (
+                    <DetailSection>
+                        <DetailField label="Tiêu đề" value={detailModule.title} />
+                        <DetailField label="Thứ tự" value={detailModule.order} />
+                        <DetailField
+                            label="Mô tả"
+                            value={detailModule.description || "Chưa có mô tả"}
+                            fullWidth
+                        />
+                        <DetailField
+                            label="Số bài học"
+                            value={detailModule.lessonsCount || 0}
+                        />
+                        <DetailField
+                            label="Ngày tạo"
+                            value={new Date(detailModule.createdAt).toLocaleString("vi-VN")}
+                        />
+                        <DetailField
+                            label="Ngày cập nhật"
+                            value={new Date(detailModule.updatedAt).toLocaleString("vi-VN")}
+                        />
+                    </DetailSection>
+                )}
+            </DetailModal>
         </div>
     );
 }

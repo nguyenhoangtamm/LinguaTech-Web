@@ -16,14 +16,7 @@ import {
     Circle,
     X
 } from "lucide-react";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
+import { Modal, Button as RSButton, SelectPicker } from "rsuite";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -32,6 +25,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "@/hooks/use-toast";
 import DeletePopover from "@/app/shared/delete-popover";
+import { DetailModal, DetailField, DetailSection } from "@/components/ui/detail-modal";
 
 interface QuestionManagementProps {
     courseId: number;
@@ -106,6 +100,8 @@ export default function QuestionManagement({ courseId }: QuestionManagementProps
     const [searchKeyword, setSearchKeyword] = useState("");
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [editingQuestion, setEditingQuestion] = useState<any>(null);
+    const [detailQuestion, setDetailQuestion] = useState<any>(null);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const searchInputRef = useRef<HTMLInputElement>(null);
 
     const form = useForm<CreateQuestionType>({
@@ -169,6 +165,11 @@ export default function QuestionManagement({ courseId }: QuestionManagementProps
             description: "Câu hỏi đã được xóa",
             variant: "success",
         });
+    };
+
+    const handleViewDetail = (question: any) => {
+        setDetailQuestion(question);
+        setIsDetailModalOpen(true);
     };
 
     const addOption = () => {
@@ -307,7 +308,7 @@ export default function QuestionManagement({ courseId }: QuestionManagementProps
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2 ml-4">
-                                        <Button variant="ghost" size="sm">
+                                        <Button variant="ghost" size="sm" onClick={() => handleViewDetail(question)}>
                                             <Eye className="w-4 h-4" />
                                         </Button>
                                         <Button variant="ghost" size="sm" onClick={() => handleEditQuestion(question)}>
@@ -326,17 +327,18 @@ export default function QuestionManagement({ courseId }: QuestionManagementProps
                 )}
             </div>
 
-            {/* Create/Edit Dialog */}
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle>
-                            {editingQuestion ? "Chỉnh sửa Câu hỏi" : "Tạo Câu hỏi mới"}
-                        </DialogTitle>
-                        <DialogDescription>
-                            {editingQuestion ? "Cập nhật thông tin câu hỏi" : "Thêm câu hỏi mới vào bài tập"}
-                        </DialogDescription>
-                    </DialogHeader>
+            {/* Create/Edit Modal */}
+            <Modal 
+                open={isCreateDialogOpen} 
+                onClose={() => setIsCreateDialogOpen(false)}
+                size="lg"
+            >
+                <Modal.Header>
+                    <Modal.Title>
+                        {editingQuestion ? "Chỉnh sửa Câu hỏi" : "Tạo Câu hỏi mới"}
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body className="max-h-[70vh] overflow-y-auto">
                     <form onSubmit={form.handleSubmit(onSubmit)}>
                         <div className="space-y-6">
                             <div>
@@ -464,21 +466,99 @@ export default function QuestionManagement({ courseId }: QuestionManagementProps
                                 />
                             </div>
                         </div>
-                        <DialogFooter className="mt-6">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setIsCreateDialogOpen(false)}
-                            >
-                                Hủy
-                            </Button>
-                            <Button type="submit">
-                                {editingQuestion ? "Cập nhật" : "Tạo Câu hỏi"}
-                            </Button>
-                        </DialogFooter>
                     </form>
-                </DialogContent>
-            </Dialog>
+                </Modal.Body>
+                <Modal.Footer>
+                    <RSButton 
+                        onClick={() => setIsCreateDialogOpen(false)} 
+                        appearance="subtle"
+                    >
+                        Hủy
+                    </RSButton>
+                    <RSButton 
+                        onClick={form.handleSubmit(onSubmit)}
+                        appearance="primary"
+                    >
+                        {editingQuestion ? "Cập nhật" : "Tạo Câu hỏi"}
+                    </RSButton>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Detail Modal */}
+            <DetailModal
+                open={isDetailModalOpen}
+                onClose={() => setIsDetailModalOpen(false)}
+                title={`Chi tiết Câu hỏi`}
+                size="lg"
+            >
+                {detailQuestion && (
+                    <div className="space-y-6">
+                        <DetailSection title="Thông tin cơ bản">
+                            <DetailField 
+                                label="Nội dung câu hỏi" 
+                                value={detailQuestion.content} 
+                                fullWidth
+                            />
+                            <DetailField 
+                                label="Loại câu hỏi" 
+                                value={questionTypes.find(t => t.value === detailQuestion.type)?.label || detailQuestion.type} 
+                            />
+                            <DetailField label="Điểm" value={`${detailQuestion.points} điểm`} />
+                        </DetailSection>
+                        
+                        <DetailSection title="Bài tập">
+                            <DetailField label="Bài tập" value={detailQuestion.assignmentTitle} />
+                            <DetailField label="Bài học" value={detailQuestion.lessonTitle} />
+                        </DetailSection>
+                        
+                        <DetailSection title="Đáp án">
+                            <div className="col-span-2">
+                                <dt className="text-sm font-medium text-gray-500 mb-2">Các lựa chọn:</dt>
+                                <dd className="space-y-2">
+                                    {detailQuestion.options?.map((option: any, index: number) => (
+                                        <div 
+                                            key={index} 
+                                            className={`p-3 rounded-lg border ${
+                                                option.isCorrect 
+                                                    ? 'bg-green-50 border-green-200' 
+                                                    : 'bg-gray-50 border-gray-200'
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                {option.isCorrect ? (
+                                                    <CheckSquare className="w-4 h-4 text-green-600" />
+                                                ) : (
+                                                    <Circle className="w-4 h-4 text-gray-400" />
+                                                )}
+                                                <span className={option.isCorrect ? 'text-green-700 font-medium' : 'text-gray-700'}>
+                                                    {option.text}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </dd>
+                            </div>
+                        </DetailSection>
+                        
+                        {detailQuestion.explanation && (
+                            <DetailSection title="Giải thích">
+                                <DetailField 
+                                    label="Giải thích" 
+                                    value={detailQuestion.explanation} 
+                                    fullWidth
+                                />
+                            </DetailSection>
+                        )}
+                        
+                        <DetailSection title="Thông tin thời gian">
+                            <DetailField 
+                                label="Ngày tạo" 
+                                value={new Date(detailQuestion.createdAt).toLocaleString("vi-VN")} 
+                            />
+                        </DetailSection>
+                    </div>
+                )}
+            </DetailModal>
         </div>
     );
 }

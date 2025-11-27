@@ -25,6 +25,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "@/hooks/use-toast";
 import DeletePopover from "@/app/shared/delete-popover";
+import { DetailModal, DetailField, DetailSection } from "@/components/ui/detail-modal";
 import {
     useModulesByCourseQuery,
     useLessonsQuery,
@@ -45,6 +46,8 @@ export default function LessonManagement({ courseId }: LessonManagementProps) {
     const [searchKeyword, setSearchKeyword] = useState("");
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [editingLesson, setEditingLesson] = useState<LessonType | null>(null);
+    const [detailLesson, setDetailLesson] = useState<LessonType | null>(null);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
     const [pageNumber, setPageNumber] = useState(1);
     const pageSize = 100;
@@ -214,6 +217,11 @@ export default function LessonManagement({ courseId }: LessonManagementProps) {
         }
     };
 
+    const handleViewDetail = (lesson: LessonType) => {
+        setDetailLesson(lesson);
+        setIsDetailModalOpen(true);
+    };
+
 
 
     if (lessonsLoading) {
@@ -341,7 +349,7 @@ export default function LessonManagement({ courseId }: LessonManagementProps) {
                                                         <Button variant="ghost" size="sm">
                                                             <Play className="w-4 h-4" />
                                                         </Button>
-                                                        <Button variant="ghost" size="sm">
+                                                        <Button variant="ghost" size="sm" onClick={() => handleViewDetail(lesson)}>
                                                             <Eye className="w-4 h-4" />
                                                         </Button>
                                                         <Button variant="ghost" size="sm" onClick={() => handleEditLesson(lesson)}>
@@ -468,6 +476,44 @@ export default function LessonManagement({ courseId }: LessonManagementProps) {
                     </Modal.Footer>
                 </form>
             </Modal>
+
+            {/* Detail Modal */}
+            <DetailModal
+                open={isDetailModalOpen}
+                onClose={() => setIsDetailModalOpen(false)}
+                title={`Chi tiết Bài học: ${detailLesson?.title || ''}`}
+                size="lg"
+            >
+                {detailLesson && (
+                    <div className="space-y-6">
+                        <DetailSection title="Thông tin cơ bản">
+                            <DetailField label="Tiêu đề" value={detailLesson.title} />
+                            <DetailField label="Thời lượng" value={`${detailLesson.duration || 0} phút`} />
+                            <DetailField label="Thứ tự" value={detailLesson.order} />
+                            <DetailField 
+                                label="Trạng thái" 
+                                value={detailLesson.isPublished ? "Đã xuất bản" : "Nháp"} 
+                            />
+                            <DetailField 
+                                label="Mô tả" 
+                                value={detailLesson.description || "Chưa có mô tả"} 
+                                fullWidth
+                            />
+                        </DetailSection>
+                        
+                        <DetailSection title="Thông tin thời gian">
+                            <DetailField 
+                                label="Ngày tạo" 
+                                value={new Date(detailLesson.createdAt).toLocaleString("vi-VN")} 
+                            />
+                            <DetailField 
+                                label="Ngày cập nhật" 
+                                value={new Date(detailLesson.updatedAt).toLocaleString("vi-VN")} 
+                            />
+                        </DetailSection>
+                    </div>
+                )}
+            </DetailModal>
         </div>
     );
 }
