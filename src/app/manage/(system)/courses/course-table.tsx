@@ -16,7 +16,7 @@ import {
   useCategoriesManagement
 } from "@/queries/useCourseManagement";
 import { Label } from "@/components/ui/label";
-import { IconButton, Input, Button, Badge, SelectPicker } from "rsuite";
+import { IconButton, Input, Button, Badge, SelectPicker, Image } from "rsuite";
 import DeletePopover from "@/app/shared/delete-popover";
 import { PageHeaderProps } from "@/types/page-header-props.type";
 import { usePageHeader } from "@/hooks/use-page-header";
@@ -26,7 +26,6 @@ import Table, { TableColumn } from "@/app/shared/common/components/table";
 import BaseLayout from "@/layouts/BaseLayout";
 import FunnelIcon from '@rsuite/icons/Funnel';
 import Link from "next/link";
-import Image from "next/image";
 import { routes } from "@/config/routes";
 
 const PAGE_SIZE = 10;
@@ -176,11 +175,9 @@ export default function CourseTable({ title, breadcrumb }: PageHeaderProps) {
         <div className="flex items-center justify-center">
           {rowData.thumbnailUrl ? (
             <Image
-              src={rowData.thumbnailUrl}
-              alt="Course thumbnail"
-              width={48}
-              height={32}
-              className="w-12 h-8 object-cover rounded"
+              src={rowData.thumbnailUrl || ""}
+              alt={rowData.title}
+              className="w-full h-full object-cover rounded-lg"
             />
           ) : (
             <div className="w-12 h-8 bg-gray-300 flex items-center justify-center rounded text-gray-600 text-xs">
@@ -301,11 +298,11 @@ export default function CourseTable({ title, breadcrumb }: PageHeaderProps) {
           icon={<FunnelIcon />}
           onClick={() => setFilterCollapsed(!filterCollapsed)}
         />
-        <Link href={routes.manage.system.courses + "/create"} className="inline-block">
+        {/* <Link href={routes.manage.system.courses + "/create"} className="inline-block">
           <Button appearance="primary" size="sm" startIcon={<Plus />}>
             Tạo khóa học
           </Button>
-        </Link>
+        </Link> */}
         <CourseForm onSubmitSuccess={courseListQuery.refetch} />
       </div>
 

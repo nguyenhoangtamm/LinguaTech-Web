@@ -36,7 +36,7 @@ const mockCourses: Course[] = [
         studentsCount: 234,
         category: { id: "1", name: "Frontend", slug: "frontend" },
         tags: ["React", "JavaScript", "TypeScript", "Performance"],
-        thumbnail: "/images/course1.jpg",
+        thumbnailUrl: "/images/course1.jpg",
         createdAt: new Date(),
         updatedAt: new Date(),
         isPublished: true
@@ -53,7 +53,7 @@ const mockCourses: Course[] = [
         studentsCount: 189,
         category: { id: "2", name: "Backend", slug: "backend" },
         tags: ["Node.js", "JavaScript", "MongoDB", "Express"],
-        thumbnail: "/images/course2.jpg",
+        thumbnailUrl: "/images/course2.jpg",
         createdAt: new Date(),
         updatedAt: new Date(),
         isPublished: true

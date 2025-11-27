@@ -24,6 +24,7 @@ import { routes } from "@/config/routes";
 import { cn } from "@/utils/class-names";
 import { useCoursesQuery, useCategoriesQuery } from "@/queries/useCourse";
 import { CourseFilterParamsType } from "@/schemaValidations/course.schema";
+import { Image } from "rsuite";
 
 type ViewMode = "grid" | "list";
 
@@ -97,7 +98,11 @@ export default function CoursesPage() {
                     <CardContent className="p-6">
                         <div className="flex gap-6">
                             <div className="w-48 h-32 bg-gray-200 rounded-lg flex-shrink-0 flex items-center justify-center">
-                                <BookOpen className="w-12 h-12 text-gray-400" />
+                                <Image
+                                    src={course.thumbnailUrl || ""}
+                                    alt={course.title}
+                                    className="w-full h-full object-cover rounded-lg"
+                                />
                             </div>
                             <div className="flex-1">
                                 <div className="flex items-start justify-between mb-2">
@@ -157,8 +162,11 @@ export default function CoursesPage() {
             <Card key={course.id} className="hover:shadow-lg transition-shadow">
                 <CardContent className="p-0">
                     <div className="aspect-video bg-gray-200 rounded-t-lg flex items-center justify-center">
-                        <BookOpen className="w-12 h-12 text-gray-400" />
-                    </div>
+                        <Image
+                            src={course.thumbnailUrl || ""}
+                            alt={course.title}
+                            className="w-full h-full object-cover rounded-lg"
+                        />                    </div>
                     <div className="p-6">
                         <div className="flex items-start justify-between mb-2">
                             <Badge variant="outline">{getLevelLabel(course.level)}</Badge>

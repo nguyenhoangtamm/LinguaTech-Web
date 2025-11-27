@@ -1,0 +1,181 @@
+/* Draft.js WYSIWYG Editor Custom Styles */
+.draft-editor-container {
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    overflow: hidden;
+    background: white;
+}
+
+/* Toolbar Styles */
+.draft-editor-toolbar {
+    border-bottom: 1px solid #e5e7eb;
+    background-color: #f9fafb;
+    padding: 8px;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+}
+
+.rdw-option-wrapper {
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    margin: 0 2px;
+    padding: 4px 6px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.rdw-option-wrapper:hover {
+    background-color: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.rdw-option-active {
+    background-color: #e5e7eb;
+    border-color: #6b7280;
+}
+
+.rdw-dropdown-wrapper {
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    margin: 0 2px;
+    background: white;
+}
+
+.rdw-dropdown-selectedtext {
+    padding: 4px 8px;
+    color: #374151;
+    font-size: 14px;
+}
+
+.rdw-dropdown-carettoopen,
+.rdw-dropdown-carettoclose {
+    color: #6b7280;
+}
+
+.rdw-dropdown-optionwrapper {
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+}
+
+.rdw-dropdownoption-default {
+    padding: 6px 12px;
+    color: #374151;
+    font-size: 14px;
+}
+
+.rdw-dropdownoption-highlighted {
+    background-color: #f3f4f6;
+}
+
+/* Editor Content Styles */
+.draft-editor-content {
+    min-height: 150px;
+    padding: 12px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #374151;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    background: white;
+}
+
+.draft-editor-content:focus {
+    outline: none;
+}
+
+.draft-editor-content .public-DraftEditorPlaceholder-root {
+    color: #9ca3af;
+    font-style: normal;
+}
+
+/* Typography in editor */
+.draft-editor-content h1 {
+    font-size: 2em;
+    font-weight: bold;
+    margin: 0.67em 0;
+}
+
+.draft-editor-content h2 {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin: 0.83em 0;
+}
+
+.draft-editor-content h3 {
+    font-size: 1.17em;
+    font-weight: bold;
+    margin: 1em 0;
+}
+
+.draft-editor-content h4 {
+    font-size: 1em;
+    font-weight: bold;
+    margin: 1.33em 0;
+}
+
+.draft-editor-content h5 {
+    font-size: 0.83em;
+    font-weight: bold;
+    margin: 1.67em 0;
+}
+
+.draft-editor-content h6 {
+    font-size: 0.67em;
+    font-weight: bold;
+    margin: 2.33em 0;
+}
+
+.draft-editor-content blockquote {
+    border-left: 4px solid #e5e7eb;
+    margin: 1em 0;
+    padding-left: 1em;
+    color: #6b7280;
+    font-style: italic;
+}
+
+.draft-editor-content ul,
+.draft-editor-content ol {
+    margin: 1em 0;
+    padding-left: 2em;
+}
+
+.draft-editor-content li {
+    margin: 0.5em 0;
+}
+
+/* Link styles */
+.draft-editor-content a {
+    color: #3b82f6;
+    text-decoration: underline;
+}
+
+.draft-editor-content a:hover {
+    color: #1d4ed8;
+}
+
+/* Focus styles for container */
+.draft-editor-container:focus-within {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 1px #3b82f6;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .draft-editor-toolbar {
+        padding: 6px;
+    }
+
+    .rdw-option-wrapper {
+        margin: 0 1px;
+        padding: 3px 4px;
+    }
+
+    .draft-editor-content {
+        padding: 10px;
+        min-height: 120px;
+    }
+}

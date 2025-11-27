@@ -141,12 +141,11 @@ export default function CourseLearnPage() {
             <Card>
                 <CardContent className="p-6">
                     <Tabs defaultValue="overview" className="w-full">
-                        <TabsList className="grid w-full grid-cols-6">
+                        <TabsList className="grid w-full grid-cols-5">
                             <TabsTrigger value="overview">Tổng quan</TabsTrigger>
                             <TabsTrigger value="curriculum">Mục lục</TabsTrigger>
                             <TabsTrigger value="materials">Tài liệu</TabsTrigger>
                             <TabsTrigger value="reviews">Đánh giá</TabsTrigger>
-                            <TabsTrigger value="discussions">Thảo luận</TabsTrigger>
                             <TabsTrigger value="faq">FAQ</TabsTrigger>
                         </TabsList>
 
@@ -156,8 +155,17 @@ export default function CourseLearnPage() {
                                     <h3 className="text-lg font-semibold mb-3">Mô tả khóa học</h3>
                                     <p className="text-gray-700 leading-relaxed">{course.description}</p>
                                 </div>
+                            <div>
+                                <h3 className="text-lg font-semibold mb-3">Chi tiết khóa học</h3>
+                                <div
+                                    className="prose max-w-none text-gray-700 break-words"
+                                    dangerouslySetInnerHTML={{
+                                        __html: course.detailedDescription || "<p class='text-gray-500'>Chưa có mô tả chi tiết.</p>"
+                                    }}
+                                />
+                            </div>
 
-                                <div>
+                                {/* <div>
                                     <h3 className="text-lg font-semibold mb-3">Bạn sẽ học được gì?</h3>
                                     <ul className="space-y-2">
                                         <li className="flex items-start gap-2">
@@ -223,7 +231,7 @@ export default function CourseLearnPage() {
                                             </p>
                                         </div>
                                     </div>
-                                </div>
+                                </div> */}
                             </div>
                         </TabsContent>
 
@@ -371,15 +379,6 @@ export default function CourseLearnPage() {
                                         </div>
                                     ))}
                                 </div>
-                            </div>
-                        </TabsContent>
-
-                        <TabsContent value="discussions" className="mt-6">
-                            <div className="text-center py-12">
-                                <MessageCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                                <h3 className="text-lg font-semibold mb-2">Khu vực thảo luận</h3>
-                                <p className="text-gray-600 mb-4">Tham gia thảo luận với giảng viên và học viên khác</p>
-                                <Button>Bắt đầu thảo luận</Button>
                             </div>
                         </TabsContent>
 

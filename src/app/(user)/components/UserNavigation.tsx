@@ -27,11 +27,11 @@ const navigationItems = [
         href: routes.user.courses,
         icon: BookOpen,
     },
-    {
-        title: "Tìm kiếm",
-        href: "/user/search",
-        icon: Search,
-    },
+    // {
+    //     title: "Tìm kiếm",
+    //     href: "/user/search",
+    //     icon: Search,
+    // },
 ];
 
 export default function UserNavigation() {
@@ -73,13 +73,13 @@ export default function UserNavigation() {
 
                     {/* User actions */}
                     <div className="flex items-center space-x-4">
-                        <Link
+                        {/* <Link
                             href={routes.user.becomeInstructor}
                             className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
                         >
                             <GraduationCap className="w-4 h-4 mr-2" />
                             Trở thành giảng viên
-                        </Link>
+                        </Link> */}
                         <button className="p-2 text-gray-600 hover:text-gray-900 rounded-md">
                             <Bell className="w-5 h-5" />
                         </button>

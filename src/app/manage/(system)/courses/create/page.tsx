@@ -86,7 +86,7 @@ export default function CreateCoursePage() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [thumbnailPreview, setThumbnailPreview] = useState("/images/course-placeholder.jpg");
-    const [selectedTags, setSelectedTags] = useState<string[]>([]);
+    const [selectedTags, setSelectedTags] = useState<number[]>([]);
 
     const { data: categoriesData } = useCategoriesManagement();
     const createCourseMutation = useCreateCourseManagement();
@@ -142,7 +142,7 @@ export default function CreateCoursePage() {
         }
     };
 
-    const addTag = (tag: string) => {
+    const addTag = (tag: number) => {
         if (!selectedTags.includes(tag)) {
             const newTags = [...selectedTags, tag];
             setSelectedTags(newTags);
@@ -150,7 +150,7 @@ export default function CreateCoursePage() {
         }
     };
 
-    const removeTag = (tagToRemove: string) => {
+    const removeTag = (tagToRemove: number) => {
         const newTags = selectedTags.filter(tag => tag !== tagToRemove);
         setSelectedTags(newTags);
         form.setValue("tags", newTags);
@@ -423,14 +423,14 @@ export default function CreateCoursePage() {
                         {/* Available Tags */}
                         <div className="flex flex-wrap gap-2">
                             {availableTags
-                                .filter(tag => !selectedTags.includes(tag))
+                                .filter(tag => !selectedTags.includes(Number(tag)))
                                 .map((tag) => (
                                     <Button
                                         key={tag}
                                         type="button"
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => addTag(tag)}
+                                        onClick={() => addTag(Number(tag))}
                                         className="text-xs"
                                     >
                                         <Plus className="w-3 h-3 mr-1" />

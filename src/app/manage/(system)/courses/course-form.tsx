@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PlusCircle, Loader2, Upload, X } from "lucide-react";
-import { Button, Input, SelectPicker, Modal, Uploader } from "rsuite";
+import { Button, Input, SelectPicker, Modal, Uploader, TagPicker } from "rsuite";
 import { Label } from "@/components/ui/label";
 import { Form, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import {
@@ -13,6 +13,7 @@ import {
     useCourseManagement,
     useCategoriesManagement
 } from "@/queries/useCourseManagement";
+import { useGetAllCourseTags } from "@/queries/useCourseTag";
 import {
     CreateCourseBodyType,
     UpdateCourseBodyType,
@@ -22,6 +23,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { handleErrorApi } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
+import RichTextEditor from "@/components/ui/rich-text-editor";
 import commonStyles from "../../../shared/common/styles/common.module.css";
 
 export default function CourseForm({
@@ -40,6 +42,7 @@ export default function CourseForm({
     const createCourseMutation = useCreateCourseManagement();
     const updateCourseMutation = useUpdateCourseManagement();
     const { data: categoriesData } = useCategoriesManagement();
+    const { data: courseTagsData } = useGetAllCourseTags();
     const { data, refetch } = useCourseManagement(id as number, isEdit);
 
     const form = useForm<CreateCourseBodyType | UpdateCourseBodyType>({
@@ -55,17 +58,29 @@ export default function CourseForm({
             tags: [],
             thumbnailUrl: "",
             videoUrl: "",
+            detailedDescription: "",
         },
     });
 
     // Category options
     const categoryOptions = useMemo(() => {
-        if (!categoriesData?.data?.data) return [];
-        return categoriesData.data.data.map((category: any) => ({
+        if (!categoriesData?.data) return [];
+        return categoriesData.data.map((category: any) => ({
             label: category.name,
             value: category.id,
         }));
     }, [categoriesData]);
+
+    // Course tag options
+    const courseTagOptions = useMemo(() => {
+        if (!courseTagsData?.data) return [];
+        return courseTagsData.data
+            .filter((tag: any) => tag.isActive)
+            .map((tag: any) => ({
+                label: tag.name,
+                value: tag.id,
+            }));
+    }, [courseTagsData]);
 
     // Level options
     const levelOptions = useMemo(() => [
@@ -89,6 +104,7 @@ export default function CourseForm({
                 tags: courseData.tags ?? [],
                 thumbnailUrl: courseData.thumbnailUrl ?? "",
                 videoUrl: courseData.videoUrl ?? "",
+                detailedDescription: courseData.detailedDescription ?? "",
             });
         }
         if (!isEdit) {
@@ -103,6 +119,7 @@ export default function CourseForm({
                 tags: [],
                 thumbnailUrl: "",
                 videoUrl: "",
+                detailedDescription: "",
             });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -124,14 +141,22 @@ export default function CourseForm({
     const onSubmit = async (values: CreateCourseBodyType | UpdateCourseBodyType) => {
         if (createCourseMutation.isPending || updateCourseMutation.isPending) return;
         try {
+            // Transform tags to ensure they are numbers
+            const transformedValues = {
+                ...values,
+                tags: Array.isArray(values.tags)
+                    ? values.tags.map((tag: any) => typeof tag === 'object' ? tag.value : tag)
+                    : []
+            };
+
             let result: any;
             if (isEdit) {
                 result = await updateCourseMutation.mutateAsync({
                     id: id as number,
-                    body: values as UpdateCourseBodyType,
+                    body: transformedValues as UpdateCourseBodyType,
                 });
             } else {
-                result = await createCourseMutation.mutateAsync(values as CreateCourseBodyType);
+                result = await createCourseMutation.mutateAsync(transformedValues as CreateCourseBodyType);
             }
 
             toast({
@@ -163,6 +188,7 @@ export default function CourseForm({
                 tags: courseData.tags ?? [],
                 thumbnailUrl: courseData.thumbnailUrl ?? "",
                 videoUrl: courseData.videoUrl ?? "",
+                detailedDescription: courseData.detailedDescription ?? "",
             });
         } else {
             form.reset({
@@ -176,24 +202,12 @@ export default function CourseForm({
                 tags: [],
                 thumbnailUrl: "",
                 videoUrl: "",
+                detailedDescription: "",
             });
         }
     };
 
-    // Tag input handlers
-    const [tagInput, setTagInput] = useState("");
-    const addTag = () => {
-        if (tagInput.trim() && !form.getValues("tags")?.includes(tagInput.trim())) {
-            const currentTags = form.getValues("tags") ?? [];
-            form.setValue("tags", [...currentTags, tagInput.trim()]);
-            setTagInput("");
-        }
-    };
 
-    const removeTag = (tagToRemove: string) => {
-        const currentTags = form.getValues("tags");
-        form.setValue("tags", currentTags?.filter(tag => tag !== tagToRemove));
-    };
 
     return (
         <>
@@ -295,6 +309,8 @@ export default function CourseForm({
                                                 className="w-full"
                                                 cleanable={false}
                                                 searchable={false}
+                                                onChange={(value) => field.onChange(Number(value))}
+
                                             />
                                             <FormMessage />
                                         </FormItem>
@@ -416,47 +432,35 @@ export default function CourseForm({
                                         <Label className="text-sm font-medium text-gray-700">
                                             Thẻ (Tags)
                                         </Label>
-                                        <div className="space-y-2">
-                                            <div className="flex gap-2">
-                                                <Input
-                                                    value={tagInput}
-                                                    onChange={setTagInput}
-                                                    placeholder="Nhập thẻ"
-                                                    className="flex-1"
-                                                    onPressEnter={(e) => {
-                                                        e.preventDefault();
-                                                        addTag();
-                                                    }}
-                                                />
-                                                <Button
-                                                    type="button"
-                                                    appearance="primary"
-                                                    onClick={addTag}
-                                                    disabled={!tagInput.trim()}
-                                                >
-                                                    Thêm
-                                                </Button>
-                                            </div>
-                                            {field.value && field.value.length > 0 && (
-                                                <div className="flex flex-wrap gap-2">
-                                                    {field.value.map((tag, index) => (
-                                                        <span
-                                                            key={index}
-                                                            className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded-md"
-                                                        >
-                                                            {tag}
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => removeTag(tag)}
-                                                                className="text-blue-600 hover:text-blue-800"
-                                                            >
-                                                                <X className="w-3 h-3" />
-                                                            </button>
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
+                                        <TagPicker
+                                            {...field}
+                                            data={courseTagOptions}
+                                            placeholder="Chọn thẻ"
+                                            className="w-full"
+                                            cleanable={true}
+                                            searchable={true}
+                                            block
+                                        />
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            {/* Detailed Description section */}
+                            <FormField
+                                control={form.control}
+                                name="detailedDescription"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <Label className="text-sm font-medium text-gray-700">
+                                            Mô tả chi tiết
+                                        </Label>
+                                        <RichTextEditor
+                                            value={field.value}
+                                            onChange={field.onChange}
+                                            placeholder="Nhập mô tả chi tiết về khóa học..."
+                                            className="min-h-[200px]"
+                                        />
                                         <FormMessage />
                                     </FormItem>
                                 )}

@@ -30,7 +30,6 @@ const courseManagementApiRequest = {
     // Update course
     update: (id: number, body: UpdateCourseBodyType) =>
         http.post<CourseOperationResType>(`/courses/update/${id}`, body),
-
     // Delete course
     delete: (id: number) =>
         http.post<CourseOperationResType>(`/courses/delete/${id}`, {}),

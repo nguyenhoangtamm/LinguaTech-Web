@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -370,9 +370,10 @@ export default function LessonDetailPage() {
     const { data: lesson, isLoading: lessonLoading } = useLessonQuery(lessonId);
     const { data: modules, isLoading: modulesLoading } = useModulesByCourseQuery(courseId);
     const { data: materialsFromApi, isLoading: materialsLoading } = useMaterialsByLessonQuery(lessonId);
-    const { data: sections, isLoading: sectionsLoading } = useSectionsByLessonQuery(lessonId);
+    const { data: sectionsApi, isLoading: sectionsLoading } = useSectionsByLessonQuery(lessonId);
     const completeLessonMutation = useCompleteLessonMutation();
-
+    const sections = useMemo(() => sectionsApi?.data || [], [sectionsApi?.data]);
+    
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [rightPanelOpen, setRightPanelOpen] = useState(true);
     const [selectedSectionId, setSelectedSectionId] = useState<number>(1);
@@ -400,8 +401,7 @@ export default function LessonDetailPage() {
     }
 
     const lessonData: any = (lesson as any)?.data ?? (lesson as any);
-
-    const lessons = modules?.flatMap((m: any) => (m.lessons || [])) || [];
+    const lessons = modules.data?.flatMap((m: any) => (m.lessons || [])) || [];
     const currentLessonIndex = lessons.findIndex((l: any) => String(l.id) === String(lessonId));
     const previousLesson = currentLessonIndex > 0 ? lessons[currentLessonIndex - 1] : null;
     const nextLesson = currentLessonIndex < lessons.length - 1 ? lessons[currentLessonIndex + 1] : null;
@@ -504,7 +504,7 @@ export default function LessonDetailPage() {
                                 <div></div>
                             )}
 
-                            <Button
+                            {/* <Button
                                 onClick={() => {
                                     if (!lessonId) return;
                                     completeLessonMutation.mutate(lessonId);
@@ -512,7 +512,7 @@ export default function LessonDetailPage() {
                             >
                                 Hoàn thành bài học
                                 <CheckCircle className="w-4 h-4 ml-2" />
-                            </Button>
+                            </Button> */}
 
                             {nextLesson ? (
                                 <Button asChild>
@@ -563,7 +563,7 @@ export default function LessonDetailPage() {
                                         <Card>
                                             <CardContent className="p-4">
                                                 <MaterialsSection
-                                                    materials={materialsFromApi || lessonData?.materials || []}
+                                                    materials={materialsFromApi.data || lessonData?.materials || []}
                                                     isLoading={loadingStates.materials}
                                                 />
                                             </CardContent>

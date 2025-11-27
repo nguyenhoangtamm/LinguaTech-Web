@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import Image from "next/image";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +27,7 @@ import { useCourseQuery } from "@/queries/useCourse";
 import { useModulesByCourseQuery } from "@/queries/useLesson";
 import { ModuleWithLessonsType } from "@/schemaValidations/lesson.schema";
 import { Course } from "@/types/course";
+import { Image } from "rsuite";
 
 // Mock instructor data (temporary until instructor API is ready)
 const mockInstructor = {
@@ -103,11 +103,10 @@ export default function CourseDetailPage() {
                             {/* Course Thumbnail Image */}
                             <div className="aspect-video bg-gray-200 rounded-t-lg overflow-hidden relative group">
                                 <Image
-                                    src={course.thumbnail || "/images/course-placeholder.jpg"}
+                                    src={course.thumbnailUrl || "/images/course-placeholder.jpg"}
                                     alt={course.title}
-                                    fill
                                     className="object-cover"
-                                    priority
+                                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
                                 />
                             </div>
 
@@ -192,8 +191,11 @@ export default function CourseDetailPage() {
                                 </div>
                             ) : (
                                 <div className="space-y-3">
-                                    <Button className="w-full" size="lg">
-                                        Đăng ký ngay
+                                    <Button className="w-full" asChild>
+                                        <Link href={`/courses/detail/${courseId}/learn`}>
+                                            <BookOpen className="w-4 h-4 mr-2" />
+                                            Xem chi tiết khóa học
+                                        </Link>
                                     </Button>
                                     <Button variant="outline" className="w-full">
                                         <Heart className="w-4 h-4 mr-2" />
@@ -332,12 +334,7 @@ export default function CourseDetailPage() {
 
             {/* Action Buttons */}
             <div className="flex gap-4">
-                <Button size="lg" asChild>
-                    <Link href={`/courses/detail/${courseId}/learn`}>
-                        <BookOpen className="w-4 h-4 mr-2" />
-                        Xem chi tiết khóa học
-                    </Link>
-                </Button>
+
                 <Button variant="outline" size="lg">
                     <MessageCircle className="w-4 h-4 mr-2" />
                     Xem đánh giá

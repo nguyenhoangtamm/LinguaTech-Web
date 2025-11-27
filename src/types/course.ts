@@ -10,7 +10,7 @@ export interface Course {
     studentsCount: number;
     category: CourseCategory;
     tags: string[];
-    thumbnail: string;
+    thumbnailUrl: string;
     videoUrl?: string;
     createdAt: Date;
     updatedAt: Date;

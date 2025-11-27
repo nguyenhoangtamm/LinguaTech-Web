@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Clock, Users, BookOpen, FileText, DollarSign, Calendar, Tag } from "lucide-react";
+import { Image } from "rsuite";
 
 interface Course {
     id: number;
@@ -125,10 +125,9 @@ export default function CourseOverview({ course }: CourseOverviewProps) {
                                 {course.thumbnailUrl && (
                                     <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
                                         <Image
-                                            src={course.thumbnailUrl}
+                                            src={course.thumbnailUrl || ""}
                                             alt={course.title}
-                                            fill
-                                            className="object-cover"
+                                            className="w-full h-full object-cover rounded-lg"
                                         />
                                     </div>
                                 )}

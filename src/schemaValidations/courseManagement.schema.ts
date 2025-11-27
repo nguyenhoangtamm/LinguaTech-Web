@@ -43,9 +43,11 @@ export const CreateCourseBodySchema = z.object({
     level: z.number().min(1).max(3),
     price: z.number().min(0, "Giá không được âm"),
     categoryId: z.number().min(1, "Danh mục là bắt buộc"),
-    tags: z.array(z.string()),
+    tags: z.array(z.number()).optional(),
     thumbnailUrl: z.string().optional(),
     videoUrl: z.string().optional(),
+    detailedDescription: z.string().optional(),
+
 });
 
 // Update course request schema
@@ -58,9 +60,10 @@ export const UpdateCourseBodySchema = z.object({
     level: z.number().optional(),
     price: z.number().optional(),
     categoryId: z.number().optional(),
-    tags: z.array(z.string()).optional(),
+    tags: z.array(z.number()).optional(),
     thumbnailUrl: z.string().optional(),
     videoUrl: z.string().optional(),
+    detailedDescription: z.string().optional(),
 });
 
 // Course category schema
