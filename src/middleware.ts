@@ -14,7 +14,7 @@ import type { TokenPayload } from "@/types/jwt.types";
 // TEMPORARY: when true, bypass role-based permission checks and allow any
 // authenticated role to access any page. This is intended for short-term
 // debugging. Remove or set to false to restore normal permission checks.
-const ALLOW_ALL_ROLES = true;
+const ALLOW_ALL_ROLES = false;
 
 export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
