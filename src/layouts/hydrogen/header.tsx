@@ -24,7 +24,7 @@ export default function Header() {
   };
 
   return (
-    <StickyHeader className="z-[50] border-b border-primary bg-primary">
+    <StickyHeader className="z-[50] border-b border-primary bg-primary dark:bg-primary">
       <div className="w-full flex flex-col">
         {/* Top Section: Logo, Search Bar and User Icon */}
         <div className="flex w-full items-center justify-between px-4 py-3 2xl:px-8 3xl:px-10 4xl:px-12 border-b border-primary-200">

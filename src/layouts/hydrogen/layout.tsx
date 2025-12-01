@@ -13,7 +13,7 @@ export default function HydrogenLayout({
       <div className="hidden md:block">
         <Sidebar />
       </div>
-      <main className="flex min-h-screen flex-col md:ml-[270px] 2xl:ml-72">
+      <main className="flex min-h-screen flex-col md:ml-[269px] 2xl:ml-72">
         <Header />
         <div className="flex w-full flex-col flex-grow px-4 py-2 2xl:px-8 3xl:px-10 4xl:px-12">
           {children}
