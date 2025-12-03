@@ -16,6 +16,7 @@ import LessonManagement from "./components/LessonManagement";
 import SectionManagement from "./components/SectionManagement";
 import QuestionManagement from "./components/QuestionManagement";
 import CourseOverview from "./components/CourseOverview";
+import CourseForm from "../course-form";
 
 const courseLevels = [
     { value: 1, label: "Cơ bản", color: "bg-green-100 text-green-800" },
@@ -27,6 +28,7 @@ export default function CourseDetailPage() {
     const params = useParams();
     const courseId = parseInt(params.id as string);
     const [activeTab, setActiveTab] = useState("overview");
+    const [courseIdEdit, setCourseIdEdit] = useState<number | undefined>();
 
     const { data: courseData, isLoading, error } = useCourseManagement(courseId, true);
 
@@ -104,7 +106,11 @@ export default function CourseDetailPage() {
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCourseIdEdit(courseId)}
+                    >
                         <Edit className="w-4 h-4 mr-2" />
                         Chỉnh sửa
                     </Button>
@@ -137,6 +143,17 @@ export default function CourseDetailPage() {
                     <p className="text-gray-600 text-sm line-clamp-2">{course.description}</p>
                 </CardContent>
             </Card>
+
+            {/* Course Form Modal for Editing */}
+            <CourseForm
+                id={courseIdEdit}
+                setId={setCourseIdEdit}
+                onSubmitSuccess={() => {
+                    // Refetch course data after edit
+                    window.location.reload();
+                }}
+                triggerButton={false}
+            />
 
             {/* Tabs for Course Management */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

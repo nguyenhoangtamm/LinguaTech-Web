@@ -25,6 +25,7 @@ import { cn } from "@/utils/class-names";
 import { useCoursesQuery, useCategoriesQuery } from "@/queries/useCourse";
 import { CourseFilterParamsType } from "@/schemaValidations/course.schema";
 import { Image } from "rsuite";
+import { useGetAllCourseTags } from "@/queries/useCourseTag";
 
 type ViewMode = "grid" | "list";
 
@@ -37,12 +38,18 @@ const getLevelLabel = (level: number): string => {
     }
 };
 
+const getTagName = (tagId: number, courseTagsData: any): string => {
+    const tag = courseTagsData?.data?.find((t: any) => t.id === tagId);
+    return tag?.name || `Tag ${tagId}`;
+};
+
 export default function CoursesPage() {
     const [viewMode, setViewMode] = useState<ViewMode>("grid");
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(6);
     const [filter, setFilter] = useState<Partial<CourseFilterParamsType>>({});
     const [searchQuery, setSearchQuery] = useState("");
+    const { data: courseTagsData } = useGetAllCourseTags();
 
     // Build API filter params (match CourseFilterParams from schema)
     const apiFilterParams: CourseFilterParamsType = {
@@ -116,9 +123,9 @@ export default function CoursesPage() {
                                 </div>
                                 <p className="text-gray-700 text-sm line-clamp-2 mb-3">{course.description}</p>
                                 <div className="flex flex-wrap gap-2 mb-3">
-                                    {course.tags.slice(0, 3).map((tag: string) => (
-                                        <Badge key={tag} variant="secondary" className="text-xs">
-                                            {tag}
+                                    {course.tags.slice(0, 3).map((tagId: number) => (
+                                        <Badge key={tagId} variant="secondary" className="text-xs">
+                                            {getTagName(tagId, courseTagsData)}
                                         </Badge>
                                     ))}
                                     {course.tags.length > 3 && (
@@ -170,16 +177,16 @@ export default function CoursesPage() {
                     <div className="p-6">
                         <div className="flex items-start justify-between mb-2">
                             <Badge variant="outline">{getLevelLabel(course.level)}</Badge>
-                            <Badge variant="secondary">{course.category.name}</Badge>
+                            <Badge variant="secondary">{course.category?.name}</Badge>
                         </div>
                         <h3 className="text-lg font-semibold line-clamp-2 mb-2">{course.title}</h3>
                         <p className="text-gray-600 text-sm mb-2">Giảng viên: {course.instructor}</p>
                         <p className="text-gray-700 text-sm line-clamp-3 mb-4">{course.description}</p>
 
                         <div className="flex flex-wrap gap-1 mb-4">
-                            {course.tags.slice(0, 2).map(tag => (
-                                <Badge key={tag} variant="secondary" className="text-xs">
-                                    {tag}
+                            {course.tags.slice(0, 2).map((tagId: number) => (
+                                <Badge key={tagId} variant="secondary" className="text-xs">
+                                    {getTagName(tagId, courseTagsData)}
                                 </Badge>
                             ))}
                             {course.tags.length > 2 && (

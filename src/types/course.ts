@@ -9,7 +9,7 @@ export interface Course {
     rating: number;
     studentsCount: number;
     category: CourseCategory;
-    tags: string[];
+    tags: number[];
     thumbnailUrl: string;
     videoUrl?: string;
     createdAt: Date;

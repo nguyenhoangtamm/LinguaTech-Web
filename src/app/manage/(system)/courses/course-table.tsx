@@ -28,7 +28,7 @@ import FunnelIcon from '@rsuite/icons/Funnel';
 import Link from "next/link";
 import { routes } from "@/config/routes";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 5;
 
 export default function CourseTable({ title, breadcrumb }: PageHeaderProps) {
   usePageHeader({ title, breadcrumb });
@@ -275,7 +275,7 @@ export default function CourseTable({ title, breadcrumb }: PageHeaderProps) {
             appearance="subtle"
             size="sm"
             icon={<PencilIcon className="h-4 w-4" />}
-            onClick={() => setCourseIdEdit(rowData.id)}
+            onClick={() => setCourseIdEdit(Number(rowData.id))}
             title="Sửa"
           />
           <DeletePopover

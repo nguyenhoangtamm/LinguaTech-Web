@@ -222,7 +222,7 @@ export default function UserDashboard() {
                                     <h4 className="font-medium line-clamp-2">{course.title}</h4>
                                     <p className="text-sm text-gray-600">{course.instructor}</p>
                                     <div className="flex items-center justify-between">
-                                        <Badge variant="outline">{course.category.name}</Badge>
+                                        <Badge variant="outline">{course.category?.name}</Badge>
                                         <span className="text-sm font-medium">
                                             {course.price.toLocaleString('vi-VN')}đ
                                         </span>

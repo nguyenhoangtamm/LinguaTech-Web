@@ -401,7 +401,7 @@ export default function LessonDetailPage() {
     }
 
     const lessonData: any = (lesson as any)?.data ?? (lesson as any);
-    const lessons = modules.data?.flatMap((m: any) => (m.lessons || [])) || [];
+    const lessons = modules?.data?.flatMap((m: any) => (m.lessons || [])) || [];
     const currentLessonIndex = lessons.findIndex((l: any) => String(l.id) === String(lessonId));
     const previousLesson = currentLessonIndex > 0 ? lessons[currentLessonIndex - 1] : null;
     const nextLesson = currentLessonIndex < lessons.length - 1 ? lessons[currentLessonIndex + 1] : null;
@@ -563,7 +563,7 @@ export default function LessonDetailPage() {
                                         <Card>
                                             <CardContent className="p-4">
                                                 <MaterialsSection
-                                                    materials={materialsFromApi.data || lessonData?.materials || []}
+                                                    materials={materialsFromApi?.data || lessonData?.materials || []}
                                                     isLoading={loadingStates.materials}
                                                 />
                                             </CardContent>

@@ -134,7 +134,6 @@ const RichTextEditor = forwardRef<HTMLDivElement, RichTextEditorProps>(
             <div ref={ref} className={className}>
                 <div className="draft-editor-container">
                     <Editor
-                        ref={editorRef}
                         editorState={editorState}
                         onEditorStateChange={onEditorStateChange}
                         placeholder={placeholder}

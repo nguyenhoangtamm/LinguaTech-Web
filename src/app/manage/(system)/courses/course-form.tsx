@@ -44,9 +44,8 @@ export default function CourseForm({
     const { data: categoriesData } = useCategoriesManagement();
     const { data: courseTagsData } = useGetAllCourseTags();
     const { data, refetch } = useCourseManagement(id as number, isEdit);
-
-    const form = useForm<CreateCourseBodyType | UpdateCourseBodyType>({
-        resolver: zodResolver(isEdit ? UpdateCourseBodySchema : CreateCourseBodySchema),
+    const form = useForm<CreateCourseBodyType >({
+        resolver: zodResolver(CreateCourseBodySchema),
         defaultValues: {
             title: "",
             description: "",
@@ -67,7 +66,7 @@ export default function CourseForm({
         if (!categoriesData?.data) return [];
         return categoriesData.data.map((category: any) => ({
             label: category.name,
-            value: category.id,
+            value: Number(category.id),
         }));
     }, [categoriesData]);
 
@@ -100,7 +99,7 @@ export default function CourseForm({
                 duration: courseData.duration ?? 0,
                 level: courseData.level ?? 1,
                 price: courseData.price ?? 0,
-                categoryId: courseData.categoryId ?? 0,
+                categoryId: courseData.category.id ? Number(courseData.category.id) : 0,
                 tags: courseData.tags ?? [],
                 thumbnailUrl: courseData.thumbnailUrl ?? "",
                 videoUrl: courseData.videoUrl ?? "",
@@ -138,7 +137,7 @@ export default function CourseForm({
         }
     };
 
-    const onSubmit = async (values: CreateCourseBodyType | UpdateCourseBodyType) => {
+    const onSubmit = async (values: CreateCourseBodyType) => {
         if (createCourseMutation.isPending || updateCourseMutation.isPending) return;
         try {
             // Transform tags to ensure they are numbers
@@ -236,7 +235,7 @@ export default function CourseForm({
 
                 <Modal.Body className="py-4 max-h-[70vh] overflow-y-auto">
                     <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        <form id="course-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <FormField
                                     control={form.control}
@@ -485,7 +484,8 @@ export default function CourseForm({
                         Đặt lại
                     </Button>
                     <Button
-                        onClick={form.handleSubmit(onSubmit)}
+                        type="submit"
+                        form="course-form"
                         appearance="primary"
                         disabled={createCourseMutation.isPending || updateCourseMutation.isPending}
                         className="bg-primary text-white"

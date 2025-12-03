@@ -13,82 +13,58 @@ import {
     Users,
     Tag,
     Grid,
-    List
+    List,
+    Loader2
 } from "lucide-react";
 import { Course } from "@/types/course";
 import Link from "next/link";
 import { routes } from "@/config/routes";
 import { cn } from "@/utils/class-names";
 import { useCoursesQuery } from "@/queries/useCourse";
+import { useGetAllCourseTags } from "@/queries/useCourseTag";
 import { CourseFilterParamsType } from "@/schemaValidations/course.schema";
-
-// Mock data (same courses from other pages)
-const mockCourses: Course[] = [
-    {
-        id: "1",
-        title: "React Advanced Patterns và Performance Optimization",
-        description: "Học các pattern nâng cao trong React và tối ưu hóa hiệu suất ứng dụng. Khóa học bao gồm Context API, Custom Hooks, Memoization và nhiều kỹ thuật khác.",
-        instructor: "Nguyễn Văn A",
-        duration: 40,
-        level: 3,
-        price: 1500000,
-        rating: 4.8,
-        studentsCount: 234,
-        category: { id: "1", name: "Frontend", slug: "frontend" },
-        tags: ["React", "JavaScript", "TypeScript", "Performance"],
-        thumbnailUrl: "/images/course1.jpg",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        isPublished: true
-    },
-    {
-        id: "2",
-        title: "Node.js Backend Development từ Zero đến Hero",
-        description: "Xây dựng API RESTful và GraphQL với Node.js, Express, và MongoDB. Học cách deploy production-ready applications.",
-        instructor: "Trần Thị B",
-        duration: 35,
-        level: 2,
-        price: 1200000,
-        rating: 4.7,
-        studentsCount: 189,
-        category: { id: "2", name: "Backend", slug: "backend" },
-        tags: ["Node.js", "JavaScript", "MongoDB", "Express"],
-        thumbnailUrl: "/images/course2.jpg",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        isPublished: true
-    },
-];
+import { Image } from "rsuite";
 
 type ViewMode = "grid" | "list";
+
+const getLevelLabel = (level: number): string => {
+    switch (Number(level)) {
+        case 1: return "Cơ bản";
+        case 2: return "Trung cấp";
+        case 3: return "Nâng cao";
+        default: return "Không xác định";
+    }
+};
+
+const getTagName = (tagId: number, courseTagsData: any): string => {
+    const tag = courseTagsData?.data?.find((t: any) => t.id === tagId);
+    return tag?.name || `Tag ${tagId}`;
+};
 
 export default function TagClient() {
     const searchParams = useSearchParams();
     const tagName = searchParams.get("tag") || "";
+    const tagId = searchParams.get("tagId") ? parseInt(searchParams.get("tagId") || "0") : null;
 
     const [viewMode, setViewMode] = useState<ViewMode>("grid");
     const [levelFilter, setLevelFilter] = useState<string>("");
 
-    // API queries (commented for now since it uses mock data)
-    const { data: coursesData, isLoading } = useCoursesQuery(
+    // Get all course tags data
+    const { data: courseTagsData, isLoading: tagsLoading } = useGetAllCourseTags();
+
+    // API queries - filter by tag ID
+    const { data: coursesData, isLoading: coursesLoading } = useCoursesQuery(
         {
             pageNumber: 1,
             pageSize: 20,
-            tags: tagName ? [tagName] : undefined,
+            tags: tagId ? [tagId] : undefined,
             level: levelFilter ? (levelFilter === "beginner" ? 1 : levelFilter === "intermediate" ? 2 : 3) : undefined,
         },
-        true
+        !!tagId // Only enable if tagId exists
     );
 
-    // Use mock data or API data
-    const courses = mockCourses.filter(
-        (course) =>
-            (!tagName || course.tags.includes(tagName)) &&
-            (!levelFilter ||
-                (levelFilter === "beginner" && course.level === 1) ||
-                (levelFilter === "intermediate" && course.level === 2) ||
-                (levelFilter === "advanced" && course.level === 3))
-    );
+    // Use API data
+    const courses = (coursesData?.data as Course[]) || [];
 
     const handleLevelFilter = (level: string) => {
         setLevelFilter(levelFilter === level ? "" : level);
@@ -103,7 +79,11 @@ export default function TagClient() {
                     <CardContent className="p-6">
                         <div className="flex gap-6">
                             <div className="w-48 h-32 bg-gray-200 rounded-lg flex-shrink-0 flex items-center justify-center">
-                                <BookOpen className="w-12 h-12 text-gray-400" />
+                                <Image
+                                    src={course.thumbnailUrl || ""}
+                                    alt={course.title}
+                                    className="w-full h-full object-cover rounded-lg"
+                                />
                             </div>
                             <div className="flex-1">
                                 <div className="flex items-start justify-between mb-2">
@@ -112,15 +92,14 @@ export default function TagClient() {
                                         <p className="text-gray-600 text-sm mb-2">Giảng viên: {course.instructor}</p>
                                     </div>
                                     <Badge variant="outline" className="ml-2">
-                                        {course.level === 1 ? "Cơ bản" :
-                                            course.level === 2 ? "Trung cấp" : "Nâng cao"}
+                                        {getLevelLabel(course.level)}
                                     </Badge>
                                 </div>
                                 <p className="text-gray-700 text-sm line-clamp-2 mb-3">{course.description}</p>
                                 <div className="flex flex-wrap gap-2 mb-3">
-                                    {course.tags.slice(0, 3).map((tag: string) => (
-                                        <Badge key={tag} variant="secondary" className="text-xs">
-                                            {tag}
+                                    {course.tags.slice(0, 3).map((tagId: number) => (
+                                        <Badge key={tagId} variant="secondary" className="text-xs">
+                                            {getTagName(tagId, courseTagsData)}
                                         </Badge>
                                     ))}
                                     {course.tags.length > 3 && (
@@ -164,13 +143,16 @@ export default function TagClient() {
             <Card key={course.id} className="hover:shadow-lg transition-shadow">
                 <CardContent className="p-0">
                     <div className="aspect-video bg-gray-200 rounded-t-lg flex items-center justify-center">
-                        <BookOpen className="w-12 h-12 text-gray-400" />
+                        <Image
+                            src={course.thumbnailUrl || ""}
+                            alt={course.title}
+                            className="w-full h-full object-cover rounded-lg"
+                        />
                     </div>
                     <div className="p-6">
                         <div className="flex items-start justify-between mb-2">
                             <Badge variant="outline">
-                                {course.level === 1 ? "Cơ bản" :
-                                    course.level === 2 ? "Trung cấp" : "Nâng cao"}
+                                {getLevelLabel(course.level)}
                             </Badge>
                         </div>
                         <h3 className="text-lg font-semibold line-clamp-2 mb-2">{course.title}</h3>
@@ -178,9 +160,9 @@ export default function TagClient() {
                         <p className="text-gray-700 text-sm line-clamp-3 mb-4">{course.description}</p>
 
                         <div className="flex flex-wrap gap-1 mb-4">
-                            {course.tags.slice(0, 2).map((tag: string) => (
-                                <Badge key={tag} variant="secondary" className="text-xs">
-                                    {tag}
+                            {course.tags.slice(0, 2).map((tagId: number) => (
+                                <Badge key={tagId} variant="secondary" className="text-xs">
+                                    {getTagName(tagId, courseTagsData)}
                                 </Badge>
                             ))}
                             {course.tags.length > 2 && (
@@ -232,6 +214,19 @@ export default function TagClient() {
         );
     }
 
+    // Find tag name from courseTagsData
+    const currentTagName = tagId ? getTagName(tagId, courseTagsData) : tagName;
+
+    // Show loading state
+    if (tagsLoading || coursesLoading) {
+        return (
+            <div className="text-center py-12">
+                <Loader2 className="w-12 h-12 text-gray-400 mx-auto mb-4 animate-spin" />
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">Đang tải dữ liệu...</h2>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-6">
             {/* Page Header */}
@@ -250,9 +245,9 @@ export default function TagClient() {
                                 <Tag className="w-8 h-8 text-blue-600" />
                             </div>
                             <div className="flex-1">
-                                <CardTitle className="text-2xl mb-2">#{tagName}</CardTitle>
+                                <CardTitle className="text-2xl mb-2">#{currentTagName}</CardTitle>
                                 <CardDescription className="text-base">
-                                    Khám phá các khóa học liên quan đến tag {tagName}
+                                    Khám phá các khóa học liên quan đến tag {currentTagName}
                                 </CardDescription>
                                 <div className="mt-2">
                                     <Badge variant="secondary">

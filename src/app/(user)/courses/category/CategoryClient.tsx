@@ -21,6 +21,7 @@ import { routes } from "@/config/routes";
 import { cn } from "@/utils/class-names";
 import { useCategoriesQuery, useCoursesQuery } from "@/queries/useCourse";
 import { CourseFilterParamsType } from "@/schemaValidations/course.schema";
+import { useGetAllCourseTags } from "@/queries/useCourseTag";
 
 type ViewMode = "grid" | "list";
 
@@ -28,7 +29,12 @@ export default function CategoryClient() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const categorySlug = searchParams.get("category") || "";
+    const { data: courseTagsData } = useGetAllCourseTags();
 
+    const getTagName = (tagId: number, courseTagsData: any): string => {
+        const tag = courseTagsData?.data?.find((t: any) => t.id === tagId);
+        return tag?.name || `Tag ${tagId}`;
+    };
     const [viewMode, setViewMode] = useState<ViewMode>("grid");
     const [levelFilter, setLevelFilter] = useState<string>("");
 
@@ -76,9 +82,9 @@ export default function CategoryClient() {
                                 </div>
                                 <p className="text-gray-700 text-sm line-clamp-2 mb-3">{course.description}</p>
                                 <div className="flex flex-wrap gap-2 mb-3">
-                                    {course.tags.slice(0, 3).map((tag: string) => (
-                                        <Badge key={tag} variant="secondary" className="text-xs">
-                                            {tag}
+                                    {course.tags.slice(0, 3).map((tagId: number) => (
+                                        <Badge key={tagId} variant="secondary" className="text-xs">
+                                            {getTagName(tagId, courseTagsData)}
                                         </Badge>
                                     ))}
                                     {course.tags.length > 3 && (
@@ -136,9 +142,9 @@ export default function CategoryClient() {
                         <p className="text-gray-700 text-sm line-clamp-3 mb-4">{course.description}</p>
 
                         <div className="flex flex-wrap gap-1 mb-4">
-                            {course.tags.slice(0, 2).map((tag: string) => (
-                                <Badge key={tag} variant="secondary" className="text-xs">
-                                    {tag}
+                            {course.tags.slice(0, 2).map((tagId: number) => (
+                                <Badge key={tagId} variant="secondary" className="text-xs">
+                                    {getTagName(tagId, courseTagsData)}
                                 </Badge>
                             ))}
                             {course.tags.length > 2 && (

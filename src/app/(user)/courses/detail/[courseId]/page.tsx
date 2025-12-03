@@ -112,7 +112,7 @@ export default function CourseDetailPage() {
 
                             <div className="p-6">
                                 <div className="flex gap-2 mb-4">
-                                    <Badge variant="outline">{course.category.name}</Badge>
+                                    <Badge variant="outline">{course.category?.name}</Badge>
                                     <Badge variant="secondary">
                                         {course.level === "beginner" ? "Cơ bản" :
                                             course.level === "intermediate" ? "Trung cấp" : "Nâng cao"}

@@ -88,7 +88,7 @@ export const CourseFilterParams = z.object({
     priceMin: z.number().optional(),
     priceMax: z.number().optional(),
     rating: z.number().optional(),
-    tags: z.array(z.string()).optional(),
+    tags: z.array(z.number()).optional(),
     sortBy: z.string().optional(),
     sortOrder: z.string().optional(),
 });
