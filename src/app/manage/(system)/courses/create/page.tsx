@@ -10,13 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
+import { InputPicker } from "rsuite";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -57,6 +51,12 @@ const courseLevels = [
     { value: 2, label: "Trung bình - Có kinh nghiệm cơ bản" },
     { value: 3, label: "Nâng cao - Có kinh nghiệm sâu" },
 ];
+
+// Convert to InputPicker format
+const levelOptions = courseLevels.map(level => ({
+    label: level.label,
+    value: level.value.toString()
+}));
 
 const availableTags = [
     "JavaScript", "Python", "React", "Node.js", "TypeScript",
@@ -266,21 +266,19 @@ export default function CreateCoursePage() {
                                 <Label htmlFor="categoryId" className="font-medium">
                                     Danh mục <span className="text-red-500">*</span>
                                 </Label>
-                                <Select
-                                    value={form.watch("categoryId")?.toString()}
-                                    onValueChange={(value) => form.setValue("categoryId", parseInt(value))}
-                                >
-                                    <SelectTrigger id="categoryId" className="h-10">
-                                        <SelectValue placeholder="Chọn danh mục" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {categories.map((category: any) => (
-                                            <SelectItem key={category.id} value={category.id.toString()}>
-                                                {category.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <InputPicker
+                                    data={categories.map((category: any) => ({
+                                        label: category.name,
+                                        value: category.id.toString()
+                                    }))}
+                                    valueKey="value"
+                                    labelKey="label"
+                                    placeholder="Chọn danh mục"
+                                    value={form.watch("categoryId")?.toString() || null}
+                                    onChange={(value) => form.setValue("categoryId", parseInt(value || "0"))}
+                                    searchable={true}
+                                    style={{ width: "100%", height: 40 }}
+                                />
                                 {form.formState.errors.categoryId && (
                                     <p className="text-sm text-red-500">{form.formState.errors.categoryId.message}</p>
                                 )}
@@ -291,21 +289,16 @@ export default function CreateCoursePage() {
                                 <Label htmlFor="level" className="font-medium">
                                     Mức độ khóa học
                                 </Label>
-                                <Select
-                                    value={form.watch("level")?.toString()}
-                                    onValueChange={(value) => form.setValue("level", parseInt(value))}
-                                >
-                                    <SelectTrigger id="level" className="h-10">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {courseLevels.map(level => (
-                                            <SelectItem key={level.value} value={level.value.toString()}>
-                                                {level.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <InputPicker
+                                    data={levelOptions}
+                                    valueKey="value"
+                                    labelKey="label"
+                                    placeholder="Chọn mức độ"
+                                    value={form.watch("level")?.toString() || "1"}
+                                    onChange={(value) => form.setValue("level", parseInt(value || "1"))}
+                                    searchable={false}
+                                    style={{ width: "100%", height: 40 }}
+                                />
                                 {form.watch("level") && (
                                     <Badge variant="secondary" className="text-xs mt-2">
                                         {courseLevels.find(l => l.value === form.watch("level"))?.label}

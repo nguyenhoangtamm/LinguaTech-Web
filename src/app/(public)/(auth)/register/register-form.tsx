@@ -18,10 +18,16 @@ import { useToast } from "@/hooks/use-toast";
 import { handleErrorApi } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { InputPicker } from "rsuite";
 import { Loader2, Eye, EyeOff, Mail, User, Lock, Phone, MapPin, Calendar } from "lucide-react";
 import { routes } from "@/config/routes";
 import Link from "next/link";
+
+const genderOptions = [
+    { label: "Nam", value: "male" },
+    { label: "Nữ", value: "female" },
+    { label: "Khác", value: "other" }
+];
 
 export default function RegisterForm() {
     const registerMutation = useRegisterMutation();
@@ -213,18 +219,19 @@ export default function RegisterForm() {
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel className="text-gray-700 font-medium text-sm">Giới tính *</FormLabel>
-                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                <FormControl>
-                                                    <SelectTrigger className="h-9 text-sm border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                                                        <SelectValue placeholder="Chọn giới tính" />
-                                                    </SelectTrigger>
-                                                </FormControl>
-                                                <SelectContent>
-                                                    <SelectItem value="male">Nam</SelectItem>
-                                                    <SelectItem value="female">Nữ</SelectItem>
-                                                    <SelectItem value="other">Khác</SelectItem>
-                                                </SelectContent>
-                                            </Select>
+                                            <FormControl>
+                                                <InputPicker
+                                                    data={genderOptions}
+                                                    valueKey="value"
+                                                    labelKey="label"
+                                                    placeholder="Chọn giới tính"
+                                                    value={field.value || null}
+                                                    onChange={(value) => field.onChange(value || "")}
+                                                    searchable={false}
+                                                    style={{ width: "100%", height: 36 }}
+                                                    className="text-sm"
+                                                />
+                                            </FormControl>
                                             <FormMessage className="text-red-500 text-xs" />
                                         </FormItem>
                                     )}

@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { InputPicker } from "rsuite";
 import {
     BookOpen,
     Search,
@@ -37,6 +37,13 @@ const getLevelLabel = (level: number): string => {
         default: return "Không xác định";
     }
 };
+
+const levelOptions = [
+    { label: "Tất cả cấp độ", value: "all" },
+    { label: "Cơ bản", value: "1" },
+    { label: "Trung cấp", value: "2" },
+    { label: "Nâng cao", value: "3" },
+];
 
 const getTagName = (tagId: number, courseTagsData: any): string => {
     const tag = courseTagsData?.data?.find((t: any) => t.id === tagId);
@@ -267,32 +274,33 @@ export default function CoursesPage() {
                             </div>
                         </div>
 
-                        <Select value={filter.category || "all"} onValueChange={(value) => handleFilterChange("category", value === "all" ? undefined : value)}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Danh mục" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Tất cả danh mục</SelectItem>
-                                {categories.map((category: any) => (
-                                    <SelectItem key={category.id} value={category.slug}>
-                                        {category.icon} {category.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <InputPicker
+                            data={[
+                                { label: "Tất cả danh mục", value: "all" },
+                                ...categories.map((category: any) => ({
+                                    label: `${category.icon} ${category.name}`,
+                                    value: category.slug
+                                }))
+                            ]}
+                            valueKey="value"
+                            labelKey="label"
+                            placeholder="Danh mục"
+                            value={filter.category || "all"}
+                            onChange={(value) => handleFilterChange("category", value === "all" ? undefined : value)}
+                            searchable={true}
+                            style={{ width: "100%", height: 40 }}
+                        />
 
-                        <Select value={filter.level?.toString() || "all"} onValueChange={(value) => handleFilterChange("level", value === "all" ? undefined : parseInt(value))}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Cấp độ" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Tất cả cấp độ</SelectItem>
-                                {/* NOTE: backend expects numeric level. Mapping: 1=beginner, 2=intermediate, 3=advanced */}
-                                <SelectItem value="1">Cơ bản</SelectItem>
-                                <SelectItem value="2">Trung cấp</SelectItem>
-                                <SelectItem value="3">Nâng cao</SelectItem>
-                            </SelectContent>
-                        </Select>
+                        <InputPicker
+                            data={levelOptions}
+                            valueKey="value"
+                            labelKey="label"
+                            placeholder="Cấp độ"
+                            value={filter.level?.toString() || "all"}
+                            onChange={(value) => handleFilterChange("level", value === "all" ? undefined : parseInt(value))}
+                            searchable={false}
+                            style={{ width: "100%", height: 40 }}
+                        />
 
                         <div className="flex gap-2">
                             <Button variant="outline" size="sm" onClick={clearFilters}>

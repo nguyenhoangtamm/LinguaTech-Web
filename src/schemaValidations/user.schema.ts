@@ -271,7 +271,7 @@ export const CreateUserBody = z
             .string({ required_error: "Vui lòng nhập tên" })
             .trim()
             .min(1, { message: "Tên không được để trống" }),
-        gender: Gender,
+        gender: Gender.optional(),
         roleId: z.number({ required_error: "Vui lòng chọn vai trò" }),
     })
     .strict();

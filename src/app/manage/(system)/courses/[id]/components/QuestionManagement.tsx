@@ -16,10 +16,10 @@ import {
     Circle,
     X
 } from "lucide-react";
-import { Modal, Button as RSButton, SelectPicker } from "rsuite";
+import { Modal, Button as RSButton } from "rsuite";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { InputPicker } from "rsuite";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -328,8 +328,8 @@ export default function QuestionManagement({ courseId }: QuestionManagementProps
             </div>
 
             {/* Create/Edit Modal */}
-            <Modal 
-                open={isCreateDialogOpen} 
+            <Modal
+                open={isCreateDialogOpen}
                 onClose={() => setIsCreateDialogOpen(false)}
                 size="lg"
             >
@@ -343,21 +343,19 @@ export default function QuestionManagement({ courseId }: QuestionManagementProps
                         <div className="space-y-6">
                             <div>
                                 <Label htmlFor="assignmentId">Bài tập *</Label>
-                                <Select
-                                    value={form.watch("assignmentId")?.toString()}
-                                    onValueChange={(value) => form.setValue("assignmentId", parseInt(value))}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Chọn bài tập" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {mockAssignments.map((assignment) => (
-                                            <SelectItem key={assignment.id} value={assignment.id.toString()}>
-                                                {assignment.lessonTitle} → {assignment.title}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <InputPicker
+                                    data={mockAssignments.map((assignment) => ({
+                                        label: `${assignment.lessonTitle} → ${assignment.title}`,
+                                        value: assignment.id.toString()
+                                    }))}
+                                    valueKey="value"
+                                    labelKey="label"
+                                    placeholder="Chọn bài tập"
+                                    value={form.watch("assignmentId")?.toString() || null}
+                                    onChange={(value) => form.setValue("assignmentId", parseInt(value || "0"))}
+                                    searchable={true}
+                                    style={{ width: "100%", height: 40 }}
+                                />
                             </div>
 
                             <div>
@@ -378,21 +376,19 @@ export default function QuestionManagement({ courseId }: QuestionManagementProps
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <Label htmlFor="type">Loại câu hỏi *</Label>
-                                    <Select
-                                        value={form.watch("type")}
-                                        onValueChange={handleQuestionTypeChange}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {questionTypes.map((type) => (
-                                                <SelectItem key={type.value} value={type.value}>
-                                                    {type.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                    <InputPicker
+                                        data={questionTypes.map((type) => ({
+                                            label: type.label,
+                                            value: type.value
+                                        }))}
+                                        valueKey="value"
+                                        labelKey="label"
+                                        placeholder="Chọn loại"
+                                        value={form.watch("type") || null}
+                                        onChange={(value) => value && handleQuestionTypeChange(value)}
+                                        searchable={false}
+                                        style={{ width: "100%", height: 40 }}
+                                    />
                                 </div>
                                 <div>
                                     <Label htmlFor="points">Điểm *</Label>
@@ -469,13 +465,13 @@ export default function QuestionManagement({ courseId }: QuestionManagementProps
                     </form>
                 </Modal.Body>
                 <Modal.Footer>
-                    <RSButton 
-                        onClick={() => setIsCreateDialogOpen(false)} 
+                    <RSButton
+                        onClick={() => setIsCreateDialogOpen(false)}
                         appearance="subtle"
                     >
                         Hủy
                     </RSButton>
-                    <RSButton 
+                    <RSButton
                         onClick={form.handleSubmit(onSubmit)}
                         appearance="primary"
                     >
@@ -494,35 +490,34 @@ export default function QuestionManagement({ courseId }: QuestionManagementProps
                 {detailQuestion && (
                     <div className="space-y-6">
                         <DetailSection title="Thông tin cơ bản">
-                            <DetailField 
-                                label="Nội dung câu hỏi" 
-                                value={detailQuestion.content} 
+                            <DetailField
+                                label="Nội dung câu hỏi"
+                                value={detailQuestion.content}
                                 fullWidth
                             />
-                            <DetailField 
-                                label="Loại câu hỏi" 
-                                value={questionTypes.find(t => t.value === detailQuestion.type)?.label || detailQuestion.type} 
+                            <DetailField
+                                label="Loại câu hỏi"
+                                value={questionTypes.find(t => t.value === detailQuestion.type)?.label || detailQuestion.type}
                             />
                             <DetailField label="Điểm" value={`${detailQuestion.points} điểm`} />
                         </DetailSection>
-                        
+
                         <DetailSection title="Bài tập">
                             <DetailField label="Bài tập" value={detailQuestion.assignmentTitle} />
                             <DetailField label="Bài học" value={detailQuestion.lessonTitle} />
                         </DetailSection>
-                        
+
                         <DetailSection title="Đáp án">
                             <div className="col-span-2">
                                 <dt className="text-sm font-medium text-gray-500 mb-2">Các lựa chọn:</dt>
                                 <dd className="space-y-2">
                                     {detailQuestion.options?.map((option: any, index: number) => (
-                                        <div 
-                                            key={index} 
-                                            className={`p-3 rounded-lg border ${
-                                                option.isCorrect 
-                                                    ? 'bg-green-50 border-green-200' 
+                                        <div
+                                            key={index}
+                                            className={`p-3 rounded-lg border ${option.isCorrect
+                                                    ? 'bg-green-50 border-green-200'
                                                     : 'bg-gray-50 border-gray-200'
-                                            }`}
+                                                }`}
                                         >
                                             <div className="flex items-center gap-2">
                                                 {option.isCorrect ? (
@@ -539,21 +534,21 @@ export default function QuestionManagement({ courseId }: QuestionManagementProps
                                 </dd>
                             </div>
                         </DetailSection>
-                        
+
                         {detailQuestion.explanation && (
                             <DetailSection title="Giải thích">
-                                <DetailField 
-                                    label="Giải thích" 
-                                    value={detailQuestion.explanation} 
+                                <DetailField
+                                    label="Giải thích"
+                                    value={detailQuestion.explanation}
                                     fullWidth
                                 />
                             </DetailSection>
                         )}
-                        
+
                         <DetailSection title="Thông tin thời gian">
-                            <DetailField 
-                                label="Ngày tạo" 
-                                value={new Date(detailQuestion.createdAt).toLocaleString("vi-VN")} 
+                            <DetailField
+                                label="Ngày tạo"
+                                value={new Date(detailQuestion.createdAt).toLocaleString("vi-VN")}
                             />
                         </DetailSection>
                     </div>

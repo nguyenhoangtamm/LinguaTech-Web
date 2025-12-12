@@ -36,7 +36,7 @@ export default function UserForm({
         enabled: isEdit,
     });
 
-    const form = useForm<CreateUserBodyType | UpdateUserBodyType>({
+    const form = useForm<CreateUserBodyType>({
         resolver: zodResolver(isEdit ? UpdateUserBody : CreateUserBody),
         defaultValues: {
             username: "",
@@ -46,14 +46,16 @@ export default function UserForm({
             password: "",
             roleId: undefined,
         },
+        shouldUnregister: false,
+        shouldFocusError: false,
     });
 
     // Role options
     const roleOptions = useMemo(() => {
-        if (!rolesData?.data?.data) return [];
-        return rolesData.data.data.map((role: any) => ({
+        if (!rolesData?.data) return [];
+        return rolesData.data.map((role: any) => ({
             label: role.name,
-            value: role.code || role.name,
+            value: role.id,
         }));
     }, [rolesData]);
 
@@ -96,7 +98,7 @@ export default function UserForm({
         }
     };
 
-    const onSubmit = async (values: CreateUserBodyType | UpdateUserBodyType) => {
+    const onSubmit = async (values: CreateUserBodyType) => {
         if (createUserMutation.isPending || updateUserMutation.isPending) return;
         try {
             let result: any;
@@ -126,7 +128,7 @@ export default function UserForm({
                 setError: form.setError,
             });
         }
-    };
+    };;
 
     const reset = () => {
         if (isEdit && data) {
@@ -257,13 +259,14 @@ export default function UserForm({
                                 <FormField
                                     control={form.control}
                                     name="roleId"
-                                    render={({ field }) => (
+                                    render={({ field: { value, onChange } }) => (
                                         <FormItem>
                                             <Label className="text-sm font-medium text-gray-700">
                                                 Vai trò *
                                             </Label>
                                             <SelectPicker
-                                                {...field}
+                                                value={value}
+                                                onChange={onChange}
                                                 data={roleOptions}
                                                 placeholder="Chọn vai trò"
                                                 className="w-full"

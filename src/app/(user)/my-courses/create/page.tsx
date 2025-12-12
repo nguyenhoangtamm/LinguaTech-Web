@@ -7,15 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { InputPicker } from "rsuite";
 import {
     ArrowLeft,
     Upload,
@@ -90,6 +84,17 @@ const courseLevels = [
     { value: 2, label: "Trung bình - Có kinh nghiệm cơ bản" },
     { value: 3, label: "Nâng cao - Có kinh nghiệm sâu" },
 ];
+
+// Convert to InputPicker format
+const categoryOptions = courseCategories.map(cat => ({
+    label: `${cat.icon} ${cat.name}`,
+    value: cat.id
+}));
+
+const levelOptions = courseLevels.map(level => ({
+    label: level.label,
+    value: level.value.toString()
+}));
 
 const availableTags = [
     "JavaScript", "Python", "React", "Node.js", "TypeScript",
@@ -336,19 +341,16 @@ export default function CreateCoursePage() {
                                 <Label htmlFor="category" className="font-medium">
                                     Danh mục <span className="text-red-500">*</span>
                                 </Label>
-                                <Select value={formData.categoryId} onValueChange={(value) => handleSelectChange("categoryId", value)}>
-                                    <SelectTrigger id="category" className="h-10">
-                                        <SelectValue placeholder="Chọn danh mục" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {courseCategories.map(category => (
-                                            <SelectItem key={category.id} value={category.id}>
-                                                <span className="mr-2">{category.icon}</span>
-                                                {category.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <InputPicker
+                                    data={categoryOptions}
+                                    valueKey="value"
+                                    labelKey="label"
+                                    placeholder="Chọn danh mục"
+                                    value={formData.categoryId || null}
+                                    onChange={(value) => handleSelectChange("categoryId", value || "")}
+                                    searchable={true}
+                                    style={{ width: "100%", height: 40 }}
+                                />
                             </div>
 
                             {/* Level */}
@@ -356,18 +358,16 @@ export default function CreateCoursePage() {
                                 <Label htmlFor="level" className="font-medium">
                                     Mức độ khóa học
                                 </Label>
-                                <Select value={formData.level.toString()} onValueChange={(value) => setFormData(prev => ({ ...prev, level: parseInt(value) }))}>
-                                    <SelectTrigger id="level" className="h-10">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {courseLevels.map(level => (
-                                            <SelectItem key={level.value} value={level.value.toString()}>
-                                                {level.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <InputPicker
+                                    data={levelOptions}
+                                    valueKey="value"
+                                    labelKey="label"
+                                    placeholder="Chọn mức độ"
+                                    value={formData.level.toString()}
+                                    onChange={(value) => setFormData(prev => ({ ...prev, level: parseInt(value || "1") }))}
+                                    searchable={false}
+                                    style={{ width: "100%", height: 40 }}
+                                />
                                 {formData.level && (
                                     <Badge variant="secondary" className="text-xs mt-2">
                                         {courseLevels.find(l => l.value === formData.level)?.label}

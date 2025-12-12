@@ -41,7 +41,7 @@ export default function SectionManagement({ courseId }: SectionManagementProps) 
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [selectedLessonId, setSelectedLessonId] = useState<number | null>(null);
     const [pageNumber, setPageNumber] = useState(1);
-    const pageSize = 100;
+    const pageSize = 1000;
     const searchInputRef = useRef<HTMLInputElement>(null);
 
     // API queries

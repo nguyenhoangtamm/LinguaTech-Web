@@ -185,8 +185,10 @@ export default function CourseDetailPage() {
                                     </div>
 
                                     <Button className="w-full" size="lg">
-                                        <Play className="w-4 h-4 mr-2" />
-                                        Tiếp tục học
+                                        <Link href={`/courses/detail/${courseId}/learn`}>
+                                            <BookOpen className="w-4 h-4 mr-2" />
+                                            Xem chi tiết khóa học
+                                        </Link>
                                     </Button>
                                 </div>
                             ) : (
