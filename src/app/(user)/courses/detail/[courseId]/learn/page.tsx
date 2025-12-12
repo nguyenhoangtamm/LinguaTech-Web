@@ -55,7 +55,7 @@ export default function CourseLearnPage() {
             </div>
         );
     }
-    
+
     if (courseLoading) {
         return (
             <div className="text-center py-12">
@@ -155,15 +155,15 @@ export default function CourseLearnPage() {
                                     <h3 className="text-lg font-semibold mb-3">Mô tả khóa học</h3>
                                     <p className="text-gray-700 leading-relaxed">{course.description}</p>
                                 </div>
-                            <div>
-                                <h3 className="text-lg font-semibold mb-3">Chi tiết khóa học</h3>
-                                <div
-                                    className="prose max-w-none text-gray-700 break-words"
-                                    dangerouslySetInnerHTML={{
-                                        __html: course.detailedDescription || "<p class='text-gray-500'>Chưa có mô tả chi tiết.</p>"
-                                    }}
-                                />
-                            </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-3">Chi tiết khóa học</h3>
+                                    <div
+                                        className="prose max-w-none text-gray-700 break-words"
+                                        dangerouslySetInnerHTML={{
+                                            __html: course.detailedDescription || "<p class='text-gray-500'>Chưa có mô tả chi tiết.</p>"
+                                        }}
+                                    />
+                                </div>
 
                                 {/* <div>
                                     <h3 className="text-lg font-semibold mb-3">Bạn sẽ học được gì?</h3>
@@ -282,10 +282,10 @@ export default function CourseLearnPage() {
                                                                 </Button>
                                                             )} */}
                                                             <Link href={`/courses/detail/${courseId}/lessons/${lesson.id}`}>
-                                                                    <Button size="sm" variant={lesson.isCompleted ? "outline" : "default"}>
-                                                                        {lesson.isCompleted ? "Xem lại" : "Học ngay"}
-                                                                    </Button>
-                                                                </Link>
+                                                                <Button size="sm" variant={lesson.isCompleted ? "outline" : "default"}>
+                                                                    {lesson.isCompleted ? "Xem lại" : "Học ngay"}
+                                                                </Button>
+                                                            </Link>
                                                             {lesson.isCompleted && (
                                                                 <CheckCircle className="w-5 h-5 text-green-500" />
                                                             )}
@@ -314,7 +314,18 @@ export default function CourseLearnPage() {
                                             </div>
                                         </div>
                                         <div className="flex gap-2">
-                                            <Button variant="outline" size="sm">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => {
+                                                    const link = document.createElement('a');
+                                                    link.href = mat.fileUrl;
+                                                    link.download = mat.fileName;
+                                                    document.body.appendChild(link);
+                                                    link.click();
+                                                    document.body.removeChild(link);
+                                                }}
+                                            >
                                                 <Download className="w-4 h-4 mr-2" />
                                                 Tải xuống
                                             </Button>

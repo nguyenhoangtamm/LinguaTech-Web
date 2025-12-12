@@ -160,9 +160,7 @@ export default function CourseDetailPage() {
                     <Card className="sticky top-4">
                         <CardContent className="p-6">
                             <div className="text-center mb-6">
-                                <div className="text-3xl font-bold text-blue-600 mb-2">
-                                    {course.price.toLocaleString('vi-VN')}đ
-                                </div>
+                                
                                 <p className="text-gray-600">Trọn đời</p>
                             </div>
 

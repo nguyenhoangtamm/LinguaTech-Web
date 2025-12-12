@@ -157,9 +157,7 @@ export default function CoursesPage() {
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3">
-                                        <span className="text-lg font-bold text-blue-600">
-                                            {course.price.toLocaleString('vi-VN')}đ
-                                        </span>
+                                       
                                         <Button asChild>
                                             <Link href={courseUrl}>Xem chi tiết</Link>
                                         </Button>
@@ -219,9 +217,7 @@ export default function CoursesPage() {
                         </div>
 
                         <div className="flex items-center justify-between">
-                            <span className="text-lg font-bold text-blue-600">
-                                {course.price.toLocaleString('vi-VN')}đ
-                            </span>
+                          
                             <Button size="sm" asChild>
                                 <Link href={courseUrl}>Xem chi tiết</Link>
                             </Button>

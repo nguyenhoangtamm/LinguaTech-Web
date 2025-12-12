@@ -13,6 +13,7 @@ export const LessonSchema = z.object({
     moduleId: z.number(),
     createdAt: z.date(),
     updatedAt: z.date(),
+    videoUrl: z.string()
 });
 
 // Module schema

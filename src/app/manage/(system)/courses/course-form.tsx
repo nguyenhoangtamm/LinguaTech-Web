@@ -44,7 +44,7 @@ export default function CourseForm({
     const { data: categoriesData } = useCategoriesManagement();
     const { data: courseTagsData } = useGetAllCourseTags();
     const { data, refetch } = useCourseManagement(id as number, isEdit);
-    const form = useForm<CreateCourseBodyType >({
+    const form = useForm<CreateCourseBodyType>({
         resolver: zodResolver(CreateCourseBodySchema),
         defaultValues: {
             title: "",
@@ -52,7 +52,7 @@ export default function CourseForm({
             instructor: "",
             duration: 0,
             level: 1,
-            price: 0,
+            price: 10,
             categoryId: 0,
             tags: [],
             thumbnailUrl: "",
@@ -361,26 +361,7 @@ export default function CourseForm({
                                 />
                             </div>
 
-                            <FormField
-                                control={form.control}
-                                name="price"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <Label className="text-sm font-medium text-gray-700">
-                                            Giá (VNĐ) *
-                                        </Label>
-                                        <Input
-                                            {...field}
-                                            type="number"
-                                            min="0"
-                                            placeholder="0"
-                                            className="w-full"
-                                            onChange={(value) => field.onChange(Number(value))}
-                                        />
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <FormField

@@ -361,7 +361,87 @@ const ReadingNotesSection = ({ lesson, isLoading }: { lesson: any, isLoading: bo
     );
 };
 
-export default function LessonDetailPage() {
+const VideoSection = ({ videoUrl, isLoading }: { videoUrl?: string, isLoading: boolean }) => {
+    if (isLoading) {
+        return (
+            <div className="p-4">
+                <div className="animate-pulse">
+                    <div className="bg-gray-200 rounded-lg h-64 w-full"></div>
+                </div>
+            </div>
+        );
+    }
+
+    if (!videoUrl) {
+        return (
+            <div className="text-center py-8 text-gray-500">
+                <Play className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <p>Chưa có video cho bài học này</p>
+            </div>
+        );
+    }
+
+    // Detect video type from URL
+    const getVideoType = (url: string) => {
+        if (url.includes('youtube.com') || url.includes('youtu.be')) {
+            return 'youtube';
+        }
+        if (url.includes('mp4')) {
+            return 'video/mp4';
+        }
+        if (url.includes('webm')) {
+            return 'video/webm';
+        }
+        if (url.includes('ogg')) {
+            return 'video/ogg';
+        }
+        return 'video/mp4'; // default
+    };
+
+    const videoType = getVideoType(videoUrl);
+    const isYouTube = videoType === 'youtube';
+
+    // Extract YouTube video ID
+    const getYouTubeId = (url: string) => {
+        const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
+        return match ? match[1] : null;
+    };
+
+    const youtubeId = isYouTube ? getYouTubeId(videoUrl) : null;
+
+    return (
+        <div className="space-y-4">
+            <h3 className="font-medium">Video bài học</h3>
+            <div className="relative w-full bg-black rounded-lg overflow-hidden">
+                <div className="aspect-video flex items-center justify-center bg-gray-900">
+                    {isYouTube && youtubeId ? (
+                        <iframe
+                            width="100%"
+                            height="100%"
+                            src={`https://www.youtube.com/embed/${youtubeId}`}
+                            title="Lesson Video"
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            className="w-full h-full"
+                        ></iframe>
+                    ) : (
+                        <video
+                            width="100%"
+                            height="100%"
+                            controls
+                            className="w-full h-full object-contain"
+                            crossOrigin="anonymous"
+                        >
+                            <source src={videoUrl} type={videoType} />
+                            <p>Trình duyệt của bạn không hỗ trợ video HTML5.</p>
+                        </video>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}; export default function LessonDetailPage() {
     const params = useParams();
     const courseIdParam = params.courseId;
     const lessonIdParam = params.lessonId;
@@ -373,7 +453,7 @@ export default function LessonDetailPage() {
     const { data: sectionsApi, isLoading: sectionsLoading } = useSectionsByLessonQuery(lessonId);
     const completeLessonMutation = useCompleteLessonMutation();
     const sections = useMemo(() => sectionsApi?.data || [], [sectionsApi?.data]);
-    
+
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [rightPanelOpen, setRightPanelOpen] = useState(true);
     const [selectedSectionId, setSelectedSectionId] = useState<number>(1);
@@ -405,6 +485,12 @@ export default function LessonDetailPage() {
     const currentLessonIndex = lessons.findIndex((l: any) => String(l.id) === String(lessonId));
     const previousLesson = currentLessonIndex > 0 ? lessons[currentLessonIndex - 1] : null;
     const nextLesson = currentLessonIndex < lessons.length - 1 ? lessons[currentLessonIndex + 1] : null;
+
+    // Debug: Log lesson data
+    if (lessonData) {
+        console.log('Lesson Data:', lessonData);
+        console.log('Video URL:', lessonData?.videoUrl);
+    }
 
     return (
         <div className="flex h-screen bg-gray-50">
@@ -542,8 +628,9 @@ export default function LessonDetailPage() {
                             </div>
 
                             <div className="px-6">
-                                <Tabs defaultValue="assignments" className="w-full">
-                                    <TabsList className="grid w-full grid-cols-2">
+                                <Tabs defaultValue="video" className="w-full">
+                                    <TabsList className="grid w-full grid-cols-3">
+                                        <TabsTrigger value="video">Video</TabsTrigger>
                                         <TabsTrigger value="assignments">Bài tập</TabsTrigger>
                                         <TabsTrigger value="materials">Tài liệu</TabsTrigger>
                                     </TabsList>
@@ -554,6 +641,17 @@ export default function LessonDetailPage() {
                                                 <AssignmentsSection
                                                     lessonId={lessonId ?? 0}
                                                     courseId={courseId ?? 0}
+                                                />
+                                            </CardContent>
+                                        </Card>
+                                    </TabsContent>
+
+                                    <TabsContent value="video" className="mt-4">
+                                        <Card>
+                                            <CardContent className="p-4">
+                                                <VideoSection
+                                                    videoUrl={lessonData?.videoUrl || lesson?.videoUrl}
+                                                    isLoading={loadingStates.content}
                                                 />
                                             </CardContent>
                                         </Card>

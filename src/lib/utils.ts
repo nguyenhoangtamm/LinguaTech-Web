@@ -111,3 +111,27 @@ export const getCurrentDateString = (): string => {
 
     return `${day}${month}${year}`;
 };
+
+export const formatBytes = (bytes: number, decimals: number = 2): string => {
+    if (bytes === 0) return "0 Bytes";
+
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    return (
+        Math.round((bytes / Math.pow(k, i)) * Math.pow(10, dm)) /
+            Math.pow(10, dm) +
+        " " +
+        sizes[i]
+    );
+};
+
+export const formatDate = (date: Date, locale: string = "en-US"): string => {
+    return new Date(date).toLocaleDateString(locale, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+    });
+};
