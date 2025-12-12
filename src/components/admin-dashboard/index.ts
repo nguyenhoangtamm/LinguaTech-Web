@@ -7,4 +7,8 @@ export { default as DashboardOverview } from "./DashboardOverview";
 export { default as AllCoursesAnalytics } from "./AllCoursesAnalytics";
 
 // Types
-export type { default as AdminDashboardStatsType } from "@/schemaValidations/adminDashboard.schema";
+export type {
+    AdminDashboardStatsType,
+    CourseAnalyticsType,
+    UserGrowthStatsType,
+} from "@/schemaValidations/adminDashboard.schema";

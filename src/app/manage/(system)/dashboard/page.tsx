@@ -8,13 +8,13 @@ import DashboardOverview from '@/components/admin-dashboard/DashboardOverview'
 import CourseAnalyticsTable from '@/components/admin-dashboard/CourseAnalyticsTable'
 import AllCoursesAnalytics from '@/components/admin-dashboard/AllCoursesAnalytics'
 import UserGrowthChart from '@/components/admin-dashboard/UserGrowthChart'
+import { DashboardExport } from '@/components/admin-dashboard/DashboardExport'
 import {
     AdminDashboardStatsType,
     CourseAnalyticsType,
     UserGrowthStatsType,
 } from '@/schemaValidations/adminDashboard.schema'
 import { useToast } from '@/hooks/use-toast'
-import LoadingOverlay from '@/components/LoadingOverlay'
 
 interface DashboardPageState {
     stats: AdminDashboardStatsType | null
@@ -90,12 +90,19 @@ export default function AdminDashboardPage() {
 
     return (
         <div className="space-y-8">
-            <PageHeader
-                title="Admin Dashboard"
-                description="System overview and analytics"
-            />
+            <PageHeader />
 
-            <LoadingOverlay show={state.loading} />
+            {/* Export Reports Section */}
+            <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                <h2 className="text-lg font-semibold mb-4">Xuất Báo Cáo</h2>
+                <DashboardExport
+                    stats={state.stats}
+                    topCoursesByEnrollment={state.topCoursesByEnrollment}
+                    topCoursesByRating={state.topCoursesByRating}
+                    userGrowthStats={state.userGrowthStats}
+                    allCourses={state.allCourses}
+                />
+            </div>
 
             {/* Main Stats Grid */}
             {state.stats && (
